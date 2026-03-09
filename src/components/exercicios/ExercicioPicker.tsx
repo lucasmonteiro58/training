@@ -53,9 +53,18 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">
           <h2 className="text-lg font-bold text-text">Adicionar Exercício</h2>
-          <button onClick={onClose} className="btn-ghost p-2">
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowCriar(true)}
+              className="btn-ghost p-2 text-accent"
+              title="Criar Exercício"
+            >
+              <Plus size={20} />
+            </button>
+            <button onClick={onClose} className="btn-ghost p-2">
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -98,14 +107,6 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
         </div>
 
         <div className="flex-1 overflow-y-auto -mx-4 px-4">
-          <button
-            onClick={() => setShowCriar(true)}
-            className="w-full mb-3 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl text-accent font-semibold hover:bg-surface-2 transition-colors"
-          >
-            <Plus size={18} />
-            Criar Exercício Personalizado
-          </button>
-
           {loading ? (
             <div className="flex flex-col gap-2">
               {[...Array(5)].map((_, i) => (
@@ -128,7 +129,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
                     <img
                       src={ex.gifUrl}
                       alt={ex.nome}
-                      className="w-12 h-12 rounded-lg object-cover bg-surface-3 flex-shrink-0"
+                      className="w-12 h-12 rounded-lg object-cover bg-surface-3 shrink-0"
                       loading="lazy"
                     />
                   ) : (

@@ -78,10 +78,10 @@ function ExerciciosPage() {
 
         {/* count & action */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs text-[var(--color-text-muted)]">{filtrados.length} exercícios</p>
+          <p className="text-xs text-text-muted">{filtrados.length} exercícios</p>
           <button
             onClick={() => setShowCriar(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-accent)] bg-[rgba(99,102,241,0.1)] px-3 py-1.5 rounded-full"
+            className="flex items-center gap-1.5 text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-full"
           >
             <Plus size={14} />
             Criar
@@ -101,15 +101,23 @@ function ExerciciosPage() {
                 style={{ animationDelay: `${(idx % 6) * 40}ms` }}>
                 {ex.gifUrl ? (
                   <img src={ex.gifUrl} alt={ex.nome}
-                    className="w-full aspect-square object-contain bg-[var(--color-surface-2)]" loading="lazy" />
+                    className="w-full aspect-square object-contain bg-surface-2" loading="lazy" />
                 ) : (
-                  <div className="w-full aspect-square bg-[var(--color-surface-2)] flex items-center justify-center">
+                  <div className="w-full aspect-square bg-surface-2 flex items-center justify-center">
                     <span className="text-4xl">💪</span>
                   </div>
                 )}
-                <div className="p-2.5">
-                  <p className="text-[var(--color-text)] text-xs font-semibold truncate">{ex.nome}</p>
-                  <p className="text-[var(--color-text-muted)] text-[10px] mt-0.5">{ex.grupoMuscular}</p>
+                <div className="p-2.5 flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-text text-sm font-medium truncate">
+                      {ex.nome}
+                    </p>
+                    <p className="text-text-muted text-xs mt-0.5">
+                      {ex.grupoMuscular}
+                      {ex.equipamento ? ` · ${ex.equipamento}` : ''}
+                    </p>
+                  </div>
+                  <Plus size={18} className="text-accent shrink-0" />
                 </div>
               </button>
             ))}
@@ -123,8 +131,6 @@ function ExerciciosPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-[var(--color-text)]">{selecionado.nome}</h2>
-                <p className="text-[var(--color-text-muted)] text-sm mt-0.5">{selecionado.grupoMuscular}</p>
               </div>
               <button onClick={() => setSelecionado(null)} className="btn-ghost p-2 text-[var(--color-text-muted)]">✕</button>
             </div>

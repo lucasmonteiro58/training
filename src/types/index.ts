@@ -25,6 +25,11 @@ export interface SerieRegistrada {
   notas?: string
 }
 
+export interface SeriePlano {
+  peso: number
+  repeticoes: number
+}
+
 export interface ExercicioNoPlano {
   id: string
   exercicioId: string
@@ -32,6 +37,7 @@ export interface ExercicioNoPlano {
   series: number
   repeticoesMeta: number
   pesoMeta?: number
+  seriesDetalhadas?: SeriePlano[]
   descansoSegundos: number
   ordem: number
   notas?: string

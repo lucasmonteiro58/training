@@ -6,6 +6,15 @@ import { GRUPOS_MUSCULARES } from '../../types'
 import { salvarExercicioPersonalizado } from '../../lib/db/dexie'
 import { syncExercicioParaFirestore } from '../../lib/firestore/sync'
 import { useAuthStore } from '../../stores'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectSeparator,
+} from '../ui/select'
 
 interface CriarExercicioModalProps {
   onClose: () => void
@@ -78,15 +87,15 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content max-h-[90dvh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[var(--color-text)]">Criar Exercício</h2>
-          <button onClick={onClose} className="btn-ghost p-2 text-[var(--color-text-subtle)]">
+          <h2 className="text-lg font-bold text-text">Criar Exercício</h2>
+          <button onClick={onClose} className="btn-ghost p-2 text-text-subtle">
             <X size={18} />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto -mx-4 px-4 space-y-4 pb-4">
           <div>
-            <label className="text-xs font-semibold text-[var(--color-text-muted)] mb-1.5 block">NOME *</label>
+            <label className="text-xs font-semibold text-text-muted mb-1.5 block">NOME *</label>
             <input
               className="input w-full"
               value={nome}
@@ -97,9 +106,9 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-[var(--color-text-muted)] block">GRUPO MUSCULAR *</label>
+              <label className="text-xs font-semibold text-text-muted block">GRUPO MUSCULAR *</label>
               {isNovoGrupo && (
-                <button type="button" onClick={() => setIsNovoGrupo(false)} className="text-[var(--color-accent)] text-xs font-medium">
+                <button type="button" onClick={() => setIsNovoGrupo(false)} className="text-accent text-xs font-medium">
                   Voltar para lista
                 </button>
               )}
@@ -114,27 +123,36 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
                 autoFocus
               />
             ) : (
-              <select
-                className="input w-full"
+              <Select
                 value={grupoSelecionado}
-                onChange={e => {
-                  if (e.target.value === '___NOVO___') {
+                onValueChange={(value) => {
+                  if (value === '___NOVO___') {
                     setIsNovoGrupo(true)
                   } else {
-                    setGrupoSelecionado(e.target.value)
+                    setGrupoSelecionado(value)
                   }
                 }}
               >
-                {gruposExistentes.map(g => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-                <option value="___NOVO___">+ Adicionar nova categoria...</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione um grupo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {gruposExistentes.map(g => (
+                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                    ))}
+                    <SelectSeparator />
+                    <SelectItem value="___NOVO___" className="text-accent font-medium">
+                      + Adicionar nova categoria...
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             )}
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-[var(--color-text-muted)] mb-1.5 block">EQUIPAMENTO</label>
+            <label className="text-xs font-semibold text-text-muted mb-1.5 block">EQUIPAMENTO</label>
             <input
               className="input w-full"
               value={equipamento}
@@ -144,7 +162,7 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-[var(--color-text-muted)] mb-1.5 block">BUSCAR IMAGEM (WEB)</label>
+            <label className="text-xs font-semibold text-text-muted mb-1.5 block">BUSCAR IMAGEM (WEB)</label>
             <div className="flex gap-2">
               <input
                 className="input flex-1"
@@ -162,13 +180,13 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
             </div>
 
             {imagensWeb.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mt-3 p-2 bg-[var(--color-surface-2)] rounded-xl max-h-48 overflow-y-auto">
+              <div className="grid grid-cols-3 gap-2 mt-3 p-2 bg-surface-2 rounded-xl max-h-48 overflow-y-auto">
                 {imagensWeb.map((url, i) => (
                   <button
                     key={i}
                     onClick={() => setGifUrl(url)}
                     className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
-                      gifUrl === url ? 'border-[var(--color-accent)] opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
+                      gifUrl === url ? 'border-accent opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img src={url} className="w-full h-full object-cover" loading="lazy" />
@@ -179,7 +197,7 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
 
             {/* URL manual */}
             <div className="mt-3">
-               <label className="text-xs font-semibold text-[var(--color-text-muted)] mb-1.5 block">URL DA IMAGEM/GIF</label>
+               <label className="text-xs font-semibold text-text-muted mb-1.5 block">URL DA IMAGEM/GIF</label>
                <input
                  className="input w-full"
                  value={gifUrl}
@@ -190,7 +208,7 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
           </div>
         </div>
 
-        <div className="pt-4 border-t border-[var(--color-border)] mt-auto">
+        <div className="pt-4 border-t border-border mt-auto">
           <button
             onClick={handleSalvar}
             disabled={!nome.trim() || (isNovoGrupo && !novoGrupoTexto.trim())}
