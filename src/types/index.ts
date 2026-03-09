@@ -50,6 +50,7 @@ export interface PlanoDeTreino {
   descricao?: string
   exercicios: ExercicioNoPlano[]
   cor?: string // hex color para card
+  arquivado?: boolean
   createdAt: number // timestamp
   updatedAt: number
   syncedAt?: number
@@ -111,6 +112,8 @@ export interface LinhaCsvTreino {
   repeticoes: string
   peso_kg: string
   descanso_segundos: string
+  instrucoes?: string // Separado por |
+  notas?: string // Observação
 }
 
 export type GrupoMuscular =

@@ -25,6 +25,15 @@ export const Route = createRootRoute({
     links: [
       { rel: 'stylesheet', href: appCss },
       { rel: 'manifest', href: '/manifest.json' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      { rel: 'apple-touch-icon', sizes: '152x152', href: '/apple-touch-icon.png' },
+      { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+      { rel: 'apple-touch-icon', sizes: '167x167', href: '/apple-touch-icon.png' },
+      // Splash Screens iPhone
+      { rel: 'apple-touch-startup-image', href: '/iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_portrait.png', media: '(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
+      { rel: 'apple-touch-startup-image', href: '/iPhone_16__iPhone_15_Pro__iPhone_15__iPhone_14_Pro_portrait.png', media: '(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
+      { rel: 'apple-touch-startup-image', href: '/iPhone_14_Plus__iPhone_13_Pro_Max__iPhone_12_Pro_Max_portrait.png', media: '(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
+      { rel: 'apple-touch-startup-image', href: '/iPhone_13_mini__iPhone_12_mini__iPhone_11_Pro__iPhone_XS__iPhone_X_portrait.png', media: '(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
     ],
   }),
   shellComponent: RootDocument,
@@ -45,12 +54,25 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
+import { useTreinoAtivoStore } from '../stores'
+import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
+
 function RootComponent() {
   const { user, loading } = useAuth()
+  const iniciado = useTreinoAtivoStore((s) => s.iniciado)
+  const pausado = useTreinoAtivoStore((s) => s.pausado)
+  const tickGeral = useTreinoAtivoStore((s) => s.tickGeral)
 
   useEffect(() => {
     registrarServiceWorker()
   }, [])
+
+  // Global timer tick while training is active and not paused
+  useEffect(() => {
+    if (!iniciado || pausado) return
+    const interval = setInterval(tickGeral, 1000)
+    return () => clearInterval(interval)
+  }, [iniciado, pausado, tickGeral])
 
   if (loading) {
     return (
@@ -70,10 +92,11 @@ function RootComponent() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh bg-[var(--color-bg)]">
-      <main className="flex-1 pt-4">
+    <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] h-dvh overflow-hidden relative">
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+      <FloatingWorkoutButton />
       <BottomNav />
     </div>
   )

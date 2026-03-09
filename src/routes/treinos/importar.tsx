@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useRef } from 'react'
-import { parsearCsv, downloadTemplateCsv, CSV_TEMPLATE } from '../../lib/csvImport'
+import { parsearCsv, downloadTemplateCsv } from '../../lib/csvImport'
 import { usePlanos } from '../../hooks/usePlanos'
 import { ArrowLeft, FileUp, Download, CheckCircle, AlertCircle, X } from 'lucide-react'
 import type { ExercicioNoPlano } from '../../types'
+import { useAuthStore } from '../../stores'
+import { salvarExercicioPersonalizado } from '../../lib/db/dexie'
+import { syncExercicioParaFirestore } from '../../lib/firestore/sync'
 
 export const Route = createFileRoute('/treinos/importar')({
   component: ImportarCsvPage,
@@ -12,6 +15,7 @@ export const Route = createFileRoute('/treinos/importar')({
 function ImportarCsvPage() {
   const navigate = useNavigate()
   const { criarPlano, atualizarPlano } = usePlanos()
+  const user = useAuthStore(s => s.user)
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<ExercicioNoPlano[] | null>(null)
   const [erros, setErros] = useState<string[]>([])
@@ -37,14 +41,25 @@ function ImportarCsvPage() {
   }
 
   const salvar = async () => {
-    if (!preview || !nomePlano.trim()) return
+    if (!preview || !nomePlano.trim() || !user) return
     setSalvando(true)
     try {
+      // 1. Salvar exercícios na lista de exercícios do usuário
+      const exerciciosComUser = await Promise.all(preview.map(async (ex) => {
+        const exercicioFinal = { ...ex.exercicio, userId: user.uid }
+        await salvarExercicioPersonalizado(exercicioFinal)
+        syncExercicioParaFirestore(exercicioFinal)
+        return { ...ex, exercicio: exercicioFinal }
+      }))
+
+      // 2. Criar o plano
       const plano = await criarPlano(nomePlano.trim())
-      await atualizarPlano({ ...plano, exercicios: preview })
+      await atualizarPlano({ ...plano, exercicios: exerciciosComUser })
+
       setSucesso(true)
       setTimeout(() => navigate({ to: '/treinos' }), 1500)
-    } catch {
+    } catch (e) {
+      console.error(e)
       alert('Erro ao salvar plano.')
     } finally {
       setSalvando(false)
@@ -76,7 +91,7 @@ function ImportarCsvPage() {
               <div>
                 <h2 className="text-sm font-bold text-[var(--color-text)]">Formato do CSV</h2>
                 <p className="text-xs text-text-muted mt-1">
-                  Use ponto e vírgula (;) para repetições ou pesos diferentes por série (ex: 10;10;8).
+                  Use ponto e vírgula (;) para repetições/pesos diferentes e pipe (|) para separar múltiplas instruções.
                 </p>
               </div>
               <button onClick={downloadTemplateCsv}
@@ -86,7 +101,7 @@ function ImportarCsvPage() {
               </button>
             </div>
             <pre className="text-[10px] text-text-muted bg-surface-2 p-3 rounded-xl overflow-x-auto font-mono">
-              {`nome_exercicio,grupo_muscular,series,\nrepeticoes,peso_kg,descanso_segundos`}
+              {`nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos,instrucoes,notas`}
             </pre>
           </div>
 

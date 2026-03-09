@@ -20,8 +20,8 @@ self.addEventListener('message', (event) => {
     const { titulo, corpo, tag } = payload
     self.registration.showNotification(titulo, {
       body: corpo,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/badge-72.png',
+      icon: '/android-chrome-192x192.png',
+      badge: '/android-chrome-192x192.png',
       tag: tag || 'fittrack-workout',
       requireInteraction: true,
       vibrate: [200, 100, 200],

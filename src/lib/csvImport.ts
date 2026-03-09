@@ -9,10 +9,10 @@ export interface ResultadoCsv {
 }
 
 // Template CSV para download pelo usuário
-export const CSV_TEMPLATE = `nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos
-Supino Reto,Peito,4,10;10;8;8,80;80;70;70,90
-Rosca Direta,Bíceps,3,12,20,60
-Agachamento Livre,Quadríceps,4,8,100,120`
+export const CSV_TEMPLATE = `nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos,instrucoes,notas
+Supino Reto,Peito,4,10;10;8;8,80;80;70;70,90,Deite no banco|Desça a barra devagar,Focar na contração
+Rosca Direta,Bíceps,3,12,20,60,Mantenha a postura,Sem roubar
+Agachamento Livre,Quadríceps,4,8,100,120,Pés na largura dos ombros|Desça até 90 graus,Manter o core firme`
 
 export function parsearCsv(conteudo: string): ResultadoCsv {
   const resultado: ResultadoCsv = { exercicios: [], erros: [] }
@@ -46,6 +46,7 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
     const repsArr = (linha.repeticoes || '').split(';').map(v => parseInt(v.trim(), 10)).filter(v => !isNaN(v))
     const pesosArr = (linha.peso_kg || '').split(';').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
     const descanso = parseInt(linha.descanso_segundos || '60', 10)
+    const instrucoesArr = linha.instrucoes ? linha.instrucoes.split('|').map(s => s.trim()).filter(Boolean) : undefined
 
     if (repsArr.length === 0) {
       resultado.erros.push(`Linha ${rowNum}: repetições inválidas`)
@@ -65,6 +66,8 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
       id: `csv-${uuidv4()}`,
       nome: linha.nome_exercicio.trim(),
       grupoMuscular: grupoPt,
+      instrucoes: instrucoesArr,
+      personalizado: true, // Marcar como personalizado para permitir salvamento no db
     }
 
     const exercicioNoPlano: ExercicioNoPlano = {
@@ -77,6 +80,7 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
       seriesDetalhadas,
       descansoSegundos: isNaN(descanso) ? 60 : descanso,
       ordem: idx,
+      notas: linha.notas?.trim() || undefined,
     }
 
     resultado.exercicios.push(exercicioNoPlano)

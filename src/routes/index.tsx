@@ -16,6 +16,9 @@ function HomePage() {
   const { sessoes } = useHistorico()
   const treinoAtivo = useTreinoAtivoStore((s) => s.iniciado)
   const sessaoAtiva = useTreinoAtivoStore((s) => s.sessao)
+  const exercicioAtualIndex = useTreinoAtivoStore((s) => s.exercicioAtualIndex)
+  const pausado = useTreinoAtivoStore((s) => s.pausado)
+  const cronometroGeralSegundos = useTreinoAtivoStore((s) => s.cronometroGeralSegundos)
 
   const nome = user?.displayName?.split(' ')[0] ?? 'Atleta'
   const hora = new Date().getHours()
@@ -29,6 +32,8 @@ function HomePage() {
   const treinosSemana = sessoes.filter((s) => s.iniciadoEm >= inicioSemana.getTime()).length
   const volumeTotal = sessoes.reduce((acc, s) => acc + (s.volumeTotal ?? 0), 0)
   const ultimasSessoes = sessoes.slice(0, 3)
+
+  const exercicioAtual = sessaoAtiva?.exercicios[exercicioAtualIndex]
 
   const diasDaSemana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
@@ -45,26 +50,42 @@ function HomePage() {
       {/* Treino ativo banner */}
       {treinoAtivo && sessaoAtiva && (
         <Link
-          to="/treino-ativo"
+          to="/treino-ativo/$planoId"
+          params={{ planoId: sessaoAtiva.planoId }}
           className="block mb-4 animate-fade-up"
           style={{ textDecoration: 'none' }}
         >
-          <div className="card p-4 border-[var(--color-accent)] bg-[var(--color-accent-subtle)] animate-pulse-glow">
+          <div className={`card p-4 border-2 transition-colors ${
+            pausado
+              ? 'border-[var(--color-text-subtle)] bg-[var(--color-surface-2)]'
+              : 'border-[var(--color-accent)] bg-[var(--color-accent-subtle)] animate-pulse-glow'
+          }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[var(--color-accent)] flex items-center justify-center">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                  pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-[var(--color-accent)]'
+                }`}>
                   <Clock size={18} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-[var(--color-text)] font-semibold text-sm">
-                    Treino em andamento
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[var(--color-text)] font-bold text-sm">
+                      {pausado ? 'Treino Pausado' : 'Treino em andamento'}
+                    </p>
+                    <span className={`px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold tabular-nums transition-colors ${
+                      pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-[var(--color-accent)]'
+                    }`}>
+                      {formatarTempo(cronometroGeralSegundos)}
+                    </span>
+                  </div>
                   <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
-                    {sessaoAtiva.planoNome}
+                    {exercicioAtual ? exercicioAtual.exercicioNome : sessaoAtiva.planoNome}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-[var(--color-accent)] font-semibold text-sm">
+              <div className={`flex items-center gap-2 font-semibold text-sm transition-colors ${
+                pausado ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-accent)]'
+              }`}>
                 Continuar <ChevronRight size={16} />
               </div>
             </div>
