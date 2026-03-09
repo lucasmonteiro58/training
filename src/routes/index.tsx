@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useAuthStore, useHistoricoStore } from '../stores'
 import { useHistorico } from '../hooks/useHistorico'
 import { usePlanos } from '../hooks/usePlanos'
@@ -9,6 +9,41 @@ import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus } from 'lu
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
+
+function PlanoCard({ plano }: { plano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] } }) {
+  const navigate = useNavigate()
+
+  return (
+    <Link to="/treinos/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
+      <div className="card p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: plano.cor ?? '#6366f1' }}
+          >
+            <Dumbbell size={18} className="text-white" />
+          </div>
+          <div>
+            <p className="text-[var(--color-text)] font-semibold text-sm">{plano.nome}</p>
+            <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+              {plano.exercicios.length} exercícios
+            </p>
+          </div>
+        </div>
+        <button
+          className="w-9 h-9 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            navigate({ to: '/treino-ativo/$planoId', params: { planoId: plano.id } })
+          }}
+        >
+          <Play size={14} className="text-white ml-0.5" />
+        </button>
+      </div>
+    </Link>
+  )
+}
 
 function HomePage() {
   const user = useAuthStore((s) => s.user)
@@ -169,29 +204,7 @@ function HomePage() {
         ) : (
           <div className="flex flex-col gap-2">
             {planosAtivos.slice(0, 3).map((plano) => (
-              <Link key={plano.id} to="/treinos/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
-                <div className="card p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ background: plano.cor ?? '#6366f1' }}
-                    >
-                      <Dumbbell size={18} className="text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[var(--color-text)] font-semibold text-sm">{plano.nome}</p>
-                      <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
-                        {plano.exercicios.length} exercícios
-                      </p>
-                    </div>
-                  </div>
-                  <Link to="/treino-ativo/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
-                    <button className="w-9 h-9 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors">
-                      <Play size={14} className="text-white ml-0.5" />
-                    </button>
-                  </Link>
-                </div>
-              </Link>
+              <PlanoCard key={plano.id} plano={plano} />
             ))}
           </div>
         )}

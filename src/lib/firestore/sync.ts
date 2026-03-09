@@ -10,6 +10,19 @@ import {
   limit,
   getDocs,
 } from 'firebase/firestore'
+
+// Firestore rejects `undefined` field values – strip them recursively
+function stripUndefined<T>(obj: T): T {
+  if (Array.isArray(obj)) return obj.map(stripUndefined) as unknown as T
+  if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, stripUndefined(v)])
+    ) as T
+  }
+  return obj
+}
 import { db } from '../firebase'
 import { salvarPlano, salvarSessao, salvarExercicioPersonalizado } from '../db/dexie'
 import type { PlanoDeTreino, SessaoDeTreino, Exercicio } from '../../types'
@@ -20,10 +33,7 @@ import type { PlanoDeTreino, SessaoDeTreino, Exercicio } from '../../types'
 export async function syncPlanoParaFirestore(plano: PlanoDeTreino): Promise<void> {
   try {
     const ref = doc(db, 'planos', plano.id)
-    await setDoc(ref, {
-      ...plano,
-      syncedAt: Date.now(),
-    })
+    await setDoc(ref, stripUndefined({ ...plano, syncedAt: Date.now() }))
     // Atualiza local com syncedAt
     await salvarPlano({ ...plano, syncedAt: Date.now() })
   } catch (err) {
@@ -61,9 +71,10 @@ export function subscribeToPlanos(
       callback(planos)
     },
     (err) => {
-      console.error('Erro no subscribe de Planos:', err)
-      if (err.code === 'failed-precondition') {
-        console.warn('Dica: Você provavelmente precisa criar um índice no Console do Firebase. Verifique o log acima para o link.')
+      if (err.code === 'permission-denied') {
+        console.warn('Acesso negado ao Firestore (Planos). Verifique as Security Rules.')
+      } else {
+        console.error('Erro no subscribe de Planos:', err)
       }
     }
   )
@@ -77,10 +88,7 @@ export function subscribeToPlanos(
 export async function syncSessaoParaFirestore(sessao: SessaoDeTreino): Promise<void> {
   try {
     const ref = doc(db, 'sessoes', sessao.id)
-    await setDoc(ref, {
-      ...sessao,
-      syncedAt: Date.now(),
-    })
+    await setDoc(ref, stripUndefined({ ...sessao, syncedAt: Date.now() }))
     await salvarSessao({ ...sessao, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar sessão:', err)
@@ -119,7 +127,11 @@ export function subscribeToSessoes(
       callback(sessoes)
     },
     (err) => {
-      console.error('Erro no subscribe de Sessões:', err)
+      if (err.code === 'permission-denied') {
+        console.warn('Acesso negado ao Firestore (Sessões).')
+      } else {
+        console.error('Erro no subscribe de Sessões:', err)
+      }
     }
   )
 
@@ -159,7 +171,11 @@ export function subscribeToProgressoTreino(
       }
     },
     (err) => {
-      console.error('Erro no subscribe de Progresso Treino:', err)
+      if (err.code === 'permission-denied') {
+        console.warn('Acesso negado ao Firestore (Treino Ativo).')
+      } else {
+        console.error('Erro no subscribe de Progresso Treino:', err)
+      }
     }
   )
 }
