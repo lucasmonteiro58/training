@@ -25,6 +25,9 @@ import {
   Search,
   ExternalLink,
   Zap,
+  Share2,
+  Trophy,
+  Copy,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/treino-ativo/$planoId')({
@@ -55,6 +58,8 @@ function TreinoAtivoPage() {
   useEffect(() => { setApplyAll(null) }, [exercicioAtualIndex])
   const [finalizando, setFinalizando] = useState(false)
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
+  const [relatorio, setRelatorio] = useState<SessaoDeTreino | null>(null)
+  const [copiado, setCopiado] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
 
@@ -174,8 +179,46 @@ function TreinoAtivoPage() {
     limparNotificacoesTreino()
     if (sessaoFinalizada) {
       await salvarSessaoCompleta(sessaoFinalizada)
+      setShowConfirmFinalizar(false)
+      setRelatorio(sessaoFinalizada)
+    } else {
+      navigate({ to: '/historico' })
     }
-    navigate({ to: '/historico' })
+    setFinalizando(false)
+  }
+
+  const gerarTextoRelatorio = (s: SessaoDeTreino): string => {
+    const data = new Date(s.iniciadoEm).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+    const duracao = s.duracaoSegundos ? formatarTempo(s.duracaoSegundos) : '–'
+    const volume = s.volumeTotal ? `${Math.round(s.volumeTotal)} kg` : '–'
+    const totalSeries = s.exercicios.reduce((acc, ex) => acc + ex.series.filter(sr => sr.completada).length, 0)
+    const linhas = [
+      `🏋️ *${s.planoNome}* — ${data}`,
+      `⏱ Duração: ${duracao}  |  📦 Volume: ${volume}  |  ✅ Séries: ${totalSeries}`,
+      '',
+      ...s.exercicios.map((ex) => {
+        const seriesOk = ex.series.filter(sr => sr.completada)
+        if (!seriesOk.length) return null
+        const resumo = seriesOk.map((sr, i) => `  ${i + 1}. ${sr.peso ?? 0}kg × ${sr.repeticoes ?? 0} reps`).join('\n')
+        return `*${ex.exercicioNome}*\n${resumo}`
+      }).filter(Boolean),
+      '',
+      '💪 Gerado pelo Training App',
+    ]
+    return linhas.join('\n')
+  }
+
+  const handleCompartilhar = async (s: SessaoDeTreino) => {
+    const texto = gerarTextoRelatorio(s)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Treino: ${s.planoNome}`, text: texto })
+        return
+      } catch { /* user cancelled */ }
+    }
+    await navigator.clipboard.writeText(texto)
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2500)
   }
 
   if (!plano || !sessao || !exercicioAtual) {
@@ -572,6 +615,78 @@ function TreinoAtivoPage() {
                 Continuar Treinando
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modal de Relatório pós-treino ──────────────────────────── */}
+      {relatorio && (
+        <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--color-bg)] overflow-y-auto">
+          {/* Header */}
+          <div className="flex flex-col items-center pt-10 pb-6 px-6 text-center">
+            <div className="w-20 h-20 rounded-3xl bg-[rgba(34,197,94,0.15)] flex items-center justify-center mb-4">
+              <Trophy size={36} className="text-[var(--color-success)]" />
+            </div>
+            <h1 className="text-2xl font-bold text-text">Treino Concluído!</h1>
+            <p className="text-text-muted text-sm mt-1">{relatorio.planoNome}</p>
+            <p className="text-text-subtle text-xs mt-0.5 capitalize">
+              {new Date(relatorio.iniciadoEm).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 px-4 mb-6">
+            {[
+              { label: 'Duração', value: relatorio.duracaoSegundos ? formatarTempo(relatorio.duracaoSegundos) : '–' },
+              { label: 'Volume (kg)', value: relatorio.volumeTotal ? Math.round(relatorio.volumeTotal) : '–' },
+              { label: 'Séries ✓', value: relatorio.exercicios.reduce((a, ex) => a + ex.series.filter(s => s.completada).length, 0) },
+            ].map((stat, i) => (
+              <div key={i} className="card p-3 text-center">
+                <p className="text-xl font-bold text-text">{stat.value}</p>
+                <p className="text-[10px] text-text-muted mt-0.5">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Exercícios */}
+          <div className="flex flex-col gap-2 px-4 mb-6">
+            {relatorio.exercicios.map((ex) => {
+              const seriesOk = ex.series.filter(s => s.completada)
+              return (
+                <div key={ex.exercicioId} className="card p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-semibold text-sm text-text">{ex.exercicioNome}</p>
+                    <span className="text-xs text-text-muted">{seriesOk.length}/{ex.series.length} séries</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {seriesOk.map((sr, i) => (
+                      <span key={i} className="text-xs bg-surface-2 text-text-muted px-2 py-0.5 rounded-lg">
+                        {sr.peso ?? 0}kg × {sr.repeticoes ?? 0}
+                      </span>
+                    ))}
+                    {seriesOk.length === 0 && (
+                      <span className="text-xs text-text-subtle italic">Nenhuma série completada</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Ações */}
+          <div className="flex flex-col gap-3 px-4 pb-10">
+            <button
+              className="btn-primary w-full py-4 flex items-center justify-center gap-2"
+              onClick={() => handleCompartilhar(relatorio)}
+            >
+              {copiado ? <><Copy size={18} /> Copiado!</> : <><Share2 size={18} /> Compartilhar Relatório</>}
+            </button>
+            <button
+              className="btn-ghost w-full py-3"
+              onClick={() => navigate({ to: '/historico' })}
+            >
+              Ver Histórico
+            </button>
           </div>
         </div>
       )}
