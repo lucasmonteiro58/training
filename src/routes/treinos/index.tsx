@@ -24,7 +24,7 @@ function TreinosPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <h1 className="text-2xl font-bold text-[var(--color-text)]">Meus Treinos</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Link to="/treinos/importar" style={{ textDecoration: 'none' }}>
             <button
               className="btn-ghost flex items-center gap-1.5 text-sm"

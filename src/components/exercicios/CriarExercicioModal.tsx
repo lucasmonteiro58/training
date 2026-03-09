@@ -139,7 +139,7 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
                 <SelectContent>
                   <SelectGroup>
                     {gruposExistentes.map(g => (
-                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                      <SelectItem key={g} value={g} className="capitalize">{g}</SelectItem>
                     ))}
                     <SelectSeparator />
                     <SelectItem value="___NOVO___" className="text-accent font-medium">
