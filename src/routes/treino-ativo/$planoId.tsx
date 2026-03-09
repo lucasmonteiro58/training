@@ -168,6 +168,13 @@ function TreinoAtivoPage() {
     atualizarSerie(exercicioAtualIndex, serieIdx, { completada: novaCompletada })
     if (novaCompletada) {
       iniciarDescanso(exercicioAtual.descansoSegundos)
+      // Verifica se todas as séries foram concluídas após este update
+      const todasCompletas = exercicioAtual.series.every((s, i) =>
+        i === serieIdx ? true : s.completada
+      )
+      if (todasCompletas && exercicioAtualIndex < (sessao?.exercicios.length ?? 0) - 1) {
+        setTimeout(() => proximoExercicio(), 800)
+      }
     } else {
       pararDescanso()
     }
