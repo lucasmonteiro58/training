@@ -13,6 +13,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -47,7 +48,8 @@ function NovoPlanoPage() {
   const isDirty = nome.trim() !== '' || descricao.trim() !== '' || exercicios.length > 0 || corSelecionada !== CORES_PLANO[0]
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -277,7 +279,7 @@ function ExercicioNoPlanoCard({
 }) {
   const [expanded, setExpanded] = useState(false)
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: exercicio.id })
 
   const style = {
@@ -327,7 +329,7 @@ function ExercicioNoPlanoCard({
       className={`card p-3 transition-opacity ${isDragging ? 'opacity-50' : 'animate-scale-in'}`}
     >
       <div className="flex items-center gap-3">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1">
+        <div ref={setActivatorNodeRef} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 touch-none select-none">
           <GripVertical size={16} className="text-text-subtle shrink-0" />
         </div>
         {exercicio.exercicio.gifUrl ? (

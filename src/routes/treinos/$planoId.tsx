@@ -10,6 +10,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -39,7 +40,8 @@ function PlanoDetalheComponent() {
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
@@ -258,7 +260,7 @@ function ExercicioDetalheCard({
   onUpdateDescanso: (segundos: number) => void
   onUpdateTipoSerie: (tipo: TipoSerie) => void
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: ex.id })
 
   const style = {
@@ -291,7 +293,7 @@ function ExercicioDetalheCard({
     >
       <div className="flex items-center gap-3">
         {editando && (
-          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1">
+          <div ref={setActivatorNodeRef} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 touch-none select-none">
             <GripVertical size={16} className="text-text-subtle shrink-0" />
           </div>
         )}
