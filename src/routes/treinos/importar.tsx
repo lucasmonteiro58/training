@@ -45,17 +45,23 @@ function ExercicioEditCard({
   const buscarImagem = async () => {
     if (!termoBusca.trim()) return
     setBuscandoImagem(true)
+    setImagensWeb([])
     try {
-      const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(termoBusca + ' exercise')}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`
-      const res = await fetch(url)
+      const apiUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(termoBusca + ' exercise')}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`
+      const res = await fetch(apiUrl)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const pages = data.query?.pages || {}
       const urls = Object.values(pages)
         .map((p: any) => (p as any).imageinfo?.[0]?.url)
         .filter((u: unknown): u is string => typeof u === 'string' && !u.toLowerCase().endsWith('.svg') && !u.toLowerCase().endsWith('.pdf'))
       setImagensWeb(urls)
+      if (urls.length === 0) {
+        toast.info('Nenhuma imagem encontrada. Tente outro termo.')
+      }
     } catch (e) {
       console.error(e)
+      toast.error('Erro ao buscar imagens. Verifique sua conexão.')
     } finally {
       setBuscandoImagem(false)
     }
@@ -182,8 +188,10 @@ function ExercicioEditCard({
                 onKeyDown={e => e.key === 'Enter' && buscarImagem()}
                 placeholder="Ex: bench press"
               />
-              <button onClick={buscarImagem} disabled={buscandoImagem} className="btn-secondary px-4">
-                <Search size={16} />
+              <button onClick={buscarImagem} disabled={buscandoImagem} className="btn-secondary px-4 shrink-0">
+                {buscandoImagem
+                  ? <RefreshCw size={16} className="animate-spin" />
+                  : <Search size={16} />}
               </button>
             </div>
 
