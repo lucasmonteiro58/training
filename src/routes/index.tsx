@@ -105,7 +105,7 @@ function HomePage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-[var(--color-text)] font-bold text-sm">
-                      {pausado ? 'Treino Pausado' : 'Treino em andamento'}
+                      {pausado ? 'Treino Pausado' : 'Treino Ativo'}
                     </p>
                     <span className={`px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold tabular-nums transition-colors ${
                       pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-[var(--color-accent)]'
