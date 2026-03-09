@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from 'firebase/auth'
 import type { PlanoDeTreino, SessaoDeTreino } from '../types'
+import { syncProgressoTreinoParaFirestore, limparProgressoTreinoFirestore } from '../lib/firestore/sync'
 
 // ============================================================
 // Auth Store
@@ -103,6 +104,18 @@ export interface TreinoAtivoStoreState {
   atualizarCronometroGeral: (segundos: number) => void
 }
 
+const syncAtivo = (state: TreinoAtivoStoreState) => {
+  if (state.iniciado && state.sessao?.userId && state.sessao) {
+    syncProgressoTreinoParaFirestore(state.sessao.userId, {
+      sessao: state.sessao,
+      exercicioAtualIndex: state.exercicioAtualIndex,
+      serieAtualIndex: state.serieAtualIndex,
+      iniciado: state.iniciado,
+      pausado: state.pausado,
+    })
+  }
+}
+
 export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
   persist(
     (set, get) => ({
@@ -118,7 +131,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
       ultimaPausaRecordada: null,
       timestampDescansoFim: null,
 
-      iniciarTreino: (sessao) =>
+      iniciarTreino: (sessao) => {
         set({
           sessao,
           exercicioAtualIndex: 0,
@@ -131,11 +144,14 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           tempoPausadoTotal: 0,
           ultimaPausaRecordada: null,
           timestampDescansoFim: null,
-        }),
+        })
+        syncAtivo(get())
+      },
 
       finalizarTreino: () => {
         const { sessao, cronometroGeralSegundos } = get()
         if (!sessao) return null
+        const userId = sessao.userId
         const finalizada: SessaoDeTreino = {
           ...sessao,
           finalizadoEm: Date.now(),
@@ -153,6 +169,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           ultimaPausaRecordada: null,
           timestampDescansoFim: null,
         })
+        if (userId) limparProgressoTreinoFirestore(userId)
         return finalizada
       },
 
@@ -180,7 +197,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           serieAtualIndex: 0,
         })),
 
-      atualizarSerie: (exercicioIdx, serieIdx, dados) =>
+      atualizarSerie: (exercicioIdx, serieIdx, dados) => {
         set((s) => {
           if (!s.sessao) return {}
           const exercicios = s.sessao.exercicios.map((ex, eIdx) => {
@@ -194,7 +211,9 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
             }
           })
           return { sessao: { ...s.sessao, exercicios } }
-        }),
+        })
+        syncAtivo(get())
+      },
 
       iniciarDescanso: (segundos) =>
         set({

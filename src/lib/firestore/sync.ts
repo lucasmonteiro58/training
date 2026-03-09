@@ -112,6 +112,32 @@ export function subscribeToSessoes(
   return unsubscribe
 }
 
+// ============================
+// Progresso em Tempo Real (Treino Ativo)
+// ============================
+export async function syncProgressoTreinoParaFirestore(
+  userId: string,
+  dados: any
+): Promise<void> {
+  try {
+    const ref = doc(db, 'ativo', userId)
+    await setDoc(ref, {
+      ...dados,
+      updatedAt: Date.now(),
+    })
+  } catch (err) {
+    console.error('Erro ao sincronizar progresso ativo:', err)
+  }
+}
+
+export async function limparProgressoTreinoFirestore(userId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'ativo', userId))
+  } catch (err) {
+    console.error('Erro ao limpar progresso ativo:', err)
+  }
+}
+
 // Busca inicial de sessões (para carregar dados offline rapidamente)
 export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoDeTreino[]> {
   try {
