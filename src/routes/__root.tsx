@@ -95,8 +95,10 @@ function RootComponent() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] h-dvh overflow-hidden relative">
-      <main className="flex-1 overflow-y-auto pt-4">
-        <Outlet />
+      <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top,0)]">
+        <div className="pt-4">
+          <Outlet />
+        </div>
       </main>
       <Toaster position="top-center" richColors />
       <PWAInstallPrompt />
@@ -123,7 +125,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--color-bg)] flex flex-col items-center justify-center px-6 relative overflow-hidden">
+    <div className="min-h-dvh bg-[var(--color-bg)] flex flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top,0)] pb-[max(20px,env(safe-area-inset-bottom,0))] relative overflow-hidden">
       {/* Background gradient orbs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full bg-[var(--color-accent)] opacity-[0.07] blur-[100px]" />
