@@ -1,0 +1,128 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
+import type { Exercicio } from '../../types'
+import { GRUPOS_MUSCULARES } from '../../types'
+import { Search } from 'lucide-react'
+
+export const Route = createFileRoute('/exercicios/')({
+  component: ExerciciosPage,
+})
+
+function ExerciciosPage() {
+  const [exercicios, setExercicios] = useState<Exercicio[]>([])
+  const [filtrados, setFiltrados] = useState<Exercicio[]>([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
+  const [grupo, setGrupo] = useState('')
+  const [selecionado, setSelecionado] = useState<Exercicio | null>(null)
+
+  useEffect(() => {
+    carregarExercicios().then((data) => {
+      setExercicios(data)
+      setFiltrados(data.slice(0, 40))
+      setLoading(false)
+    })
+  }, [])
+
+  useEffect(() => {
+    setFiltrados(buscarExercicios(exercicios, query, grupo || undefined).slice(0, 60))
+  }, [query, grupo, exercicios])
+
+  return (
+    <>
+      <div className="page-container pt-6">
+        <h1 className="text-2xl font-bold text-[var(--color-text)] mb-4 animate-fade-up">
+          Exercícios
+        </h1>
+
+        {/* Search */}
+        <div className="relative mb-3 animate-fade-up" style={{ animationDelay: '50ms' }}>
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" />
+          <input className="input pl-10" placeholder="Buscar por nome ou músculo..."
+            value={query} onChange={(e) => setQuery(e.target.value)} />
+        </div>
+
+        {/* Grupos */}
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 animate-fade-up" style={{ animationDelay: '100ms' }}>
+          {['', ...GRUPOS_MUSCULARES.slice(0, 12)].map((g) => (
+            <button key={g}
+              onClick={() => setGrupo(g)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                grupo === g
+                  ? 'bg-[var(--color-accent)] text-white'
+                  : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
+              }`}>
+              {g || 'Todos'}
+            </button>
+          ))}
+        </div>
+
+        {/* count */}
+        <p className="text-xs text-[var(--color-text-muted)] mb-3">{filtrados.length} exercícios</p>
+
+        {/* Grid */}
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-36 rounded-2xl" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filtrados.map((ex, idx) => (
+              <button key={ex.id} onClick={() => setSelecionado(ex)}
+                className="card p-0 overflow-hidden text-left animate-fade-up"
+                style={{ animationDelay: `${(idx % 6) * 40}ms` }}>
+                {ex.gifUrl ? (
+                  <img src={ex.gifUrl} alt={ex.nome}
+                    className="w-full aspect-square object-contain bg-[var(--color-surface-2)]" loading="lazy" />
+                ) : (
+                  <div className="w-full aspect-square bg-[var(--color-surface-2)] flex items-center justify-center">
+                    <span className="text-4xl">💪</span>
+                  </div>
+                )}
+                <div className="p-2.5">
+                  <p className="text-[var(--color-text)] text-xs font-semibold truncate">{ex.nome}</p>
+                  <p className="text-[var(--color-text-muted)] text-[10px] mt-0.5">{ex.grupoMuscular}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Detail modal */}
+      {selecionado && (
+        <div className="modal-overlay" onClick={() => setSelecionado(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-[var(--color-text)]">{selecionado.nome}</h2>
+                <p className="text-[var(--color-text-muted)] text-sm mt-0.5">{selecionado.grupoMuscular}</p>
+              </div>
+              <button onClick={() => setSelecionado(null)} className="btn-ghost p-2 text-[var(--color-text-muted)]">✕</button>
+            </div>
+            {selecionado.gifUrl && (
+              <img src={selecionado.gifUrl} alt={selecionado.nome}
+                className="w-full max-h-56 object-contain rounded-xl bg-[var(--color-surface-2)] mb-4" />
+            )}
+            {selecionado.equipamento && (
+              <p className="text-xs text-[var(--color-text-muted)] mb-2">
+                <span className="font-semibold">Equipamento:</span> {selecionado.equipamento}
+              </p>
+            )}
+            {selecionado.instrucoes && selecionado.instrucoes.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] mb-2">INSTRUÇÕES</p>
+                <ol className="list-decimal list-inside space-y-1.5">
+                  {selecionado.instrucoes.map((inst, i) => (
+                    <li key={i} className="text-xs text-[var(--color-text-muted)] leading-relaxed">{inst}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}

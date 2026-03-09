@@ -1,0 +1,326 @@
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import { usePlanos } from '../../hooks/usePlanos'
+import { useHistorico } from '../../hooks/useHistorico'
+import { useAuthStore, useTreinoAtivoStore } from '../../stores'
+import {
+  enviarNotificacaoTreino,
+  limparNotificacoesTreino,
+  solicitarPermissaoNotificacao,
+  formatarTempo,
+} from '../../lib/notifications'
+import type { SessaoDeTreino, SerieRegistrada } from '../../types'
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  XCircle,
+  SkipForward,
+  Timer,
+  Pause,
+  Play,
+  Flag,
+  RotateCcw,
+} from 'lucide-react'
+
+export const Route = createFileRoute('/treino-ativo/$planoId')({
+  component: TreinoAtivoPage,
+})
+
+function TreinoAtivoPage() {
+  const { planoId } = Route.useParams()
+  const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
+  const { planos } = usePlanos()
+  const { salvarSessaoCompleta } = useHistorico()
+  const plano = planos.find((p) => p.id === planoId)
+
+  const store = useTreinoAtivoStore()
+  const {
+    sessao, exercicioAtualIndex, cronometroGeralSegundos,
+    cronometroDescansoSegundos, cronometroDescansoAtivo,
+    pausado, iniciado,
+    iniciarTreino, finalizarTreino, pausarTreino, retomar,
+    proximoExercicio, exercicioAnterior, atualizarSerie,
+    iniciarDescanso, pararDescanso, tickGeral, tickDescanso,
+  } = store
+
+  const timerRef = useRef<number | null>(null)
+  const descansoRef = useRef<number | null>(null)
+  const [finalizando, setFinalizando] = useState(false)
+
+  // ─── Iniciar treino se não estiver ativo ───────────────────────────────────
+  useEffect(() => {
+    if (!plano || !user) return
+    // Se já há sessão ativa desse plano, continua
+    if (iniciado && sessao?.planoId === planoId) return
+    // Se há sessão de outro plano ativa, finaliza e começa nova
+    const exerciciosNaSessao = plano.exercicios.map((ex) => ({
+      exercicioId: ex.exercicioId,
+      exercicioNome: ex.exercicio.nome,
+      gifUrl: ex.exercicio.gifUrl,
+      grupoMuscular: ex.exercicio.grupoMuscular,
+      descansoSegundos: ex.descansoSegundos,
+      ordem: ex.ordem,
+      series: Array.from({ length: ex.series }, (_, i) => ({
+        id: uuidv4(),
+        ordem: i,
+        repeticoes: ex.repeticoesMeta,
+        peso: ex.pesoMeta ?? 0,
+        completada: false,
+      } as SerieRegistrada)),
+    }))
+    const novaSessao: SessaoDeTreino = {
+      id: uuidv4(),
+      userId: user.uid,
+      planoId: plano.id,
+      planoNome: plano.nome,
+      iniciadoEm: Date.now(),
+      exercicios: exerciciosNaSessao,
+    }
+    iniciarTreino(novaSessao)
+    solicitarPermissaoNotificacao()
+  }, [plano, user, planoId])
+
+  // ─── Cronômetro geral ──────────────────────────────────────────────────────
+  useEffect(() => {
+    timerRef.current = window.setInterval(() => { tickGeral() }, 1000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [tickGeral])
+
+  // ─── Cronômetro de descanso ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!cronometroDescansoAtivo) {
+      if (descansoRef.current) clearInterval(descansoRef.current)
+      return
+    }
+    descansoRef.current = window.setInterval(() => { tickDescanso() }, 1000)
+    return () => { if (descansoRef.current) clearInterval(descansoRef.current) }
+  }, [cronometroDescansoAtivo, tickDescanso])
+
+  // ─── Notificação ao iniciar descanso ──────────────────────────────────────
+  useEffect(() => {
+    if (cronometroDescansoAtivo && sessao) {
+      const ex = sessao.exercicios[exercicioAtualIndex]
+      enviarNotificacaoTreino(
+        `⏱ Descanso – ${cronometroDescansoSegundos}s`,
+        `Próximo: ${ex?.exercicioNome ?? ''}`,
+      )
+    }
+    if (!cronometroDescansoAtivo) limparNotificacoesTreino()
+  }, [cronometroDescansoAtivo])
+
+  const exercicioAtual = sessao?.exercicios[exercicioAtualIndex]
+  const totalExercicios = sessao?.exercicios.length ?? 0
+  const progresso = totalExercicios ? (exercicioAtualIndex / totalExercicios) * 100 : 0
+
+  const handleCompletarSerie = (serieIdx: number) => {
+    if (!exercicioAtual) return
+    const serie = exercicioAtual.series[serieIdx]
+    const novaCompletada = !serie.completada
+    atualizarSerie(exercicioAtualIndex, serieIdx, { completada: novaCompletada })
+    if (novaCompletada) {
+      iniciarDescanso(exercicioAtual.descansoSegundos)
+    } else {
+      pararDescanso()
+    }
+  }
+
+  const handleFinalizar = async () => {
+    if (!confirm('Finalizar treino e salvar?')) return
+    setFinalizando(true)
+    const sessaoFinalizada = finalizarTreino()
+    limparNotificacoesTreino()
+    if (sessaoFinalizada) {
+      await salvarSessaoCompleta(sessaoFinalizada)
+    }
+    navigate({ to: '/historico' })
+  }
+
+  if (!plano || !sessao || !exercicioAtual) {
+    return (
+      <div className="page-container pt-6 text-center">
+        <p className="text-[var(--color-text-muted)]">Carregando treino...</p>
+      </div>
+    )
+  }
+
+  const seriesCompletadas = exercicioAtual.series.filter((s) => s.completada).length
+
+  return (
+    <div className="flex flex-col min-h-dvh bg-[var(--color-bg)]">
+      {/* ─── Header fixo ───────────────────────────────────────────── */}
+      <div className="px-4 pt-4 pb-2 flex flex-col gap-2">
+        {/* Top bar */}
+        <div className="flex items-center justify-between">
+          <button onClick={() => navigate({ to: '/treinos' })} className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)]">
+            <XCircle size={18} />
+          </button>
+          {/* Timer geral */}
+          <div className="flex items-center gap-2">
+            <Timer size={14} className="text-[var(--color-text-subtle)]" />
+            <span className="timer-sm text-[var(--color-text-muted)]">
+              {formatarTempo(cronometroGeralSegundos)}
+            </span>
+            <button
+              onClick={pausado ? retomar : pausarTreino}
+              className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)]"
+            >
+              {pausado ? <Play size={16} /> : <Pause size={16} />}
+            </button>
+          </div>
+          <button onClick={handleFinalizar} disabled={finalizando}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(34,197,94,0.12)] text-[var(--color-success)] text-sm font-semibold">
+            <Flag size={14} />
+            {finalizando ? '...' : 'Finalizar'}
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="progress-bar">
+          <div className="progress-fill" style={{ width: `${progresso}%` }} />
+        </div>
+
+        {/* Exercise nav */}
+        <div className="flex items-center justify-between py-1">
+          <button onClick={exercicioAnterior} disabled={exercicioAtualIndex === 0}
+            className="btn-ghost p-1.5 disabled:opacity-30">
+            <ChevronLeft size={18} />
+          </button>
+          <div className="text-center">
+            <p className="text-[10px] text-[var(--color-text-subtle)] font-medium">
+              {exercicioAtualIndex + 1} / {totalExercicios}
+            </p>
+            <p className="text-[var(--color-text)] font-bold text-sm">
+              {exercicioAtual.exercicioNome}
+            </p>
+            <p className="text-[10px] text-[var(--color-text-muted)]">
+              {exercicioAtual.grupoMuscular}
+            </p>
+          </div>
+          <button onClick={proximoExercicio} disabled={exercicioAtualIndex === totalExercicios - 1}
+            className="btn-ghost p-1.5 disabled:opacity-30">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* ─── GIF do exercício ──────────────────────────────────────── */}
+      <div className="px-4 mb-4">
+        {exercicioAtual.gifUrl ? (
+          <div className="aspect-[16/9] max-h-48 rounded-2xl overflow-hidden bg-[var(--color-surface)]">
+            <img
+              src={exercicioAtual.gifUrl}
+              alt={exercicioAtual.exercicioNome}
+              className="w-full h-full object-contain"
+            />
+          </div>
+        ) : (
+          <div className="h-24 rounded-2xl bg-[var(--color-surface)] flex items-center justify-center">
+            <span className="text-5xl">💪</span>
+          </div>
+        )}
+      </div>
+
+      {/* ─── Cronômetro de descanso ────────────────────────────────── */}
+      {cronometroDescansoAtivo && (
+        <div className="mx-4 mb-4 card p-4 border-[var(--color-accent)] bg-[var(--color-accent-subtle)] animate-scale-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-[var(--color-text-muted)] font-medium">DESCANSO</p>
+              <p className="timer-display text-[var(--color-accent)]">
+                {formatarTempo(cronometroDescansoSegundos)}
+              </p>
+            </div>
+            <button onClick={pararDescanso}
+              className="btn-ghost flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
+              <SkipForward size={16} />
+              Pular
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Tabela de séries ──────────────────────────────────────── */}
+      <div className="flex-1 px-4 pb-4 overflow-y-auto">
+        {/* Header */}
+        <div className="grid grid-cols-[32px_1fr_1fr_40px] gap-2 px-3 mb-1">
+          {['#', 'Peso (kg)', 'Reps', ''].map((h, i) => (
+            <span key={i} className="text-[10px] text-[var(--color-text-subtle)] font-semibold text-center">{h}</span>
+          ))}
+        </div>
+
+        <div className="flex flex-col">
+          {exercicioAtual.series.map((serie, sIdx) => (
+            <div
+              key={serie.id}
+              className={`set-row ${serie.completada ? 'completed' : ''}`}
+            >
+              {/* Número da série */}
+              <span className={`text-sm font-bold text-center ${serie.completada ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
+                {sIdx + 1}
+              </span>
+
+              {/* Peso */}
+              <input
+                type="number"
+                className="set-input"
+                value={serie.peso || ''}
+                placeholder="0"
+                onChange={(e) =>
+                  atualizarSerie(exercicioAtualIndex, sIdx, { peso: parseFloat(e.target.value) || 0 })
+                }
+              />
+
+              {/* Reps */}
+              <input
+                type="number"
+                className="set-input"
+                value={serie.repeticoes || ''}
+                placeholder="0"
+                onChange={(e) =>
+                  atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: parseInt(e.target.value) || 0 })
+                }
+              />
+
+              {/* Check */}
+              <button
+                onClick={() => handleCompletarSerie(sIdx)}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                  serie.completada
+                    ? 'bg-[var(--color-success)] text-white'
+                    : 'bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] hover:bg-[rgba(34,197,94,0.15)] hover:text-[var(--color-success)]'
+                }`}
+              >
+                <CheckCircle size={17} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Progresso séries */}
+        <div className="mt-4 text-center">
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {seriesCompletadas}/{exercicioAtual.series.length} séries completadas
+          </p>
+          <div className="progress-bar mt-2">
+            <div className="progress-fill"
+              style={{ width: `${exercicioAtual.series.length ? (seriesCompletadas / exercicioAtual.series.length) * 100 : 0}%` }} />
+          </div>
+        </div>
+
+        {/* Próximo exercício */}
+        {exercicioAtualIndex < totalExercicios - 1 && (
+          <button
+            onClick={proximoExercicio}
+            className="mt-4 w-full btn-secondary flex items-center justify-center gap-2"
+          >
+            <SkipForward size={16} />
+            Próximo: {sessao.exercicios[exercicioAtualIndex + 1]?.exercicioNome}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
