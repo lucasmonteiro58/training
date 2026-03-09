@@ -246,19 +246,23 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         syncAtivo(get())
       },
 
-      iniciarDescanso: (segundos) =>
+      iniciarDescanso: (segundos) => {
         set({
           cronometroDescansoSegundos: segundos,
           cronometroDescansoAtivo: true,
           timestampDescansoFim: Date.now() + segundos * 1000,
-        }),
+        })
+        syncAtivo(get())
+      },
 
-      pararDescanso: () =>
+      pararDescanso: () => {
         set({
           cronometroDescansoAtivo: false,
           cronometroDescansoSegundos: 0,
           timestampDescansoFim: null,
-        }),
+        })
+        syncAtivo(get())
+      },
 
       tickGeral: () =>
         set((s) => {

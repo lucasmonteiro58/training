@@ -86,10 +86,8 @@ function RootComponent() {
         return
       }
 
-      // Mesma sessão → sincroniza estado incremental (pause, série, exercício)
-      if (state.sessao?.id === dados.sessao?.id) {
-        state.sincronizarEstadoExterno(dados)
-      }
+      // Treino ativo nos dois lados → sincroniza sempre (cobre conflito de sessão e pausa/retomada)
+      state.sincronizarEstadoExterno(dados)
     })
 
     return unsub
