@@ -525,7 +525,7 @@ function ImportarCsvPage() {
   const planosValidos = planos?.filter(p => p.nome.trim() && p.exercicios.length > 0) ?? []
 
   return (
-    <div className="page-container pt-4 pb-32">
+    <div className="page-container pt-4 pb-[450px]">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 animate-fade-up">
         <button
@@ -654,7 +654,7 @@ function ImportarCsvPage() {
 
       {/* Sticky save button */}
       {planos && !sucesso && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--color-bg)]/90 backdrop-blur border-t border-[var(--color-border)] z-50">
+        <div className="fixed left-0 right-0 p-4 bg-[var(--color-bg)]/90 backdrop-blur border-t border-[var(--color-border)] z-[60]" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <button
             onClick={salvar}
             disabled={planosValidos.length === 0 || salvando}

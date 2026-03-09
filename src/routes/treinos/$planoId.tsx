@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { usePlanos } from '../../hooks/usePlanos'
-import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown, Search, RefreshCw } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
+import { GRUPOS_MUSCULARES } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
+import { toast } from 'sonner'
 import {
   DndContext,
   closestCenter,
@@ -76,6 +78,14 @@ function PlanoDetalheComponent() {
         const novas = base.map((s, i) => (i === sIdx ? { ...s, ...campo } : s))
         return { ...ex, seriesDetalhadas: novas }
       })
+    )
+  }
+
+  const atualizarExercicioEdit = (exId: string, campos: Partial<ExercicioNoPlano['exercicio']>) => {
+    setExerciciosEdit((prev) =>
+      prev.map((ex) =>
+        ex.id === exId ? { ...ex, exercicio: { ...ex.exercicio, ...campos } } : ex
+      )
     )
   }
 
@@ -184,6 +194,7 @@ function PlanoDetalheComponent() {
                       onUpdateSerie={(sIdx, campo) => atualizarSerieEdit(ex.id, sIdx, campo)}
                       onUpdateDescanso={(s) => atualizarDescansoEdit(ex.id, s)}
                       onUpdateTipoSerie={(tipo) => atualizarTipoSerieEdit(ex.id, tipo)}
+                      onUpdateExercicio={(campos) => atualizarExercicioEdit(ex.id, campos)}
                     />
                   ))}
                 </div>
@@ -202,6 +213,7 @@ function PlanoDetalheComponent() {
                   onUpdateSerie={() => {}}
                   onUpdateDescanso={() => {}}
                   onUpdateTipoSerie={() => {}}
+                  onUpdateExercicio={() => {}}
                 />
               ))}
             </div>
@@ -250,6 +262,7 @@ function ExercicioDetalheCard({
   onUpdateSerie,
   onUpdateDescanso,
   onUpdateTipoSerie,
+  onUpdateExercicio,
 }: {
   ex: ExercicioNoPlano
   editando: boolean
@@ -259,7 +272,36 @@ function ExercicioDetalheCard({
   onUpdateSerie: (sIdx: number, campo: Partial<SeriePlano>) => void
   onUpdateDescanso: (segundos: number) => void
   onUpdateTipoSerie: (tipo: TipoSerie) => void
+  onUpdateExercicio: (campos: Partial<ExercicioNoPlano['exercicio']>) => void
 }) {
+  const [buscandoImagem, setBuscandoImagem] = useState(false)
+  const [imagensWeb, setImagensWeb] = useState<string[]>([])
+  const [termoBusca, setTermoBusca] = useState(ex.exercicio.nome)
+
+  const buscarImagem = async () => {
+    if (!termoBusca.trim()) return
+    setBuscandoImagem(true)
+    setImagensWeb([])
+    try {
+      const key = import.meta.env.VITE_GIPHY_API_KEY
+      if (!key) {
+        toast.error('Chave da API Giphy não configurada.')
+        return
+      }
+      const apiUrl = `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(termoBusca + ' exercise')}&limit=12&rating=g`
+      const res = await fetch(apiUrl)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      const urls: string[] = (data.data ?? []).map((gif: any) => gif?.images?.original?.url ?? gif?.images?.downsized?.url).filter(Boolean)
+      setImagensWeb(urls)
+      if (urls.length === 0) toast.info('Nenhuma imagem encontrada. Tente outro termo.')
+    } catch (e) {
+      console.error(e)
+      toast.error('Erro ao buscar imagens.')
+    } finally {
+      setBuscandoImagem(false)
+    }
+  }
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: ex.id })
 
@@ -326,7 +368,81 @@ function ExercicioDetalheCard({
       </div>
 
       {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-border space-y-2">
+        <div className="mt-3 pt-3 border-t border-border space-y-3">
+
+          {/* Nome */}
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1 px-1">NOME</label>
+            <input
+              className="input text-sm w-full"
+              value={ex.exercicio.nome}
+              onChange={e => onUpdateExercicio({ nome: e.target.value })}
+            />
+          </div>
+
+          {/* Grupo muscular */}
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1 px-1">GRUPO MUSCULAR</label>
+            <select
+              className="input text-sm w-full"
+              value={ex.exercicio.grupoMuscular}
+              onChange={e => onUpdateExercicio({ grupoMuscular: e.target.value })}
+            >
+              {GRUPOS_MUSCULARES.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+
+          {/* Busca de imagem */}
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1 px-1">BUSCAR IMAGEM (WEB)</label>
+            <div className="flex gap-2">
+              <input
+                className="input flex-1 text-sm"
+                value={termoBusca}
+                onChange={e => setTermoBusca(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && buscarImagem()}
+                placeholder="Ex: bench press"
+              />
+              <button onClick={buscarImagem} disabled={buscandoImagem} className="btn-secondary px-3 shrink-0">
+                {buscandoImagem ? <RefreshCw size={15} className="animate-spin" /> : <Search size={15} />}
+              </button>
+            </div>
+            {imagensWeb.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-2 p-2 bg-surface-2 rounded-xl max-h-44 overflow-y-auto">
+                {imagensWeb.map((url, i) => (
+                  <button
+                    key={i}
+                    onClick={() => onUpdateExercicio({ gifUrl: url })}
+                    className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
+                      ex.exercicio.gifUrl === url ? 'border-accent opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={url} className="w-full h-full object-cover" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="mt-2">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-text-subtle block mb-1 px-1">URL MANUAL</label>
+              <div className="flex gap-2 items-start">
+                <input
+                  className="input text-sm flex-1"
+                  placeholder="https://exemplo.com/exercicio.gif"
+                  value={ex.exercicio.gifUrl ?? ''}
+                  onChange={e => onUpdateExercicio({ gifUrl: e.target.value || undefined })}
+                />
+                {ex.exercicio.gifUrl && (
+                  <img
+                    src={ex.exercicio.gifUrl}
+                    alt={ex.exercicio.nome}
+                    className="w-12 h-12 rounded-xl object-cover shrink-0 bg-surface-2"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Modo (tipoSerie) */}
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle">Modo</span>
