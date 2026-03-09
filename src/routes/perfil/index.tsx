@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from '../../hooks/useAuth'
 import { useHistoricoStore, usePlanosStore } from '../../stores'
 import { formatarTempo } from '../../lib/notifications'
-import { LogOut, User, Dumbbell, History, TrendingUp, Bell, Info } from 'lucide-react'
+import { LogOut, User, Dumbbell, History, TrendingUp, Bell, Info, ChevronRight } from 'lucide-react'
 import { solicitarPermissaoNotificacao } from '../../lib/notifications'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -76,6 +76,19 @@ function PerfilPage() {
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Veja todos os seus treinos passados</p>
           </div>
           <History size={16} className="text-[var(--color-text-subtle)]" />
+        </Link>
+
+        <div className="mx-4 h-px bg-[var(--color-border)] opacity-20" />
+
+        <Link to="/perfil/evolucao" className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--color-surface-2)] rounded-xl transition-colors text-left" style={{ textDecoration: 'none' }}>
+          <div className="w-9 h-9 rounded-xl bg-[rgba(34,197,94,0.12)] flex items-center justify-center">
+            <TrendingUp size={18} className="text-green-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[var(--color-text)]">Evolução de Peso</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Gráficos de progresso por exercício</p>
+          </div>
+          <ChevronRight size={16} className="text-[var(--color-text-subtle)]" />
         </Link>
 
         <div className="mx-4 h-px bg-[var(--color-border)] opacity-20" />

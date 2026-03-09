@@ -19,6 +19,7 @@ import { Route as TreinosNovoRouteImport } from './routes/treinos/novo'
 import { Route as TreinosImportarRouteImport } from './routes/treinos/importar'
 import { Route as TreinosPlanoIdRouteImport } from './routes/treinos/$planoId'
 import { Route as TreinoAtivoPlanoIdRouteImport } from './routes/treino-ativo/$planoId'
+import { Route as PerfilEvolucaoRouteImport } from './routes/perfil/evolucao'
 import { Route as HistoricoSessaoIdRouteImport } from './routes/historico/$sessaoId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const TreinoAtivoPlanoIdRoute = TreinoAtivoPlanoIdRouteImport.update({
   path: '/treino-ativo/$planoId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilEvolucaoRoute = PerfilEvolucaoRouteImport.update({
+  id: '/perfil/evolucao',
+  path: '/perfil/evolucao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HistoricoSessaoIdRoute = HistoricoSessaoIdRouteImport.update({
   id: '/historico/$sessaoId',
   path: '/historico/$sessaoId',
@@ -80,6 +86,7 @@ const HistoricoSessaoIdRoute = HistoricoSessaoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
+  '/perfil/evolucao': typeof PerfilEvolucaoRoute
   '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
   '/treinos/$planoId': typeof TreinosPlanoIdRoute
   '/treinos/importar': typeof TreinosImportarRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
+  '/perfil/evolucao': typeof PerfilEvolucaoRoute
   '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
   '/treinos/$planoId': typeof TreinosPlanoIdRoute
   '/treinos/importar': typeof TreinosImportarRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
+  '/perfil/evolucao': typeof PerfilEvolucaoRoute
   '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
   '/treinos/$planoId': typeof TreinosPlanoIdRoute
   '/treinos/importar': typeof TreinosImportarRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/historico/$sessaoId'
+    | '/perfil/evolucao'
     | '/treino-ativo/$planoId'
     | '/treinos/$planoId'
     | '/treinos/importar'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/historico/$sessaoId'
+    | '/perfil/evolucao'
     | '/treino-ativo/$planoId'
     | '/treinos/$planoId'
     | '/treinos/importar'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/historico/$sessaoId'
+    | '/perfil/evolucao'
     | '/treino-ativo/$planoId'
     | '/treinos/$planoId'
     | '/treinos/importar'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoricoSessaoIdRoute: typeof HistoricoSessaoIdRoute
+  PerfilEvolucaoRoute: typeof PerfilEvolucaoRoute
   TreinoAtivoPlanoIdRoute: typeof TreinoAtivoPlanoIdRoute
   TreinosPlanoIdRoute: typeof TreinosPlanoIdRoute
   TreinosImportarRoute: typeof TreinosImportarRoute
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TreinoAtivoPlanoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil/evolucao': {
+      id: '/perfil/evolucao'
+      path: '/perfil/evolucao'
+      fullPath: '/perfil/evolucao'
+      preLoaderRoute: typeof PerfilEvolucaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/historico/$sessaoId': {
       id: '/historico/$sessaoId'
       path: '/historico/$sessaoId'
@@ -258,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoricoSessaoIdRoute: HistoricoSessaoIdRoute,
+  PerfilEvolucaoRoute: PerfilEvolucaoRoute,
   TreinoAtivoPlanoIdRoute: TreinoAtivoPlanoIdRoute,
   TreinosPlanoIdRoute: TreinosPlanoIdRoute,
   TreinosImportarRoute: TreinosImportarRoute,
