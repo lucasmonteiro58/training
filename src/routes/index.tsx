@@ -4,6 +4,7 @@ import { useHistorico } from '../hooks/useHistorico'
 import { usePlanos } from '../hooks/usePlanos'
 import { useTreinoAtivoStore } from '../stores'
 import { formatarTempo } from '../lib/notifications'
+import { useIniciarTreino } from '../hooks/useIniciarTreino'
 import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus, Zap } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
@@ -11,41 +12,45 @@ export const Route = createFileRoute('/')({
 })
 
 function PlanoCard({ plano }: { plano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] } }) {
-  const navigate = useNavigate()
+  const { handleIniciar, modal } = useIniciarTreino()
 
   return (
-    <Link to="/treinos/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
-      <div className="card p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: plano.cor ?? '#6366f1' }}
+    <>
+      <Link to="/treinos/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
+        <div className="card p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: plano.cor ?? '#6366f1' }}
+            >
+              <Dumbbell size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="text-[var(--color-text)] font-semibold text-sm">{plano.nome}</p>
+              <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+                {plano.exercicios.length} exercícios
+              </p>
+            </div>
+          </div>
+          <button
+            className="w-9 h-9 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleIniciar(plano.id)
+            }}
           >
-            <Dumbbell size={18} className="text-white" />
-          </div>
-          <div>
-            <p className="text-[var(--color-text)] font-semibold text-sm">{plano.nome}</p>
-            <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
-              {plano.exercicios.length} exercícios
-            </p>
-          </div>
+            <Play size={14} className="text-white ml-0.5" />
+          </button>
         </div>
-        <button
-          className="w-9 h-9 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            navigate({ to: '/treino-ativo/$planoId', params: { planoId: plano.id } })
-          }}
-        >
-          <Play size={14} className="text-white ml-0.5" />
-        </button>
-      </div>
-    </Link>
+      </Link>
+      {modal}
+    </>
   )
 }
 
 function HomePage() {
+  const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const { planosAtivos, loading } = usePlanos()
   const { sessoes } = useHistorico()
@@ -54,6 +59,7 @@ function HomePage() {
   const exercicioAtualIndex = useTreinoAtivoStore((s) => s.exercicioAtualIndex)
   const pausado = useTreinoAtivoStore((s) => s.pausado)
   const cronometroGeralSegundos = useTreinoAtivoStore((s) => s.cronometroGeralSegundos)
+  const { handleIniciar, modal: modalProximo } = useIniciarTreino()
 
   const nome = user?.displayName?.split(' ')[0] ?? 'Atleta'
   const hora = new Date().getHours()
@@ -197,38 +203,41 @@ function HomePage() {
 
       {/* Próximo Treino */}
       {!treinoAtivo && proximoPlano && (
-        <div className="mb-6 animate-fade-up" style={{ animationDelay: '125ms' }}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-[var(--color-text)]">Próximo Treino</h2>
-            {ultimaSessao && (
-              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
-                baseado no último concluído
-              </span>
-            )}
-          </div>
-          <div className="card p-4 flex items-center justify-between border border-[var(--color-accent)]/30">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                style={{ background: proximoPlano.cor ?? '#6366f1' }}
-              >
-                <Zap size={20} className="text-white" />
-              </div>
-              <div>
-                <p className="text-[var(--color-text)] font-bold text-sm">{proximoPlano.nome}</p>
-                <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
-                  {proximoPlano.exercicios.length} exercícios
-                </p>
-              </div>
+        <>
+          <div className="mb-6 animate-fade-up" style={{ animationDelay: '125ms' }}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-[var(--color-text)]">Próximo Treino</h2>
+              {ultimaSessao && (
+                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
+                  baseado no último concluído
+                </span>
+              )}
             </div>
-            <button
-              className="flex items-center gap-1.5 bg-[var(--color-accent)] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[var(--color-accent-hover)] active:scale-95 transition-all"
-              onClick={() => navigate({ to: '/treino-ativo/$planoId', params: { planoId: proximoPlano.id } })}
-            >
-              <Play size={14} className="ml-0.5" /> Iniciar
-            </button>
+            <div className="card p-4 flex items-center justify-between border border-[var(--color-accent)]/30">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{ background: proximoPlano.cor ?? '#6366f1' }}
+                >
+                  <Zap size={20} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-[var(--color-text)] font-bold text-sm">{proximoPlano.nome}</p>
+                  <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+                    {proximoPlano.exercicios.length} exercícios
+                  </p>
+                </div>
+              </div>
+              <button
+                className="flex items-center gap-1.5 bg-[var(--color-accent)] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[var(--color-accent-hover)] active:scale-95 transition-all"
+                onClick={() => handleIniciar(proximoPlano.id)}
+              >
+                <Play size={14} className="ml-0.5" /> Iniciar
+              </button>
+            </div>
           </div>
-        </div>
+          {modalProximo}
+        </>
       )}
 
       {/* Meus Planos */}

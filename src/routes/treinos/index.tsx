@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { usePlanos } from '../../hooks/usePlanos'
 import { Dumbbell, Plus, FileUp, Play, ChevronRight, Trash2, Archive, ArchiveRestore, GripVertical, ArrowUpDown } from 'lucide-react'
 import { useState } from 'react'
+import { useIniciarTreino } from '../../hooks/useIniciarTreino'
 import {
   DndContext,
   PointerSensor,
@@ -42,6 +43,7 @@ function PlanoSortableCard({
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: plano.id })
   const navigate = useNavigate()
+  const { handleIniciar, modal } = useIniciarTreino()
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -89,11 +91,12 @@ function PlanoSortableCard({
 
         {!reordenando && (
           <div className="flex items-center gap-1 flex-shrink-0">
-            <Link to="/treino-ativo/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
-              <button className="w-10 h-10 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors">
-                <Play size={14} className="text-white ml-0.5" />
-              </button>
-            </Link>
+            <button
+              className="w-10 h-10 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
+              onClick={() => handleIniciar(plano.id)}
+            >
+              <Play size={14} className="text-white ml-0.5" />
+            </button>
             <button
               className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-subtle)] hover:text-[var(--color-accent)] hover:bg-[rgba(99,102,241,0.1)] transition-colors"
               onClick={() => onArchive(plano.id)}
@@ -121,6 +124,7 @@ function PlanoSortableCard({
         </div>
       )}
     </div>
+    {modal}
   )
 }
 

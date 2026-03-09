@@ -7,6 +7,7 @@ import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
 import { GRUPOS_MUSCULARES } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
 import { toast } from 'sonner'
+import { useIniciarTreino } from '../../hooks/useIniciarTreino'
 import {
   DndContext,
   closestCenter,
@@ -40,6 +41,7 @@ function PlanoDetalheComponent() {
   const [showPicker, setShowPicker] = useState(false)
   const [exerciciosEdit, setExerciciosEdit] = useState<ExercicioNoPlano[]>(plano?.exercicios ?? [])
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
+  const { handleIniciar, modal: modalInicio } = useIniciarTreino()
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -164,12 +166,15 @@ function PlanoDetalheComponent() {
         </div>
 
         {/* Start button */}
-        <Link to="/treino-ativo/$planoId" params={{ planoId }} style={{ textDecoration: 'none' }}>
-          <button className="btn-primary w-full mb-6 py-4 text-base animate-fade-up" style={{ animationDelay: '100ms' }}>
-            <Play size={20} />
-            Iniciar Treino
-          </button>
-        </Link>
+        <button
+          className="btn-primary w-full mb-6 py-4 text-base animate-fade-up"
+          style={{ animationDelay: '100ms' }}
+          onClick={() => handleIniciar(planoId)}
+        >
+          <Play size={20} />
+          Iniciar Treino
+        </button>
+        {modalInicio}
 
         {/* Exercises list */}
         <div className="animate-fade-up" style={{ animationDelay: '150ms' }}>
