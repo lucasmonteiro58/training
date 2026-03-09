@@ -82,7 +82,7 @@ body {
   max-width: 480px;
   margin: 0 auto;
   padding: 0 16px;
-  padding-bottom: 90px; /* espaço para bottom nav */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 10px)); /* espaço para bottom nav + iOS safe area */
 }
 
 /* ============================================================

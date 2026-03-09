@@ -192,7 +192,7 @@ function TreinosPage() {
   }
 
   return (
-    <div className="page-container pt-6 pb-24">
+    <div className="page-container pt-6" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <h1 className="text-2xl font-bold text-[var(--color-text)]">Meus Treinos</h1>

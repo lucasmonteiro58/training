@@ -97,7 +97,7 @@ function EvolucaoPage() {
   }
 
   return (
-    <div className="page-container pt-4 pb-10">
+    <div className="page-container pt-4">
       {/* Header */}
       <div className="flex items-center gap-3 mb-5 animate-fade-up">
         <button

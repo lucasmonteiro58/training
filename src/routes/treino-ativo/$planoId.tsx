@@ -674,7 +674,7 @@ function TreinoAtivoPage() {
           </div>
 
           {/* Ações */}
-          <div className="flex flex-col gap-3 px-4 pb-10">
+          <div className="flex flex-col gap-3 px-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2.5rem)' }}>
             <button
               className="btn-primary w-full py-4 flex items-center justify-center gap-2"
               onClick={() => handleCompartilhar(relatorio)}

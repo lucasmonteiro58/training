@@ -115,7 +115,8 @@ function ExerciciosPage() {
         {/* Grid Virtualizado */}
         <div
           ref={parentRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden -mx-4 px-4 scrollbar-hide pb-24"
+          className="flex-1 overflow-y-auto overflow-x-hidden -mx-4 px-4 scrollbar-hide"
+          style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
         >
           {loading ? (
             <div className="grid grid-cols-2 gap-3">
