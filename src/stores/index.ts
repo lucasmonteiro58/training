@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from 'firebase/auth'
-import type { PlanoDeTreino, SessaoDeTreino, Exercicio } from '../types'
+import type { PlanoDeTreino, SessaoDeTreino } from '../types'
 
 // ============================================================
 // Auth Store
@@ -80,6 +80,10 @@ export interface TreinoAtivoStoreState {
   cronometroDescansoAtivo: boolean
   pausado: boolean
   iniciado: boolean
+  // Novos campos para precisão baseada em data
+  tempoPausadoTotal: number
+  ultimaPausaRecordada: number | null
+  timestampDescansoFim: number | null
   // Ações
   iniciarTreino: (sessao: SessaoDeTreino) => void
   finalizarTreino: () => SessaoDeTreino | null
@@ -110,6 +114,9 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
       cronometroDescansoAtivo: false,
       pausado: false,
       iniciado: false,
+      tempoPausadoTotal: 0,
+      ultimaPausaRecordada: null,
+      timestampDescansoFim: null,
 
       iniciarTreino: (sessao) =>
         set({
@@ -121,6 +128,9 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           cronometroDescansoAtivo: false,
           pausado: false,
           iniciado: true,
+          tempoPausadoTotal: 0,
+          ultimaPausaRecordada: null,
+          timestampDescansoFim: null,
         }),
 
       finalizarTreino: () => {
@@ -139,12 +149,23 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           serieAtualIndex: 0,
           cronometroGeralSegundos: 0,
           cronometroDescansoAtivo: false,
+          tempoPausadoTotal: 0,
+          ultimaPausaRecordada: null,
+          timestampDescansoFim: null,
         })
         return finalizada
       },
 
-      pausarTreino: () => set({ pausado: true }),
-      retomar: () => set({ pausado: false }),
+      pausarTreino: () => set({ pausado: true, ultimaPausaRecordada: Date.now() }),
+      retomar: () =>
+        set((s) => {
+          const pausaRecente = s.ultimaPausaRecordada ? Date.now() - s.ultimaPausaRecordada : 0
+          return {
+            pausado: false,
+            tempoPausadoTotal: s.tempoPausadoTotal + pausaRecente,
+            ultimaPausaRecordada: null,
+          }
+        }),
 
       proximoExercicio: () =>
         set((s) => {
@@ -176,24 +197,51 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         }),
 
       iniciarDescanso: (segundos) =>
-        set({ cronometroDescansoSegundos: segundos, cronometroDescansoAtivo: true }),
+        set({
+          cronometroDescansoSegundos: segundos,
+          cronometroDescansoAtivo: true,
+          timestampDescansoFim: Date.now() + segundos * 1000,
+        }),
 
       pararDescanso: () =>
-        set({ cronometroDescansoAtivo: false, cronometroDescansoSegundos: 0 }),
+        set({
+          cronometroDescansoAtivo: false,
+          cronometroDescansoSegundos: 0,
+          timestampDescansoFim: null,
+        }),
 
       tickGeral: () =>
         set((s) => {
-          if (s.pausado || !s.iniciado) return {}
-          return { cronometroGeralSegundos: s.cronometroGeralSegundos + 1 }
+          if (!s.iniciado || !s.sessao) return {}
+
+          const agora = Date.now()
+          let tempoPausadoAcumulado = s.tempoPausadoTotal
+
+          // Se estiver pausado, somamos o tempo decorrido desde o início da pausa atual
+          if (s.pausado && s.ultimaPausaRecordada) {
+            tempoPausadoAcumulado += agora - s.ultimaPausaRecordada
+          }
+
+          const tempoAtivoMs = agora - s.sessao.iniciadoEm - tempoPausadoAcumulado
+          const novosSegundos = Math.max(0, Math.floor(tempoAtivoMs / 1000))
+
+          if (novosSegundos === s.cronometroGeralSegundos) return {}
+          return { cronometroGeralSegundos: novosSegundos }
         }),
 
       tickDescanso: () =>
         set((s) => {
-          if (!s.cronometroDescansoAtivo) return {}
-          const next = s.cronometroDescansoSegundos - 1
-          if (next <= 0)
-            return { cronometroDescansoSegundos: 0, cronometroDescansoAtivo: false }
-          return { cronometroDescansoSegundos: next }
+          if (!s.cronometroDescansoAtivo || !s.timestampDescansoFim) return {}
+          const agora = Date.now()
+          const restante = Math.ceil((s.timestampDescansoFim - agora) / 1000)
+
+          if (restante <= 0)
+            return {
+              cronometroDescansoSegundos: 0,
+              cronometroDescansoAtivo: false,
+              timestampDescansoFim: null,
+            }
+          return { cronometroDescansoSegundos: restante }
         }),
 
       atualizarCronometroGeral: (segundos) => set({ cronometroGeralSegundos: segundos }),
@@ -206,6 +254,10 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         serieAtualIndex: s.serieAtualIndex,
         cronometroGeralSegundos: s.cronometroGeralSegundos,
         iniciado: s.iniciado,
+        pausado: s.pausado,
+        tempoPausadoTotal: s.tempoPausadoTotal,
+        ultimaPausaRecordada: s.ultimaPausaRecordada,
+        timestampDescansoFim: s.timestampDescansoFim,
       }),
     }
   )

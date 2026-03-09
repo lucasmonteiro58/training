@@ -10,7 +10,7 @@ import {
   solicitarPermissaoNotificacao,
   formatarTempo,
 } from '../../lib/notifications'
-import type { SessaoDeTreino, SerieRegistrada } from '../../types'
+import type { SessaoDeTreino, SerieRegistrada, ExercicioNaSessao } from '../../types'
 import {
   ChevronLeft,
   ChevronRight,
@@ -21,7 +21,9 @@ import {
   Pause,
   Play,
   Flag,
-  RotateCcw,
+  Info,
+  Search,
+  ExternalLink,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/treino-ativo/$planoId')({
@@ -49,6 +51,7 @@ function TreinoAtivoPage() {
   const timerRef = useRef<number | null>(null)
   const descansoRef = useRef<number | null>(null)
   const [finalizando, setFinalizando] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
 
   // ─── Iniciar treino se não estiver ativo ───────────────────────────────────
   useEffect(() => {
@@ -56,18 +59,21 @@ function TreinoAtivoPage() {
     // Se já há sessão ativa desse plano, continua
     if (iniciado && sessao?.planoId === planoId) return
     // Se há sessão de outro plano ativa, finaliza e começa nova
-    const exerciciosNaSessao = plano.exercicios.map((ex) => ({
+    const exerciciosNaSessao: ExercicioNaSessao[] = plano.exercicios.map((ex) => ({
       exercicioId: ex.exercicioId,
       exercicioNome: ex.exercicio.nome,
       gifUrl: ex.exercicio.gifUrl,
       grupoMuscular: ex.exercicio.grupoMuscular,
       descansoSegundos: ex.descansoSegundos,
       ordem: ex.ordem,
+      notas: ex.notas,
+      instrucoes: ex.exercicio.instrucoes,
       series: Array.from({ length: ex.series }, (_, i) => ({
         id: uuidv4(),
         ordem: i,
         repeticoes: ex.repeticoesMeta,
-        peso: ex.pesoMeta ?? 0,
+        weight: ex.seriesDetalhadas?.[i]?.peso ?? (ex.pesoMeta ?? 0),
+        peso: ex.seriesDetalhadas?.[i]?.peso ?? (ex.pesoMeta ?? 0),
         completada: false,
       } as SerieRegistrada)),
     }))
@@ -112,6 +118,7 @@ function TreinoAtivoPage() {
   }, [cronometroDescansoAtivo])
 
   const exercicioAtual = sessao?.exercicios[exercicioAtualIndex]
+  const planoExercicio = plano?.exercicios.find(ex => ex.exercicioId === exercicioAtual?.exercicioId)
   const totalExercicios = sessao?.exercicios.length ?? 0
   const progresso = totalExercicios ? (exercicioAtualIndex / totalExercicios) * 100 : 0
 
@@ -199,10 +206,15 @@ function TreinoAtivoPage() {
               {exercicioAtual.grupoMuscular}
             </p>
           </div>
-          <button onClick={proximoExercicio} disabled={exercicioAtualIndex === totalExercicios - 1}
-            className="btn-ghost p-1.5 disabled:opacity-30">
-            <ChevronRight size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setShowInfo(true)} className="btn-ghost p-1.5">
+              <Info size={18} className="text-accent" />
+            </button>
+            <button onClick={proximoExercicio} disabled={exercicioAtualIndex === totalExercicios - 1}
+              className="btn-ghost p-1.5 disabled:opacity-30">
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -266,22 +278,24 @@ function TreinoAtivoPage() {
               <input
                 type="number"
                 className="set-input"
-                value={serie.peso || ''}
+                value={serie.peso === 0 ? '' : serie.peso}
                 placeholder="0"
                 onChange={(e) =>
-                  atualizarSerie(exercicioAtualIndex, sIdx, { peso: parseFloat(e.target.value) || 0 })
+                  atualizarSerie(exercicioAtualIndex, sIdx, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })
                 }
+                onFocus={(e) => e.target.select()}
               />
 
               {/* Reps */}
               <input
                 type="number"
                 className="set-input"
-                value={serie.repeticoes || ''}
+                value={serie.repeticoes === 0 ? '' : serie.repeticoes}
                 placeholder="0"
                 onChange={(e) =>
-                  atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: parseInt(e.target.value) || 0 })
+                  atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: e.target.value === '' ? 0 : parseInt(e.target.value) })
                 }
+                onFocus={(e) => e.target.select()}
               />
 
               {/* Check */}
@@ -321,6 +335,79 @@ function TreinoAtivoPage() {
           </button>
         )}
       </div>
+
+      {/* ─── Modal de Informações ───────────────────────────────────── */}
+      {showInfo && (
+        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
+          <div className="modal-content max-h-[80dvh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-text truncate pr-4">{exercicioAtual.exercicioNome}</h2>
+              <button onClick={() => setShowInfo(false)} className="btn-ghost p-2 text-text-subtle">
+                <XCircle size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-5 pb-2">
+              {/* Media fallback if GIF is available */}
+              {(exercicioAtual.gifUrl || planoExercicio?.exercicio.gifUrl) && (
+                <img
+                  src={exercicioAtual.gifUrl || planoExercicio?.exercicio.gifUrl}
+                  className="w-full max-h-56 object-contain rounded-xl bg-surface-2"
+                  alt="demonstração"
+                />
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <div>
+                  <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-1">Músculo</p>
+                  <span className="px-2.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium capitalize">
+                    {exercicioAtual.grupoMuscular}
+                  </span>
+                </div>
+                {(planoExercicio?.exercicio.equipamento) && (
+                  <div>
+                    <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-1">Equipamento</p>
+                    <p className="text-sm text-text capitalize">{planoExercicio?.exercicio.equipamento}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Observação do plano */}
+              {exercicioAtual.notas && (
+                <div className="p-3 rounded-xl bg-accent/5 border border-accent/10">
+                  <p className="text-[10px] font-bold text-accent uppercase tracking-wider mb-1">Observação do Treino</p>
+                  <p className="text-sm text-text italic">"{exercicioAtual.notas}"</p>
+                </div>
+              )}
+
+              {/* Instruções */}
+              {(exercicioAtual.instrucoes || planoExercicio?.exercicio.instrucoes) && (
+                <div>
+                  <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-2">Instruções</p>
+                  <ol className="list-decimal list-inside space-y-2">
+                    {(exercicioAtual.instrucoes || planoExercicio?.exercicio.instrucoes || []).map((inst, i) => (
+                      <li key={i} className="text-xs text-text-muted leading-relaxed">{inst}</li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {/* Busca Google */}
+              <button
+                onClick={() => {
+                  const query = encodeURIComponent(`${exercicioAtual.exercicioNome} ${exercicioAtual.grupoMuscular} como fazer`)
+                  window.open(`https://www.google.com/search?q=${query}`, '_blank')
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-3 text-text text-xs font-semibold hover:bg-surface-2 transition-colors"
+              >
+                <Search size={14} />
+                Buscar no Google
+                <ExternalLink size={12} className="opacity-50" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

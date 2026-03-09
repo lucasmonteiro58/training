@@ -63,6 +63,8 @@ export interface ExercicioNaSessao {
   series: SerieRegistrada[]
   descansoSegundos: number
   ordem: number
+  notas?: string // Observação vinda do plano
+  instrucoes?: string[] // Instruções originais do exercício
 }
 
 export interface SessaoDeTreino {

@@ -327,16 +327,18 @@ function ExercicioNoPlanoCard({
                 <input
                   type="number"
                   className="set-input h-9! py-0! text-sm!"
-                  value={s.peso}
-                  onChange={(e) => updateSerie(i, { peso: parseFloat(e.target.value) || 0 })}
+                  value={s.peso === 0 ? '' : s.peso}
+                  onChange={(e) => updateSerie(i, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                   onFocus={(e) => e.target.select()}
+                  placeholder="0"
                 />
                 <input
                   type="number"
                   className="set-input h-9! py-0! text-sm!"
-                  value={s.repeticoes}
-                  onChange={(e) => updateSerie(i, { repeticoes: parseInt(e.target.value) || 0 })}
+                  value={s.repeticoes === 0 ? '' : s.repeticoes}
+                  onChange={(e) => updateSerie(i, { repeticoes: e.target.value === '' ? 0 : parseInt(e.target.value) })}
                   onFocus={(e) => e.target.select()}
+                  placeholder="0"
                 />
                 <button
                   onClick={() => removeSerie(i)}
@@ -357,6 +359,18 @@ function ExercicioNoPlanoCard({
           </button>
 
           <div className="pt-2">
+             <label className="text-[10px] text-text-subtle font-bold uppercase block mb-1.5 pl-1">
+                OBSERVAÇÕES DO EXERCÍCIO
+              </label>
+              <textarea
+                className="input h-16 text-sm resize-none py-2"
+                placeholder="Dica: manter cotovelos fechados..."
+                value={exercicio.notas || ''}
+                onChange={(e) => onUpdate({ notas: e.target.value })}
+              />
+          </div>
+
+          <div className="pt-1">
              <label className="text-[10px] text-text-subtle font-bold uppercase block mb-1.5 pl-1">
                 Descanso (segundos)
               </label>

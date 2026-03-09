@@ -31,6 +31,7 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
   const [equipamento, setEquipamento] = useState('')
   const [gifUrl, setGifUrl] = useState('')
 
+  const [instrucoesTexto, setInstrucoesTexto] = useState('')
   const [buscandoImagem, setBuscandoImagem] = useState(false)
   const [imagensWeb, setImagensWeb] = useState<string[]>([])
   const [termoBusca, setTermoBusca] = useState('')
@@ -67,12 +68,15 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
     const grupoFinal = isNovoGrupo ? novoGrupoTexto.trim() : grupoSelecionado
     if (!nome.trim() || !grupoFinal || !user) return
 
+    const instrucoesArray = instrucoesTexto.split('\n').map(l => l.trim()).filter(Boolean)
+
     const novoExercicio: Exercicio = {
       id: `custom-${uuidv4()}`,
       nome: nome.trim(),
       grupoMuscular: grupoFinal,
       equipamento: equipamento.trim() || undefined,
       gifUrl: gifUrl || undefined,
+      instrucoes: instrucoesArray.length > 0 ? instrucoesArray : undefined,
       personalizado: true,
       userId: user.uid,
     }
@@ -158,6 +162,16 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
               value={equipamento}
               onChange={e => setEquipamento(e.target.value)}
               placeholder="Ex: Halteres (Opcional)"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-text-muted mb-1.5 block">INSTRUÇÕES (UMA POR LINHA)</label>
+            <textarea
+              className="input w-full h-24 py-2 resize-none"
+              value={instrucoesTexto}
+              onChange={e => setInstrucoesTexto(e.target.value)}
+              placeholder="Ex: Mantenha as costas retas&#10;Desça a barra devagar"
             />
           </div>
 
