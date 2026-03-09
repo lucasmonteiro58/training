@@ -108,6 +108,13 @@ export interface TreinoAtivoStoreState {
     serieAtualIndex: number
     pausado: boolean
   }) => void
+  sincronizarEstadoExterno: (dados: {
+    sessao: SessaoDeTreino
+    exercicioAtualIndex: number
+    serieAtualIndex: number
+    pausado: boolean
+  }) => void
+  limparLocal: () => void
 }
 
 const syncAtivo = (state: TreinoAtivoStoreState) => {
@@ -179,8 +186,11 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         return finalizada
       },
 
-      pausarTreino: () => set({ pausado: true, ultimaPausaRecordada: Date.now() }),
-      retomar: () =>
+      pausarTreino: () => {
+        set({ pausado: true, ultimaPausaRecordada: Date.now() })
+        syncAtivo(get())
+      },
+      retomar: () => {
         set((s) => {
           const pausaRecente = s.ultimaPausaRecordada ? Date.now() - s.ultimaPausaRecordada : 0
           return {
@@ -188,20 +198,26 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
             tempoPausadoTotal: s.tempoPausadoTotal + pausaRecente,
             ultimaPausaRecordada: null,
           }
-        }),
+        })
+        syncAtivo(get())
+      },
 
-      proximoExercicio: () =>
+      proximoExercicio: () => {
         set((s) => {
           const total = s.sessao?.exercicios.length ?? 0
           const next = Math.min(s.exercicioAtualIndex + 1, total - 1)
           return { exercicioAtualIndex: next, serieAtualIndex: 0 }
-        }),
+        })
+        syncAtivo(get())
+      },
 
-      exercicioAnterior: () =>
+      exercicioAnterior: () => {
         set((s) => ({
           exercicioAtualIndex: Math.max(0, s.exercicioAtualIndex - 1),
           serieAtualIndex: 0,
-        })),
+        }))
+        syncAtivo(get())
+      },
 
       atualizarSerie: (exercicioIdx, serieIdx, dados) => {
         set((s) => {
@@ -278,6 +294,28 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           serieAtualIndex: dados.serieAtualIndex ?? 0,
           pausado: dados.pausado ?? false,
           iniciado: true,
+          cronometroGeralSegundos: 0,
+          cronometroDescansoSegundos: 0,
+          cronometroDescansoAtivo: false,
+          tempoPausadoTotal: 0,
+          ultimaPausaRecordada: null,
+          timestampDescansoFim: null,
+        }),
+
+      sincronizarEstadoExterno: (dados) =>
+        set({
+          sessao: dados.sessao,
+          exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
+          serieAtualIndex: dados.serieAtualIndex ?? 0,
+          pausado: dados.pausado ?? false,
+        }),
+
+      limparLocal: () =>
+        set({
+          sessao: null,
+          iniciado: false,
+          exercicioAtualIndex: 0,
+          serieAtualIndex: 0,
           cronometroGeralSegundos: 0,
           cronometroDescansoSegundos: 0,
           cronometroDescansoAtivo: false,

@@ -73,8 +73,22 @@ function RootComponent() {
 
     const unsub = subscribeToProgressoTreino(user.uid, (dados) => {
       const state = useTreinoAtivoStore.getState()
-      if (dados?.iniciado && !state.iniciado) {
+
+      // Treino encerrado em outro dispositivo → limpa local
+      if (!dados || !dados.iniciado) {
+        if (state.iniciado) state.limparLocal()
+        return
+      }
+
+      // Treino iniciado em outro dispositivo → restaura do zero
+      if (!state.iniciado) {
         state.restaurarDeExterno(dados)
+        return
+      }
+
+      // Mesma sessão → sincroniza estado incremental (pause, série, exercício)
+      if (state.sessao?.id === dados.sessao?.id) {
+        state.sincronizarEstadoExterno(dados)
       }
     })
 
