@@ -158,7 +158,7 @@ function TreinoAtivoPage() {
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
       {/* ─── Header fixo ───────────────────────────────────────────── */}
-      <div className="px-4 pt-4 pb-2 flex flex-col gap-2">
+      <div className="px-4 pt-4 pb-2 flex flex-col gap-4">
         {/* Top bar */}
         <div className="flex items-center justify-between">
           <button onClick={() => navigate({ to: '/treinos' })} className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)]">
