@@ -4,7 +4,7 @@ import { useHistorico } from '../hooks/useHistorico'
 import { usePlanos } from '../hooks/usePlanos'
 import { useTreinoAtivoStore } from '../stores'
 import { formatarTempo } from '../lib/notifications'
-import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus } from 'lucide-react'
+import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus, Zap } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -69,6 +69,16 @@ function HomePage() {
   const ultimasSessoes = sessoes.slice(0, 3)
 
   const exercicioAtual = sessaoAtiva?.exercicios[exercicioAtualIndex]
+
+  // Próximo treino: plano seguinte ao último concluído, em rotação
+  const ultimaSessao = sessoes[0]
+  const proximoPlano = (() => {
+    if (!planosAtivos.length) return null
+    if (!ultimaSessao) return planosAtivos[0]
+    const idx = planosAtivos.findIndex((p) => p.id === ultimaSessao.planoId)
+    if (idx === -1) return planosAtivos[0]
+    return planosAtivos[(idx + 1) % planosAtivos.length]
+  })()
 
   const diasDaSemana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
@@ -184,6 +194,42 @@ function HomePage() {
           })}
         </div>
       </div>
+
+      {/* Próximo Treino */}
+      {!treinoAtivo && proximoPlano && (
+        <div className="mb-6 animate-fade-up" style={{ animationDelay: '125ms' }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-[var(--color-text)]">Próximo Treino</h2>
+            {ultimaSessao && (
+              <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
+                baseado no último concluído
+              </span>
+            )}
+          </div>
+          <div className="card p-4 flex items-center justify-between border border-[var(--color-accent)]/30">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{ background: proximoPlano.cor ?? '#6366f1' }}
+              >
+                <Zap size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="text-[var(--color-text)] font-bold text-sm">{proximoPlano.nome}</p>
+                <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+                  {proximoPlano.exercicios.length} exercícios
+                </p>
+              </div>
+            </div>
+            <button
+              className="flex items-center gap-1.5 bg-[var(--color-accent)] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[var(--color-accent-hover)] active:scale-95 transition-all"
+              onClick={() => navigate({ to: '/treino-ativo/$planoId', params: { planoId: proximoPlano.id } })}
+            >
+              <Play size={14} className="ml-0.5" /> Iniciar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Meus Planos */}
       <div className="mb-6 animate-fade-up" style={{ animationDelay: '150ms' }}>
