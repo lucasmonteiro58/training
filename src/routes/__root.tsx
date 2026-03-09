@@ -110,7 +110,14 @@ function RootComponent() {
           <Outlet />
         </div>
       </main>
-      <Toaster position="bottom-center" richColors offset={100} />
+      <Toaster
+        position="bottom-center"
+        richColors
+        offset={110}
+        toastOptions={{
+          style: { zIndex: 9999 }
+        }}
+      />
       <PWAInstallPrompt />
       <FloatingWorkoutButton />
       <BottomNav />

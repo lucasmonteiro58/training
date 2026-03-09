@@ -31,12 +31,15 @@ export function FloatingWorkoutButton() {
     <Link
       to="/treino-ativo/$planoId"
       params={{ planoId: sessao.planoId }}
-      className="fixed bottom-24 left-4 right-4 z-50 animate-fade-up"
-      style={{ textDecoration: 'none' }}
+      className="fixed left-4 right-4 z-[60] animate-fade-up"
+      style={{
+        bottom: `calc(90px + env(safe-area-inset-bottom, 0px))`,
+        textDecoration: 'none'
+      }}
     >
       <div className={`card p-3 shadow-xl border-2 transition-all active:scale-95 ${
         pausado
-          ? 'border-text-subtle bg-surface-2 opacity-90'
+          ? 'border-text-subtle bg-surface-2 opacity-90 border-opacity-50'
           : 'border-accent bg-accent-subtle ring-4 ring-accent/5'
       }`}>
         <div className="flex items-center justify-between">

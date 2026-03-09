@@ -61,7 +61,10 @@ export function PWAInstallPrompt() {
   if (!show) return null
 
   return (
-    <div className="fixed bottom-26 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm">
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-[70] w-[calc(100%-2rem)] max-w-sm"
+      style={{ bottom: `calc(100px + env(safe-area-inset-bottom, 0px))` }}
+    >
       <div className="card p-5 border border-accent/20 bg-surface/80 backdrop-blur-xl shadow-2xl animate-fade-up">
         <button
           onClick={dismiss}
