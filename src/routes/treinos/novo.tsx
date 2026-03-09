@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
 import { useAuthStore } from '../../stores'
-import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown, XCircle } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown, XCircle, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
-import type { ExercicioNoPlano, SeriePlano } from '../../types'
+import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
 import { CORES_PLANO } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
 import {
@@ -357,15 +357,37 @@ function ExercicioNoPlanoCard({
       {expanded && (
         <div className="mt-4 space-y-3">
           {/* Header da tabela de séries */}
-          <div className="grid grid-cols-[30px_1fr_1fr_40px] gap-2 px-2 text-[10px] font-bold text-text-subtle uppercase tracking-wider">
-            <span className="text-center">#</span>
-            <span className="text-center">PESO (KG)</span>
-            <span className="text-center">REPS</span>
-            <span></span>
-          </div>
+          {(() => {
+            const tipo = exercicio.tipoSerie ?? 'reps'
+            const ciclo: TipoSerie[] = ['reps', 'tempo', 'falha']
+            const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
+            const labels: Record<TipoSerie, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
+            const nextLabels: Record<TipoSerie, string> = { reps: 'Min', tempo: 'Falha', falha: 'Reps' }
+            return (
+              <div className="grid grid-cols-[30px_1fr_1fr_40px] gap-2 px-2 text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-center text-text-subtle">#</span>
+                <span className="text-center text-text-subtle">PESO (KG)</span>
+                <button
+                  onClick={() => onUpdate({ tipoSerie: proximo })}
+                  title={`Mudar para: ${nextLabels[tipo]}`}
+                  className={`flex items-center justify-center gap-1 rounded-md border px-1.5 py-0.5 transition-colors ${
+                    tipo === 'reps'
+                      ? 'text-text-muted border-border hover:text-accent hover:border-accent/50'
+                      : 'text-accent border-accent/40 bg-accent/10'
+                  }`}
+                >
+                  {labels[tipo]}
+                  <RefreshCw size={8} className="opacity-60" />
+                </button>
+                <span></span>
+              </div>
+            )
+          })()}
 
           <div className="flex flex-col gap-2">
-            {series.map((s, i) => (
+            {series.map((s, i) => {
+              const tipo = exercicio.tipoSerie ?? 'reps'
+              return (
               <div key={i} className="grid grid-cols-[30px_1fr_1fr_40px] gap-2 items-center bg-surface-2/50 p-1 rounded-lg">
                 <span className="text-[11px] font-bold text-text-muted text-center">{i + 1}</span>
                 <input
@@ -379,10 +401,13 @@ function ExercicioNoPlanoCard({
                 <input
                   type="number"
                   className="set-input h-9! py-0! text-sm!"
-                  value={s.repeticoes === 0 ? '' : s.repeticoes}
-                  onChange={(e) => updateSerie(i, { repeticoes: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                  value={tipo === 'tempo'
+                    ? (s.repeticoes === 0 ? '' : s.repeticoes)
+                    : (s.repeticoes === 0 ? '' : s.repeticoes)}
+                  onChange={(e) => updateSerie(i, { repeticoes: e.target.value === '' ? 0 : (tipo === 'tempo' ? parseFloat(e.target.value) : parseInt(e.target.value)) })}
                   onFocus={(e) => e.target.select()}
-                  placeholder="0"
+                  placeholder={tipo === 'falha' ? 'Falha' : tipo === 'tempo' ? '0.0' : '0'}
+                  step={tipo === 'tempo' ? '0.5' : '1'}
                 />
                 <button
                   onClick={() => removeSerie(i)}
@@ -391,7 +416,8 @@ function ExercicioNoPlanoCard({
                   <Trash2 size={14} />
                 </button>
               </div>
-            ))}
+              )
+            })}
           </div>
 
           {applyAll && (
@@ -400,7 +426,11 @@ function ExercicioNoPlanoCard({
                 <p className="text-xs text-text-muted">
                   Repetir{' '}
                   <strong className="text-text">
-                    {applyAll.field === 'peso' ? `${applyAll.value} kg` : `${applyAll.value} reps`}
+                    {applyAll.field === 'peso'
+                      ? `${applyAll.value} kg`
+                      : applyAll.field === 'repeticoes' && (exercicio.tipoSerie ?? 'reps') === 'tempo'
+                        ? `${applyAll.value} min`
+                        : `${applyAll.value} reps`}
                   </strong>{' '}em:
                 </p>
                 <button

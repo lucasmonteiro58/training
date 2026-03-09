@@ -30,6 +30,8 @@ export interface SeriePlano {
   repeticoes: number
 }
 
+export type TipoSerie = 'reps' | 'tempo' | 'falha'
+
 export interface ExercicioNoPlano {
   id: string
   exercicioId: string
@@ -41,6 +43,8 @@ export interface ExercicioNoPlano {
   descansoSegundos: number
   ordem: number
   notas?: string
+  tipoSerie?: TipoSerie
+  duracaoMetaSegundos?: number // usado quando tipoSerie === 'tempo'
 }
 
 export interface PlanoDeTreino {
@@ -66,6 +70,8 @@ export interface ExercicioNaSessao {
   ordem: number
   notas?: string // Observação vinda do plano
   instrucoes?: string[] // Instruções originais do exercício
+  tipoSerie?: TipoSerie
+  duracaoMetaSegundos?: number
 }
 
 export interface SessaoDeTreino {

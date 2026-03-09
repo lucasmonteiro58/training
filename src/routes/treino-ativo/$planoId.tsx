@@ -24,6 +24,7 @@ import {
   Info,
   Search,
   ExternalLink,
+  Zap,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/treino-ativo/$planoId')({
@@ -57,6 +58,33 @@ function TreinoAtivoPage() {
   const [showInfo, setShowInfo] = useState(false)
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
 
+  // ─── Cronômetro de série (para exercícios por tempo) ──────────────────────
+  const [timerSerie, setTimerSerie] = useState<{ sIdx: number; restando: number } | null>(null)
+  const timerSerieRef = useRef<number | null>(null)
+
+  const iniciarTimerSerie = (sIdx: number, duracaoSegundos: number) => {
+    if (timerSerieRef.current) clearInterval(timerSerieRef.current)
+    setTimerSerie({ sIdx, restando: duracaoSegundos })
+    timerSerieRef.current = window.setInterval(() => {
+      setTimerSerie((prev) => {
+        if (!prev || prev.restando <= 1) {
+          clearInterval(timerSerieRef.current!)
+          return null
+        }
+        return { ...prev, restando: prev.restando - 1 }
+      })
+    }, 1000)
+  }
+
+  const pararTimerSerie = () => {
+    if (timerSerieRef.current) clearInterval(timerSerieRef.current)
+    setTimerSerie(null)
+  }
+
+  useEffect(() => {
+    pararTimerSerie()
+  }, [exercicioAtualIndex])
+
   // ─── Iniciar treino se não estiver ativo ───────────────────────────────────
   useEffect(() => {
     if (!plano || !user) return
@@ -72,6 +100,8 @@ function TreinoAtivoPage() {
       ordem: ex.ordem,
       notas: ex.notas,
       instrucoes: ex.exercicio.instrucoes,
+      tipoSerie: ex.tipoSerie,
+      duracaoMetaSegundos: ex.duracaoMetaSegundos,
       series: Array.from({ length: ex.series }, (_, i) => ({
         id: uuidv4(),
         ordem: i,
@@ -260,14 +290,30 @@ function TreinoAtivoPage() {
       {/* ─── Tabela de séries ──────────────────────────────────────── */}
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {/* Header */}
-        <div className="grid grid-cols-[32px_1fr_1fr_40px] gap-2 px-3 mb-1">
-          {['#', 'Peso (kg)', 'Reps', ''].map((h, i) => (
-            <span key={i} className="text-[10px] text-[var(--color-text-subtle)] font-semibold text-center">{h}</span>
-          ))}
-        </div>
+        {(() => {
+          const tipo = exercicioAtual.tipoSerie ?? 'reps'
+          const labels: Record<string, string> = { reps: 'Reps', tempo: 'Min', falha: 'Falha ⚡' }
+          return (
+            <div className="grid grid-cols-[32px_1fr_1fr_40px] gap-2 px-3 mb-1">
+              {['#', 'Peso (kg)', labels[tipo] ?? 'Reps', ''].map((h, i) => (
+                <span key={i} className="text-[10px] text-[var(--color-text-subtle)] font-semibold text-center">{h}</span>
+              ))}
+            </div>
+          )
+        })()}
+
+        {exercicioAtual.tipoSerie === 'falha' && (
+          <div className="flex items-center gap-1.5 mb-2 px-1">
+            <Zap size={12} className="text-yellow-400" />
+            <span className="text-[10px] font-semibold text-yellow-400">Executar até a falha muscular</span>
+          </div>
+        )}
 
         <div className="flex flex-col">
-          {exercicioAtual.series.map((serie, sIdx) => (
+          {exercicioAtual.series.map((serie, sIdx) => {
+            const tipo = exercicioAtual.tipoSerie ?? 'reps'
+            const isTimerAtivo = timerSerie?.sIdx === sIdx
+            return (
             <div
               key={serie.id}
               className={`set-row ${serie.completada ? 'completed' : ''}`}
@@ -291,23 +337,47 @@ function TreinoAtivoPage() {
                 onFocus={(e) => e.target.select()}
               />
 
-              {/* Reps */}
-              <input
-                type="number"
-                className="set-input"
-                value={serie.repeticoes === 0 ? '' : serie.repeticoes}
-                placeholder="0"
-                onChange={(e) => {
-                  const val = e.target.value === '' ? 0 : parseInt(e.target.value)
-                  atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: val })
-                  if (exercicioAtual.series.length > 1) setApplyAll({ field: 'repeticoes', sIdx, value: val })
-                }}
-                onFocus={(e) => e.target.select()}
-              />
+              {/* Reps / Tempo */}
+              {tipo === 'tempo' ? (
+                <button
+                  onClick={() => {
+                    const duracaoSeg = Math.round((serie.repeticoes || 1) * 60)
+                    if (isTimerAtivo) {
+                      pararTimerSerie()
+                    } else {
+                      iniciarTimerSerie(sIdx, duracaoSeg)
+                    }
+                  }}
+                  className={`set-input flex items-center justify-center gap-1 text-xs font-bold ${
+                    isTimerAtivo ? 'text-accent' : 'text-text-muted'
+                  }`}
+                >
+                  <Timer size={12} />
+                  {isTimerAtivo
+                    ? formatarTempo(timerSerie!.restando)
+                    : formatarTempo(Math.round((serie.repeticoes || 1) * 60))}
+                </button>
+              ) : (
+                <input
+                  type="number"
+                  className="set-input"
+                  value={serie.repeticoes === 0 ? '' : serie.repeticoes}
+                  placeholder={tipo === 'falha' ? 'Falha' : '0'}
+                  onChange={(e) => {
+                    const val = e.target.value === '' ? 0 : parseInt(e.target.value)
+                    atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: val })
+                    if (exercicioAtual.series.length > 1) setApplyAll({ field: 'repeticoes', sIdx, value: val })
+                  }}
+                  onFocus={(e) => e.target.select()}
+                />
+              )}
 
               {/* Check */}
               <button
-                onClick={() => handleCompletarSerie(sIdx)}
+                onClick={() => {
+                  if (tipo === 'tempo' && isTimerAtivo) pararTimerSerie()
+                  handleCompletarSerie(sIdx)
+                }}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
                   serie.completada
                     ? 'bg-[var(--color-success)] text-white'
@@ -317,7 +387,8 @@ function TreinoAtivoPage() {
                 <CheckCircle size={17} />
               </button>
             </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Repetir valor em outras séries */}
