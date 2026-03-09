@@ -16,6 +16,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -71,7 +72,11 @@ function NovoPlanoPage() {
     )
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (_event: DragEndEvent) => {
+    // reorder already happened in onDragOver
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
       setExercicios((items) => {
@@ -181,6 +186,7 @@ function NovoPlanoPage() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
