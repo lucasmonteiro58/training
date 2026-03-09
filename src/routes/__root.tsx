@@ -127,7 +127,7 @@ function RootComponent() {
       <Toaster
         position="bottom-center"
         richColors
-        offset={110}
+        offset={120}
         toastOptions={{
           style: { zIndex: 9999 }
         }}
