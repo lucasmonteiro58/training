@@ -128,6 +128,7 @@ function RootComponent() {
         position="bottom-center"
         richColors
         offset={120}
+        visibleToasts={1}
         toastOptions={{
           style: { zIndex: 9999 }
         }}
