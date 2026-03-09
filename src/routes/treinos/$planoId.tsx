@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { usePlanos } from '../../hooks/usePlanos'
 import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
-import type { ExercicioNoPlano, PlanoDeTreino } from '../../types'
+import type { ExercicioNoPlano, PlanoDeTreino, SeriePlano } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
 
 export const Route = createFileRoute('/treinos/$planoId')({
@@ -19,6 +19,7 @@ function PlanoDetalheComponent() {
   const [nome, setNome] = useState(plano?.nome ?? '')
   const [showPicker, setShowPicker] = useState(false)
   const [exerciciosEdit, setExerciciosEdit] = useState<ExercicioNoPlano[]>(plano?.exercicios ?? [])
+  const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
 
   if (!plano) {
     return (
@@ -37,11 +38,30 @@ function PlanoDetalheComponent() {
   const adicionarEx = (ex: any) => {
     setExerciciosEdit((prev) => [
       ...prev,
-      { id: uuidv4(), exercicioId: ex.id, exercicio: ex, series: 3, repeticoesMeta: 10, pesoMeta: 0, descansoSegundos: 60, ordem: prev.length },
+      { id: uuidv4(), exercicioId: ex.id, exercicio: ex, series: 3, repeticoesMeta: 10, pesoMeta: 0, descansoSegundos: 60, ordem: prev.length, seriesDetalhadas: [{ peso: 0, repeticoes: 10 }, { peso: 0, repeticoes: 10 }, { peso: 0, repeticoes: 10 }] },
     ])
   }
 
   const removerEx = (id: string) => setExerciciosEdit((p) => p.filter((e) => e.id !== id))
+
+  const atualizarSerieEdit = (exId: string, sIdx: number, campo: Partial<SeriePlano>) => {
+    setExerciciosEdit((prev) =>
+      prev.map((ex) => {
+        if (ex.id !== exId) return ex
+        const base = ex.seriesDetalhadas ?? Array.from({ length: ex.series }, () => ({ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta }))
+        const novas = base.map((s, i) => (i === sIdx ? { ...s, ...campo } : s))
+        return { ...ex, seriesDetalhadas: novas }
+      })
+    )
+  }
+
+  const toggleExpandedEx = (id: string) =>
+    setExpandedEx((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
 
   return (
     <>
@@ -98,35 +118,80 @@ function PlanoDetalheComponent() {
           </div>
 
           <div className="flex flex-col gap-2">
-            {(editando ? exerciciosEdit : plano.exercicios).map((ex) => (
-              <div key={ex.id} className="card p-3">
-                <div className="flex items-center gap-3">
-                  {editando && <GripVertical size={16} className="text-[var(--color-text-subtle)]" />}
-                  {ex.exercicio.gifUrl ? (
-                    <img src={ex.exercicio.gifUrl} alt={ex.exercicio.nome}
-                      className="w-12 h-12 rounded-xl object-cover bg-[var(--color-surface-2)] flex-shrink-0" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl">💪</span>
+            {(editando ? exerciciosEdit : plano.exercicios).map((ex) => {
+              const isExpanded = editando && expandedEx.has(ex.id)
+              const seriesEdit = isExpanded
+                ? (ex.seriesDetalhadas ?? Array.from({ length: ex.series }, () => ({ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta })))
+                : []
+              return (
+                <div key={ex.id} className="card p-3">
+                  <div className="flex items-center gap-3">
+                    {editando && <GripVertical size={16} className="text-[var(--color-text-subtle)]" />}
+                    {ex.exercicio.gifUrl ? (
+                      <img src={ex.exercicio.gifUrl} alt={ex.exercicio.nome}
+                        className="w-12 h-12 rounded-xl object-cover bg-[var(--color-surface-2)] flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center flex-shrink-0">
+                        <span className="text-2xl">💪</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[var(--color-text)] font-semibold text-sm truncate">{ex.exercicio.nome}</p>
+                      <div className="flex gap-3 mt-1">
+                        <span className="text-xs text-[var(--color-text-muted)]">{ex.series} séries</span>
+                        <span className="text-xs text-[var(--color-text-muted)]">{ex.repeticoesMeta} reps</span>
+                        {ex.pesoMeta ? <span className="text-xs text-[var(--color-text-muted)]">{ex.pesoMeta}kg</span> : null}
+                        <span className="text-xs text-[var(--color-text-muted)]">⏱ {ex.descansoSegundos}s</span>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[var(--color-text)] font-semibold text-sm truncate">{ex.exercicio.nome}</p>
-                    <div className="flex gap-3 mt-1">
-                      <span className="text-xs text-[var(--color-text-muted)]">{ex.series} séries</span>
-                      <span className="text-xs text-[var(--color-text-muted)]">{ex.repeticoesMeta} reps</span>
-                      {ex.pesoMeta ? <span className="text-xs text-[var(--color-text-muted)]">{ex.pesoMeta}kg</span> : null}
-                      <span className="text-xs text-[var(--color-text-muted)]">⏱ {ex.descansoSegundos}s</span>
-                    </div>
+                    {editando ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => toggleExpandedEx(ex.id)}
+                          className="btn-ghost p-2 text-[var(--color-text-subtle)]"
+                          title="Editar séries"
+                        >
+                          <ChevronDown size={15} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        <button onClick={() => removerEx(ex.id)} className="btn-ghost p-2 text-[var(--color-danger)]">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
-                  {editando && (
-                    <button onClick={() => removerEx(ex.id)} className="btn-ghost p-2 text-[var(--color-danger)]">
-                      <Trash2 size={15} />
-                    </button>
+                  {isExpanded && (
+                    <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-2">
+                      <div className="grid grid-cols-[30px_1fr_1fr] gap-2 px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-subtle)]">
+                        <span className="text-center">#</span>
+                        <span className="text-center">Peso (kg)</span>
+                        <span className="text-center">Reps</span>
+                      </div>
+                      {seriesEdit.map((s, i) => (
+                        <div key={i} className="grid grid-cols-[30px_1fr_1fr] gap-2 items-center bg-[var(--color-surface-2)]/50 px-1 py-1 rounded-lg">
+                          <span className="text-[11px] font-bold text-[var(--color-text-muted)] text-center">{i + 1}</span>
+                          <input
+                            type="number"
+                            className="set-input h-9! py-0! text-sm!"
+                            value={s.peso === 0 ? '' : s.peso}
+                            onChange={(e) => atualizarSerieEdit(ex.id, i, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
+                            placeholder="0"
+                          />
+                          <input
+                            type="number"
+                            className="set-input h-9! py-0! text-sm!"
+                            value={s.repeticoes === 0 ? '' : s.repeticoes}
+                            onChange={(e) => atualizarSerieEdit(ex.id, i, { repeticoes: e.target.value === '' ? 0 : parseInt(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
+                            placeholder="0"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {editando && (

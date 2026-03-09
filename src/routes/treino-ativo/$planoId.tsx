@@ -35,7 +35,7 @@ function TreinoAtivoPage() {
   const { planoId } = Route.useParams()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { planos } = usePlanos()
+  const { planos, atualizarPlano } = usePlanos()
   const { salvarSessaoCompleta } = useHistorico()
   const plano = planos.find((p) => p.id === planoId)
 
@@ -333,6 +333,19 @@ function TreinoAtivoPage() {
                   const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
                   atualizarSerie(exercicioAtualIndex, sIdx, { peso: val })
                   if (exercicioAtual.series.length > 1) setApplyAll({ field: 'peso', sIdx, value: val })
+                }}
+                onBlur={(e) => {
+                  if (!plano) return
+                  const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
+                  const exIdx = plano.exercicios.findIndex((ex) => ex.exercicioId === exercicioAtual.exercicioId)
+                  if (exIdx === -1) return
+                  const exercicios = plano.exercicios.map((ex, i) => {
+                    if (i !== exIdx) return ex
+                    const base = ex.seriesDetalhadas ?? Array.from({ length: ex.series }, () => ({ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta }))
+                    const seriesDetalhadas = base.map((s, j) => (j === sIdx ? { ...s, peso: val } : s))
+                    return { ...ex, seriesDetalhadas }
+                  })
+                  atualizarPlano({ ...plano, exercicios })
                 }}
                 onFocus={(e) => e.target.select()}
               />
