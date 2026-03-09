@@ -1,7 +1,7 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { BottomNav } from '../components/layout/BottomNav'
-import { useAuthStore, useTreinoAtivoStore } from '../stores'
+import { useTreinoAtivoStore } from '../stores'
 import { registrarServiceWorker } from '../lib/notifications'
 import { subscribeToProgressoTreino } from '../lib/firestore/sync'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
@@ -57,9 +57,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
+import { useAuth as useAuthHook } from '../hooks/useAuth'
+
 function RootComponent() {
-  const user = useAuthStore((s) => s.user)
-  const loadingAuth = useAuthStore((s) => s.loading)
+  const { user, loading: loadingAuth } = useAuthHook()
   const { iniciado, iniciarTreino, pausado, tickGeral } = useTreinoAtivoStore()
 
   useEffect(() => {
@@ -128,7 +129,6 @@ function RootComponent() {
 // ============================================================
 // Login Page (inline for simplicity)
 // ============================================================
-import { useAuth as useAuthHook } from '../hooks/useAuth'
 
 function LoginPage() {
   const { loginComGoogle } = useAuthHook()
