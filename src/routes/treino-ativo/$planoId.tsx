@@ -51,6 +51,7 @@ function TreinoAtivoPage() {
   const timerRef = useRef<number | null>(null)
   const descansoRef = useRef<number | null>(null)
   const [finalizando, setFinalizando] = useState(false)
+  const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
 
   // ─── Iniciar treino se não estiver ativo ───────────────────────────────────
@@ -135,7 +136,6 @@ function TreinoAtivoPage() {
   }
 
   const handleFinalizar = async () => {
-    if (!confirm('Finalizar treino e salvar?')) return
     setFinalizando(true)
     const sessaoFinalizada = finalizarTreino()
     limparNotificacoesTreino()
@@ -177,7 +177,7 @@ function TreinoAtivoPage() {
               {pausado ? <Play size={16} /> : <Pause size={16} />}
             </button>
           </div>
-          <button onClick={handleFinalizar} disabled={finalizando}
+          <button onClick={() => setShowConfirmFinalizar(true)} disabled={finalizando}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(34,197,94,0.12)] text-[var(--color-success)] text-sm font-semibold">
             <Flag size={14} />
             {finalizando ? '...' : 'Finalizar'}
@@ -403,6 +403,35 @@ function TreinoAtivoPage() {
                 <Search size={14} />
                 Buscar no Google
                 <ExternalLink size={12} className="opacity-50" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ─── Modal de Confirmação Finalizar ────────────────────────── */}
+      {showConfirmFinalizar && (
+        <div className="modal-overlay" onClick={() => setShowConfirmFinalizar(false)}>
+          <div className="modal-content text-center" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-3xl bg-[rgba(34,197,94,0.12)] flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={32} className="text-[var(--color-success)]" />
+            </div>
+            <h2 className="text-xl font-bold text-[var(--color-text)] mb-2">Finalizar Treino?</h2>
+            <p className="text-[var(--color-text-muted)] text-sm mb-6">
+              Parabéns pelo esforço! Todas as séries concluídas serão registradas no seu histórico.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleFinalizar}
+                disabled={finalizando}
+                className="btn-success w-full py-4 text-base"
+              >
+                {finalizando ? 'Salvando...' : 'Sim, Finalizar Agora'}
+              </button>
+              <button
+                onClick={() => setShowConfirmFinalizar(false)}
+                className="btn-ghost w-full py-3"
+              >
+                Continuar Treinando
               </button>
             </div>
           </div>
