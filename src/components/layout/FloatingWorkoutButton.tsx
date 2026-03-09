@@ -1,7 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useTreinoAtivoStore } from '../../stores'
-import { Clock, ChevronRight } from 'lucide-react'
+import { Clock } from 'lucide-react'
 import { formatarTempo } from '../../lib/notifications'
 
 export function FloatingWorkoutButton() {
@@ -31,42 +31,21 @@ export function FloatingWorkoutButton() {
     <Link
       to="/treino-ativo/$planoId"
       params={{ planoId: sessao.planoId }}
-      className="fixed left-4 right-4 z-[60] animate-fade-up"
+      className="fixed right-4 z-[60] animate-fade-up"
       style={{
         bottom: `calc(90px + env(safe-area-inset-bottom, 0px))`,
         textDecoration: 'none'
       }}
     >
-      <div className={`card p-3 shadow-xl border-2 transition-all active:scale-95 ${
+      <div className={`w-14 h-14 rounded-full shadow-xl flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 border-2 ${
         pausado
-          ? 'border-text-subtle bg-surface-2 opacity-90 border-opacity-50'
-          : 'border-accent bg-accent-subtle ring-4 ring-accent/5'
+          ? 'bg-surface-2 border-text-subtle/40'
+          : 'bg-accent border-accent ring-4 ring-accent/20'
       }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-              pausado ? 'bg-text-subtle' : 'bg-accent'
-            }`}>
-              <Clock size={16} className="text-white" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-text font-bold text-xs truncate">
-                  {pausado ? 'Pausado' : 'Treino Ativo'}
-                </p>
-                <span className={`px-1.5 py-0.5 rounded-md text-white text-[9px] font-bold tabular-nums transition-colors ${
-                  pausado ? 'bg-text-subtle' : 'bg-accent'
-                }`}>
-                  {formatarTempo(cronometroGeralSegundos)}
-                </span>
-              </div>
-              <p className="text-text-muted text-[10px] truncate mt-0.5 font-medium">
-                {exercicioAtual ? exercicioAtual.exercicioNome : sessao.planoNome}
-              </p>
-            </div>
-          </div>
-          <ChevronRight size={18} className={pausado ? 'text-text-subtle' : 'text-accent'} />
-        </div>
+        <Clock size={18} className="text-white" />
+        <span className="text-white text-[9px] font-bold tabular-nums leading-none">
+          {formatarTempo(cronometroGeralSegundos)}
+        </span>
       </div>
     </Link>
   )
