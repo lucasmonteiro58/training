@@ -109,7 +109,7 @@ function NovoPlanoPage() {
                 {CORES_PLANO.map((cor) => (
                   <button
                     key={cor}
-                    className={`w-8 h-8 rounded-full transition-transform ${corSelecionada === cor ? 'scale-125 ring-2 ring-offset-2 ring-offset-[var(--color-surface)] ring-white' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
+                    className={`w-8 h-8 rounded-full transition-transform ${corSelecionada === cor ? 'scale-105 ring-2 ring-offset-2 ring-offset-[var(--color-surface)] ring-white' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
                     style={{ background: cor }}
                     onClick={() => setCorSelecionada(cor)}
                   />
