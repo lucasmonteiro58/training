@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { usePlanosStore } from '../stores'
 import { useAuthStore } from '../stores'
 import { getPlanos, salvarPlano, deletarPlano } from '../lib/db/dexie'
-import { syncPlanoParaFirestore, deletarPlanoFirestore, subscribeToPlanos } from '../lib/firestore/sync'
+import { syncPlanoParaFirestore, deletarPlanoFirestore, subscribeToPlanos, subscribeToExercicios } from '../lib/firestore/sync'
 import type { PlanoDeTreino, ExercicioNoPlano } from '../types'
 import { CORES_PLANO } from '../types'
 
@@ -23,12 +23,22 @@ export function usePlanos() {
     })
 
     // 2. Subscribe em tempo real ao Firestore
-    const unsub = subscribeToPlanos(user.uid, (remote) => {
+    const unsubPlanos = subscribeToPlanos(user.uid, (remote) => {
       setPlanos(remote)
       setLoading(false)
     })
 
-    return unsub
+    // 3. Subscribe em tempo real aos Exercícios Personalizados
+    const unsubExercicios = subscribeToExercicios(user.uid, () => {
+      // O subscribeToExercicios já salva no Dexie local automaticamente.
+      // Não precisamos atualizar um store específico aqui se não houver um useExerciciosStore,
+      // mas as telas que consultam o Dexie (como a de Exercícios) verão os dados.
+    })
+
+    return () => {
+      unsubPlanos()
+      unsubExercicios()
+    }
   }, [user, setPlanos, setLoading])
 
   const criarPlano = useCallback(

@@ -63,7 +63,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content max-h-[88dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content max-h-[75dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">
           <h2 className="text-lg font-bold text-text">Adicionar Exercício</h2>
@@ -88,7 +88,6 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
             placeholder="Buscar exercício..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            autoFocus
           />
         </div>
 
