@@ -107,12 +107,18 @@ export interface TreinoAtivoStoreState {
     exercicioAtualIndex: number
     serieAtualIndex: number
     pausado: boolean
+    tempoPausadoTotal?: number
+    ultimaPausaRecordada?: number | null
+    timestampDescansoFim?: number | null
   }) => void
   sincronizarEstadoExterno: (dados: {
     sessao: SessaoDeTreino
     exercicioAtualIndex: number
     serieAtualIndex: number
     pausado: boolean
+    tempoPausadoTotal?: number
+    ultimaPausaRecordada?: number | null
+    timestampDescansoFim?: number | null
   }) => void
   limparLocal: () => void
 }
@@ -125,6 +131,9 @@ const syncAtivo = (state: TreinoAtivoStoreState) => {
       serieAtualIndex: state.serieAtualIndex,
       iniciado: state.iniciado,
       pausado: state.pausado,
+      tempoPausadoTotal: state.tempoPausadoTotal,
+      ultimaPausaRecordada: state.ultimaPausaRecordada,
+      timestampDescansoFim: state.timestampDescansoFim,
     })
   }
 }
@@ -293,13 +302,13 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
           serieAtualIndex: dados.serieAtualIndex ?? 0,
           pausado: dados.pausado ?? false,
+          tempoPausadoTotal: dados.tempoPausadoTotal ?? 0,
+          ultimaPausaRecordada: dados.ultimaPausaRecordada ?? null,
+          timestampDescansoFim: dados.timestampDescansoFim ?? null,
+          cronometroDescansoAtivo: dados.timestampDescansoFim != null && dados.timestampDescansoFim > Date.now(),
           iniciado: true,
           cronometroGeralSegundos: 0,
           cronometroDescansoSegundos: 0,
-          cronometroDescansoAtivo: false,
-          tempoPausadoTotal: 0,
-          ultimaPausaRecordada: null,
-          timestampDescansoFim: null,
         }),
 
       sincronizarEstadoExterno: (dados) =>
@@ -308,6 +317,10 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
           serieAtualIndex: dados.serieAtualIndex ?? 0,
           pausado: dados.pausado ?? false,
+          tempoPausadoTotal: dados.tempoPausadoTotal ?? 0,
+          ultimaPausaRecordada: dados.ultimaPausaRecordada ?? null,
+          timestampDescansoFim: dados.timestampDescansoFim ?? null,
+          cronometroDescansoAtivo: dados.timestampDescansoFim != null && dados.timestampDescansoFim > Date.now(),
         }),
 
       limparLocal: () =>
