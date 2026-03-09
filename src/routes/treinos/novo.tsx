@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useBlocker } from '@tanstack/react-router'
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
@@ -43,9 +43,13 @@ function NovoPlanoPage() {
   const [saving, setSaving] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [corSelecionada, setCorSelecionada] = useState(CORES_PLANO[0])
-  const [showConfirmVoltar, setShowConfirmVoltar] = useState(false)
 
   const isDirty = nome.trim() !== '' || descricao.trim() !== '' || exercicios.length > 0 || corSelecionada !== CORES_PLANO[0]
+
+  const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } = useBlocker({
+    shouldBlockFn: () => isDirty,
+    withResolver: true,
+  })
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -113,7 +117,7 @@ function NovoPlanoPage() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => isDirty ? setShowConfirmVoltar(true) : navigate({ to: '/treinos' })}
+            onClick={() => isDirty ? blockerProceed?.() : navigate({ to: '/treinos' })}
             className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted hover:text-text transition-colors"
           >
             <ArrowLeft size={18} />
@@ -218,8 +222,8 @@ function NovoPlanoPage() {
         </div>
       </div>
 
-      {showConfirmVoltar && (
-        <div className="modal-overlay" onClick={() => setShowConfirmVoltar(false)}>
+      {blockerStatus === 'blocked' && (
+        <div className="modal-overlay" onClick={blockerReset}>
           <div className="modal-content text-center" onClick={(e) => e.stopPropagation()}>
             <div className="w-16 h-16 rounded-3xl bg-danger/10 flex items-center justify-center mx-auto mb-4">
               <XCircle size={32} className="text-danger" />
@@ -230,13 +234,13 @@ function NovoPlanoPage() {
             </p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => navigate({ to: '/treinos' })}
+                onClick={blockerProceed}
                 className="btn-danger w-full py-4 text-base"
               >
                 Sim, Descartar
               </button>
               <button
-                onClick={() => setShowConfirmVoltar(false)}
+                onClick={blockerReset}
                 className="btn-ghost w-full py-3"
               >
                 Continuar Editando

@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, Link, useBlocker } from '@tanstack/react-router'
 import { useState } from 'react'
 import { usePlanos } from '../../hooks/usePlanos'
-import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown, Search, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown, Search, RefreshCw, XCircle } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
 import { GRUPOS_MUSCULARES } from '../../types'
@@ -42,6 +42,11 @@ function PlanoDetalheComponent() {
   const [exerciciosEdit, setExerciciosEdit] = useState<ExercicioNoPlano[]>(plano?.exercicios ?? [])
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
   const { handleIniciar, modal: modalInicio } = useIniciarTreino()
+
+  const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } = useBlocker({
+    shouldBlockFn: () => editando,
+    withResolver: true,
+  })
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -253,6 +258,28 @@ function PlanoDetalheComponent() {
 
       {showPicker && (
         <ExercicioPicker onSelect={(ex) => { adicionarEx(ex); setShowPicker(false) }} onClose={() => setShowPicker(false)} />
+      )}
+
+      {blockerStatus === 'blocked' && (
+        <div className="modal-overlay" onClick={blockerReset}>
+          <div className="modal-content text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-3xl bg-danger/10 flex items-center justify-center mx-auto mb-4">
+              <XCircle size={32} className="text-danger" />
+            </div>
+            <h2 className="text-xl font-bold text-text mb-2">Descartar edição?</h2>
+            <p className="text-text-muted text-sm mb-6">
+              As alterações feitas serão perdidas.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button onClick={blockerProceed} className="btn-danger w-full py-4 text-base">
+                Sim, Descartar
+              </button>
+              <button onClick={blockerReset} className="btn-ghost w-full py-3">
+                Continuar Editando
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
