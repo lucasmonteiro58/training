@@ -47,14 +47,16 @@ function ExercicioEditCard({
     setBuscandoImagem(true)
     setImagensWeb([])
     try {
-      const apiUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(termoBusca + ' exercise')}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url&format=json&origin=*`
+      const key = import.meta.env.VITE_GIPHY_API_KEY
+      if (!key) {
+        toast.error('Chave da API Giphy não configurada. Adicione VITE_GIPHY_API_KEY no .env')
+        return
+      }
+      const apiUrl = `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(termoBusca)}&limit=12&rating=g`
       const res = await fetch(apiUrl)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      const pages = data.query?.pages || {}
-      const urls = Object.values(pages)
-        .map((p: any) => (p as any).imageinfo?.[0]?.url)
-        .filter((u: unknown): u is string => typeof u === 'string' && !u.toLowerCase().endsWith('.svg') && !u.toLowerCase().endsWith('.pdf'))
+      const urls: string[] = (data.data ?? []).map((gif: any) => gif?.images?.original?.url ?? gif?.images?.downsized?.url).filter(Boolean)
       setImagensWeb(urls)
       if (urls.length === 0) {
         toast.info('Nenhuma imagem encontrada. Tente outro termo.')
