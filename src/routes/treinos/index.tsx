@@ -53,7 +53,8 @@ function PlanoSortableCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="card p-4 animate-fade-up">
+    <>
+      <div ref={setNodeRef} style={style} className="card p-4 animate-fade-up">
       <div className="flex items-center gap-3">
         {reordenando && (
           <button
@@ -124,7 +125,8 @@ function PlanoSortableCard({
         </div>
       )}
     </div>
-    {modal}
+      {modal}
+    </>
   )
 }
 
