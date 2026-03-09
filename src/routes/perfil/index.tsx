@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from '../../hooks/useAuth'
 import { useHistoricoStore, usePlanosStore } from '../../stores'
 import { formatarTempo } from '../../lib/notifications'
@@ -64,7 +64,20 @@ function PerfilPage() {
 
       {/* Configurações */}
       <div className="card p-1 mb-5 animate-fade-up" style={{ animationDelay: '100ms' }}>
-        <p className="text-xs font-bold text-[var(--color-text-muted)] px-4 py-3">CONFIGURAÇÕES</p>
+        <p className="text-xs font-bold text-[var(--color-text-muted)] px-4 py-3 uppercase tracking-wider">Conta e Recursos</p>
+
+        <Link to="/historico" className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--color-surface-2)] rounded-xl transition-colors text-left" style={{ textDecoration: 'none' }}>
+          <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
+            <History size={18} className="text-[var(--color-accent)]" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[var(--color-text)]">Histórico de Treinos</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Veja todos os seus treinos passados</p>
+          </div>
+          <History size={16} className="text-[var(--color-text-subtle)]" />
+        </Link>
+
+        <div className="mx-4 h-px bg-[var(--color-border)] opacity-20" />
 
         <button onClick={handleNotif}
           className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--color-surface-2)] rounded-xl transition-colors text-left">
