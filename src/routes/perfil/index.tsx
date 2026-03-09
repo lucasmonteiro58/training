@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useAuth } from '../../hooks/useAuth'
 import { useHistoricoStore, usePlanosStore } from '../../stores'
-import { formatarTempo } from '../../lib/notifications'
-import { LogOut, User, Dumbbell, History, TrendingUp, Bell, Info, ChevronRight } from 'lucide-react'
-import { solicitarPermissaoNotificacao } from '../../lib/notifications'
+import { formatarTempo, solicitarPermissaoNotificacao, getNotifAtivas, setNotifAtivas } from '../../lib/notifications'
+import { LogOut, User, Dumbbell, History, TrendingUp, Bell, BellOff, Info, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -15,17 +14,42 @@ function PerfilPage() {
   const { user, logout } = useAuth()
   const planos = usePlanosStore((s) => s.planos)
   const sessoes = useHistoricoStore((s) => s.sessoes)
-  const [notifPermitida, setNotifPermitida] = useState(typeof Notification !== 'undefined' && Notification.permission === 'granted')
+  const [notifPermitida, setNotifPermitida] = useState(() => getNotifAtivas())
+
+  const handleNotif = async () => {
+    const permissao = typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+
+    if (permissao === 'granted' && notifPermitida) {
+      setNotifAtivas(false)
+      setNotifPermitida(false)
+      toast.success('Notificações desativadas.')
+      return
+    }
+
+    if (permissao === 'granted' && !notifPermitida) {
+      setNotifAtivas(true)
+      setNotifPermitida(true)
+      toast.success('Notificações reativadas!')
+      return
+    }
+
+    if (permissao === 'denied') {
+      toast.error('Permissão bloqueada pelo navegador. Acesse as configurações do site para reativar.')
+      return
+    }
+
+    const ok = await solicitarPermissaoNotificacao()
+    if (ok) {
+      setNotifAtivas(true)
+      setNotifPermitida(true)
+      toast.success('Notificações ativadas! Você receberá alertas durante o treino.')
+    } else {
+      toast.error('Permissão negada. Ative nas configurações do seu navegador.')
+    }
+  }
 
   const totalDuracao = sessoes.reduce((sum, s) => sum + (s.duracaoSegundos ?? 0), 0)
   const totalVolume = sessoes.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
-
-  const handleNotif = async () => {
-    const ok = await solicitarPermissaoNotificacao()
-    setNotifPermitida(ok)
-    if (ok) toast.success('Notificações ativadas! Você receberá alertas durante o treino.')
-    else toast.error('Permissão negada. Ative nas configurações do seu navegador.')
-  }
 
   return (
     <div className="page-container pt-6">
@@ -95,18 +119,25 @@ function PerfilPage() {
 
         <button onClick={handleNotif}
           className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--color-surface-2)] rounded-xl transition-colors text-left">
-          <div className="w-9 h-9 rounded-xl bg-[rgba(245,158,11,0.12)] flex items-center justify-center">
-            <Bell size={18} className="text-amber-400" />
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${notifPermitida ? 'bg-[rgba(245,158,11,0.12)]' : 'bg-[var(--color-surface-2)]'}`}>
+            {notifPermitida
+              ? <Bell size={18} className="text-amber-400" />
+              : <BellOff size={18} className="text-[var(--color-text-muted)]" />}
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-[var(--color-text)]">Notificações de Treino</p>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-              {notifPermitida ? '✓ Ativadas' : 'Toque para ativar'}
+              {notifPermitida ? 'Toque para desativar' : 'Toque para ativar'}
             </p>
           </div>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${notifPermitida ? 'bg-[rgba(34,197,94,0.12)] text-[var(--color-success)]' : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'}`}>
-            {notifPermitida ? 'Ativa' : 'Inativa'}
-          </span>
+          {/* Toggle switch */}
+          <div className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+            notifPermitida ? 'bg-amber-400' : 'bg-[var(--color-border-strong)]'
+          }`}>
+            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${
+              notifPermitida ? 'left-5' : 'left-0.5'
+            }`} />
+          </div>
         </button>
 
         <div className="mx-4 h-px bg-[var(--color-border)]" />

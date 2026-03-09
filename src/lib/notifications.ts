@@ -1,5 +1,16 @@
 let swRegistration: ServiceWorkerRegistration | null = null
 
+const NOTIF_PREF_KEY = 'training_notif_ativas'
+
+export function getNotifAtivas(): boolean {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false
+  return localStorage.getItem(NOTIF_PREF_KEY) !== 'false'
+}
+
+export function setNotifAtivas(ativo: boolean): void {
+  localStorage.setItem(NOTIF_PREF_KEY, ativo ? 'true' : 'false')
+}
+
 export async function registrarServiceWorker(): Promise<void> {
   if (!('serviceWorker' in navigator)) return
   try {
@@ -22,7 +33,8 @@ export function enviarNotificacaoTreino(
   corpo: string,
   tag = 'training-workout'
 ): void {
-  if (typeof Notification === 'undefined' || !swRegistration?.active || Notification.permission !== 'granted') return
+  if (!getNotifAtivas()) return
+  if (!swRegistration?.active) return
   swRegistration.active.postMessage({
     type: 'WORKOUT_NOTIFICATION',
     payload: { titulo, corpo, tag },
