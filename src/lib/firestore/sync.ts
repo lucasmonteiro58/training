@@ -149,13 +149,19 @@ export function subscribeToProgressoTreino(
   callback: (dados: any) => void
 ): () => void {
   const ref = doc(db, 'ativo', userId)
-  return onSnapshot(ref, (d) => {
-    if (d.exists()) {
-      callback(d.data())
-    } else {
-      callback(null)
+  return onSnapshot(
+    ref,
+    (d) => {
+      if (d.exists()) {
+        callback(d.data())
+      } else {
+        callback(null)
+      }
+    },
+    (err) => {
+      console.error('Erro no subscribe de Progresso Treino:', err)
     }
-  })
+  )
 }
 
 export async function limparProgressoTreinoFirestore(userId: string): Promise<void> {
@@ -211,15 +217,21 @@ export function subscribeToExercicios(
     where('userId', '==', userId)
   )
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const exercicios: Exercicio[] = []
-    snapshot.forEach((d) => {
-      const data = d.data() as Exercicio
-      exercicios.push(data)
-      salvarExercicioPersonalizado(data)
-    })
-    callback(exercicios)
-  })
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const exercicios: Exercicio[] = []
+      snapshot.forEach((d) => {
+        const data = d.data() as Exercicio
+        exercicios.push(data)
+        salvarExercicioPersonalizado(data)
+      })
+      callback(exercicios)
+    },
+    (err) => {
+      console.error('Erro no subscribe de Exercícios:', err)
+    }
+  )
 
   return unsubscribe
 }

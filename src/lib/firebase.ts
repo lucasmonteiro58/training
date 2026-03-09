@@ -1,8 +1,7 @@
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import {
   getFirestore,
-  enableIndexedDbPersistence,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -14,21 +13,10 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig)
+// Initialize Firebase (Singleton pattern)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
 export const auth = getAuth(app)
 export const db = getFirestore(app)
-
-// Habilitar persistência offline (IndexedDB do Firebase)
-if (typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Firebase persistence: múltiplas abas abertas')
-    } else if (err.code === 'unimplemented') {
-      console.warn('Firebase persistence: navegador não suporta')
-    }
-  })
-}
 
 export default app
