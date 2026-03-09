@@ -27,7 +27,6 @@ import {
   Zap,
   Share2,
   Trophy,
-  Copy,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/treino-ativo/$planoId')({
@@ -60,6 +59,7 @@ function TreinoAtivoPage() {
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
   const [relatorio, setRelatorio] = useState<SessaoDeTreino | null>(null)
   const [copiado, setCopiado] = useState(false)
+  const [gerandoImagem, setGerandoImagem] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
 
@@ -187,38 +187,223 @@ function TreinoAtivoPage() {
     setFinalizando(false)
   }
 
-  const gerarTextoRelatorio = (s: SessaoDeTreino): string => {
-    const data = new Date(s.iniciadoEm).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const gerarImagemRelatorio = async (s: SessaoDeTreino): Promise<Blob | null> => {
+    const W = 1080
+    const PAD = 64
+    const C = {
+      bg: '#0d0f14', surface: '#161820', surface2: '#1e2028',
+      accent: '#6366f1', success: '#22c55e',
+      text: '#f0f0f5', muted: '#8b8fa8', subtle: '#565870',
+      border: 'rgba(255,255,255,0.08)',
+    }
+
+    const exerciciosVisiveis = s.exercicios.filter(ex => ex.series.some(sr => sr.completada))
+    const totalSeries = s.exercicios.reduce((a, ex) => a + ex.series.filter(sr => sr.completada).length, 0)
     const duracao = s.duracaoSegundos ? formatarTempo(s.duracaoSegundos) : '–'
     const volume = s.volumeTotal ? `${Math.round(s.volumeTotal)} kg` : '–'
-    const totalSeries = s.exercicios.reduce((acc, ex) => acc + ex.series.filter(sr => sr.completada).length, 0)
-    const linhas = [
-      `🏋️ *${s.planoNome}* — ${data}`,
-      `⏱ Duração: ${duracao}  |  📦 Volume: ${volume}  |  ✅ Séries: ${totalSeries}`,
-      '',
-      ...s.exercicios.map((ex) => {
-        const seriesOk = ex.series.filter(sr => sr.completada)
-        if (!seriesOk.length) return null
-        const resumo = seriesOk.map((sr, i) => `  ${i + 1}. ${sr.peso ?? 0}kg × ${sr.repeticoes ?? 0} reps`).join('\n')
-        return `*${ex.exercicioNome}*\n${resumo}`
-      }).filter(Boolean),
-      '',
-      '💪 Gerado pelo Training App',
+    const data = new Date(s.iniciadoEm).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+    // Estimate height
+    const headerH = 320
+    const statsH = 160
+    const exH = exerciciosVisiveis.reduce((acc, ex) => {
+      const sets = ex.series.filter(sr => sr.completada)
+      const rows = Math.ceil(sets.length / 4)
+      return acc + 80 + rows * 52 + 32
+    }, 0)
+    const footerH = 100
+    const H = headerH + statsH + exH + footerH + PAD * 2
+
+    const canvas = document.createElement('canvas')
+    canvas.width = W
+    canvas.height = H
+    const ctx = canvas.getContext('2d')!
+
+    const roundRect = (x: number, y: number, w: number, h: number, r: number) => {
+      ctx.beginPath()
+      ctx.roundRect(x, y, w, h, r)
+      ctx.fill()
+    }
+
+    // Background
+    ctx.fillStyle = C.bg
+    ctx.fillRect(0, 0, W, H)
+
+    // Top accent bar
+    const grad = ctx.createLinearGradient(0, 0, W, 0)
+    grad.addColorStop(0, '#6366f1')
+    grad.addColorStop(1, '#a78bfa')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, W, 8)
+
+    // Subtle top glow
+    const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.7)
+    glow.addColorStop(0, 'rgba(99,102,241,0.18)')
+    glow.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, W, 300)
+
+    let y = 48
+
+    // App label
+    ctx.fillStyle = C.muted
+    ctx.font = `500 ${36}px -apple-system, Inter, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.fillText('Training App', W / 2, (y += 48))
+
+    // Trophy
+    ctx.font = `${96}px serif`
+    ctx.fillText('🏆', W / 2, (y += 114))
+
+    // Title
+    ctx.fillStyle = C.text
+    ctx.font = `800 ${72}px -apple-system, Inter, sans-serif`
+    ctx.fillText('Treino Concluído!', W / 2, (y += 88))
+
+    // Plan name
+    ctx.fillStyle = C.accent
+    ctx.font = `600 ${44}px -apple-system, Inter, sans-serif`
+    ctx.fillText(s.planoNome, W / 2, (y += 58))
+
+    // Date
+    ctx.fillStyle = C.muted
+    ctx.font = `400 ${34}px -apple-system, Inter, sans-serif`
+    ctx.fillText(data, W / 2, (y += 50))
+
+    // Divider
+    y += 36
+    ctx.strokeStyle = C.border
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(PAD, y)
+    ctx.lineTo(W - PAD, y)
+    ctx.stroke()
+    y += 40
+
+    // Stats cards
+    const stats = [
+      { label: 'DURAÇÃO', value: duracao },
+      { label: 'VOLUME', value: volume },
+      { label: 'SÉRIES', value: String(totalSeries) },
     ]
-    return linhas.join('\n')
+    const cardW = (W - PAD * 2 - 24) / 3
+    const cardH = 130
+    stats.forEach((st, i) => {
+      const cx = PAD + i * (cardW + 12)
+      ctx.fillStyle = C.surface
+      roundRect(cx, y, cardW, cardH, 20)
+      // border
+      ctx.strokeStyle = C.border
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.roundRect(cx, y, cardW, cardH, 20)
+      ctx.stroke()
+      // value
+      ctx.fillStyle = C.text
+      ctx.font = `700 ${48}px -apple-system, Inter, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.fillText(st.value, cx + cardW / 2, y + 72)
+      // label
+      ctx.fillStyle = C.subtle
+      ctx.font = `500 ${26}px -apple-system, Inter, sans-serif`
+      ctx.fillText(st.label, cx + cardW / 2, y + 108)
+    })
+    y += cardH + 48
+
+    // Exercises
+    ctx.textAlign = 'left'
+    exerciciosVisiveis.forEach((ex) => {
+      const sets = ex.series.filter(sr => sr.completada)
+      if (!sets.length) return
+
+      // Exercise name row
+      ctx.fillStyle = C.text
+      ctx.font = `600 ${38}px -apple-system, Inter, sans-serif`
+      ctx.fillText(ex.exercicioNome, PAD, y)
+      ctx.fillStyle = C.muted
+      ctx.font = `400 ${30}px -apple-system, Inter, sans-serif`
+      ctx.fillText(`${sets.length} séries`, W - PAD - 140, y)
+      y += 44
+
+      // Set chips
+      let chipX = PAD
+      const chipH = 44
+      const chipPadX = 24
+      sets.forEach((sr) => {
+        const label = `${sr.peso ?? 0}kg × ${sr.repeticoes ?? 0}`
+        ctx.font = `500 ${26}px -apple-system, Inter, sans-serif`
+        const tw = ctx.measureText(label).width
+        const cw = tw + chipPadX * 2
+
+        if (chipX + cw > W - PAD) {
+          chipX = PAD
+          y += chipH + 10
+        }
+
+        ctx.fillStyle = C.surface2
+        ctx.beginPath()
+        ctx.roundRect(chipX, y, cw, chipH, 12)
+        ctx.fill()
+        ctx.strokeStyle = C.border
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.roundRect(chipX, y, cw, chipH, 12)
+        ctx.stroke()
+
+        ctx.fillStyle = C.muted
+        ctx.textAlign = 'center'
+        ctx.fillText(label, chipX + cw / 2, y + chipH - 12)
+        ctx.textAlign = 'left'
+        chipX += cw + 10
+      })
+      y += chipH + 32
+    })
+
+    // Footer divider
+    y += 8
+    ctx.strokeStyle = C.border
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(PAD, y)
+    ctx.lineTo(W - PAD, y)
+    ctx.stroke()
+    y += 32
+
+    // Footer text
+    ctx.fillStyle = C.subtle
+    ctx.font = `400 ${30}px -apple-system, Inter, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.fillText('💪 Gerado pelo Training App', W / 2, y + 36)
+
+    return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
   }
 
   const handleCompartilhar = async (s: SessaoDeTreino) => {
-    const texto = gerarTextoRelatorio(s)
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `Treino: ${s.planoNome}`, text: texto })
-        return
-      } catch { /* user cancelled */ }
+    setGerandoImagem(true)
+    try {
+      const blob = await gerarImagemRelatorio(s)
+      if (!blob) throw new Error('Falha ao gerar imagem')
+
+      const file = new File([blob], `treino-${Date.now()}.png`, { type: 'image/png' })
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Treino: ${s.planoNome}` })
+      } else {
+        // Fallback: download the image
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `treino-${s.planoNome.replace(/\s+/g, '-')}.png`
+        a.click()
+        URL.revokeObjectURL(url)
+        setCopiado(true)
+        setTimeout(() => setCopiado(false), 2500)
+      }
+    } catch {
+      // user cancelled or error — ignore
+    } finally {
+      setGerandoImagem(false)
     }
-    await navigator.clipboard.writeText(texto)
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2500)
   }
 
   if (relatorio) {
@@ -280,8 +465,13 @@ function TreinoAtivoPage() {
           <button
             className="btn-primary w-full py-4 flex items-center justify-center gap-2"
             onClick={() => handleCompartilhar(relatorio)}
+            disabled={gerandoImagem}
           >
-            {copiado ? <><Copy size={18} /> Copiado!</> : <><Share2 size={18} /> Compartilhar Relatório</>}
+            {gerandoImagem
+              ? <><span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> Gerando imagem...</>
+              : copiado ? <><Share2 size={18} /> Imagem salva!</>
+              : <><Share2 size={18} /> Compartilhar como Imagem</>
+            }
           </button>
           <button
             className="btn-ghost w-full py-3"
