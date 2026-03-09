@@ -368,7 +368,14 @@ function ExercicioNoPlanoCard({
                 <span className="text-center text-text-subtle">#</span>
                 <span className="text-center text-text-subtle">PESO (KG)</span>
                 <button
-                  onClick={() => onUpdate({ tipoSerie: proximo })}
+                  onClick={() => {
+                    const updates: Partial<typeof exercicio> = { tipoSerie: proximo }
+                    if (proximo === 'tempo') {
+                      updates.seriesDetalhadas = exercicio.seriesDetalhadas.map((s) => ({ ...s, repeticoes: 1 }))
+                    }
+                    onUpdate(updates)
+                    setApplyAll(null)
+                  }}
                   title={`Mudar para: ${nextLabels[tipo]}`}
                   className={`flex items-center justify-center gap-1 rounded-md border px-1.5 py-0.5 transition-colors ${
                     tipo === 'reps'
