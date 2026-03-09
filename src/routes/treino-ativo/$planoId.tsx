@@ -50,9 +50,12 @@ function TreinoAtivoPage() {
 
   const timerRef = useRef<number | null>(null)
   const descansoRef = useRef<number | null>(null)
+
+  useEffect(() => { setApplyAll(null) }, [exercicioAtualIndex])
   const [finalizando, setFinalizando] = useState(false)
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
+  const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
 
   // ─── Iniciar treino se não estiver ativo ───────────────────────────────────
   useEffect(() => {
@@ -280,9 +283,11 @@ function TreinoAtivoPage() {
                 className="set-input"
                 value={serie.peso === 0 ? '' : serie.peso}
                 placeholder="0"
-                onChange={(e) =>
-                  atualizarSerie(exercicioAtualIndex, sIdx, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })
-                }
+                onChange={(e) => {
+                  const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
+                  atualizarSerie(exercicioAtualIndex, sIdx, { peso: val })
+                  if (exercicioAtual.series.length > 1) setApplyAll({ field: 'peso', sIdx, value: val })
+                }}
                 onFocus={(e) => e.target.select()}
               />
 
@@ -292,9 +297,11 @@ function TreinoAtivoPage() {
                 className="set-input"
                 value={serie.repeticoes === 0 ? '' : serie.repeticoes}
                 placeholder="0"
-                onChange={(e) =>
-                  atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: e.target.value === '' ? 0 : parseInt(e.target.value) })
-                }
+                onChange={(e) => {
+                  const val = e.target.value === '' ? 0 : parseInt(e.target.value)
+                  atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: val })
+                  if (exercicioAtual.series.length > 1) setApplyAll({ field: 'repeticoes', sIdx, value: val })
+                }}
                 onFocus={(e) => e.target.select()}
               />
 
@@ -312,6 +319,53 @@ function TreinoAtivoPage() {
             </div>
           ))}
         </div>
+
+        {/* Repetir valor em outras séries */}
+        {applyAll && (
+          <div className="mt-3 bg-accent/10 border border-accent/20 rounded-xl px-3 py-2.5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-text-muted">
+                Repetir{' '}
+                <strong className="text-text">
+                  {applyAll.field === 'peso' ? `${applyAll.value} kg` : `${applyAll.value} reps`}
+                </strong>{' '}em:
+              </p>
+              <button
+                onClick={() => setApplyAll(null)}
+                className="w-5 h-5 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface-2 transition-colors text-xs"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex gap-1.5">
+              {applyAll.sIdx < exercicioAtual.series.length - 1 && (
+                <button
+                  onClick={() => {
+                    exercicioAtual.series.forEach((_, i) => {
+                      if (i > applyAll.sIdx)
+                        atualizarSerie(exercicioAtualIndex, i, { [applyAll.field]: applyAll.value })
+                    })
+                    setApplyAll(null)
+                  }}
+                  className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent/20"
+                >
+                  ↓ Seguintes
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  exercicioAtual.series.forEach((_, i) => {
+                    atualizarSerie(exercicioAtualIndex, i, { [applyAll.field]: applyAll.value })
+                  })
+                  setApplyAll(null)
+                }}
+                className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-accent"
+              >
+                Todas
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Progresso séries */}
         <div className="mt-4 text-center">

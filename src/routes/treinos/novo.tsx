@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
 import { useAuthStore } from '../../stores'
-import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ExercicioNoPlano, SeriePlano } from '../../types'
 import { CORES_PLANO } from '../../types'
@@ -41,6 +41,9 @@ function NovoPlanoPage() {
   const [saving, setSaving] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [corSelecionada, setCorSelecionada] = useState(CORES_PLANO[0])
+  const [showConfirmVoltar, setShowConfirmVoltar] = useState(false)
+
+  const isDirty = nome.trim() !== '' || descricao.trim() !== '' || exercicios.length > 0 || corSelecionada !== CORES_PLANO[0]
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -103,7 +106,7 @@ function NovoPlanoPage() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => navigate({ to: '/treinos' })}
+            onClick={() => isDirty ? setShowConfirmVoltar(true) : navigate({ to: '/treinos' })}
             className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted hover:text-text transition-colors"
           >
             <ArrowLeft size={18} />
@@ -207,6 +210,34 @@ function NovoPlanoPage() {
         </div>
       </div>
 
+      {showConfirmVoltar && (
+        <div className="modal-overlay" onClick={() => setShowConfirmVoltar(false)}>
+          <div className="modal-content text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-3xl bg-danger/10 flex items-center justify-center mx-auto mb-4">
+              <XCircle size={32} className="text-danger" />
+            </div>
+            <h2 className="text-xl font-bold text-text mb-2">Cancelar criação?</h2>
+            <p className="text-text-muted text-sm mb-6">
+              As alterações feitas serão perdidas e o plano não será salvo.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate({ to: '/treinos' })}
+                className="btn-danger w-full py-4 text-base"
+              >
+                Sim, Descartar
+              </button>
+              <button
+                onClick={() => setShowConfirmVoltar(false)}
+                className="btn-ghost w-full py-3"
+              >
+                Continuar Editando
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPicker && (
         <ExercicioPicker
           onSelect={(ex) => {
@@ -239,6 +270,7 @@ function ExercicioNoPlanoCard({
   onRemove: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: exercicio.id })
 
@@ -273,6 +305,13 @@ function ExercicioNoPlanoCard({
       i === idx ? { ...s, ...campo } : s
     )
     onUpdate({ seriesDetalhadas: novasSeries })
+    if (series.length > 1) {
+      if ('peso' in campo && campo.peso !== undefined) {
+        setApplyAll({ field: 'peso', sIdx: idx, value: campo.peso as number })
+      } else if ('repeticoes' in campo && campo.repeticoes !== undefined) {
+        setApplyAll({ field: 'repeticoes', sIdx: idx, value: campo.repeticoes as number })
+      }
+    }
   }
 
   return (
@@ -354,6 +393,51 @@ function ExercicioNoPlanoCard({
               </div>
             ))}
           </div>
+
+          {applyAll && (
+            <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-2.5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-text-muted">
+                  Repetir{' '}
+                  <strong className="text-text">
+                    {applyAll.field === 'peso' ? `${applyAll.value} kg` : `${applyAll.value} reps`}
+                  </strong>{' '}em:
+                </p>
+                <button
+                  onClick={() => setApplyAll(null)}
+                  className="w-5 h-5 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface-2 transition-colors text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex gap-1.5">
+                {applyAll.sIdx < series.length - 1 && (
+                  <button
+                    onClick={() => {
+                      const novasSeries = series.map((s: SeriePlano, i: number) =>
+                        i > applyAll.sIdx ? { ...s, [applyAll.field]: applyAll.value } : s
+                      )
+                      onUpdate({ seriesDetalhadas: novasSeries })
+                      setApplyAll(null)
+                    }}
+                    className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent/20"
+                  >
+                    ↓ Seguintes
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    const novasSeries = series.map((s: SeriePlano) => ({ ...s, [applyAll.field]: applyAll.value }))
+                    onUpdate({ seriesDetalhadas: novasSeries })
+                    setApplyAll(null)
+                  }}
+                  className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-accent"
+                >
+                  Todas
+                </button>
+              </div>
+            </div>
+          )}
 
           <button
             onClick={addSerie}
