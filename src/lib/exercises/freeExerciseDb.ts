@@ -4,9 +4,9 @@ import { getCachedExercicios, setCachedExercicios } from '../db/dexie'
 
 // Dataset open-source: https://github.com/yuhonas/free-exercise-db
 const RAW_URL =
-  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json'
+  'https://raw.githubusercontent.com/joao-gugel/exercicios-bd-ptbr/refs/heads/main/exercises/exercises-ptbr-full-translation.json'
 const GIF_BASE =
-  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises'
+  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/refs/heads/main/exercises'
 
 interface RawExercise {
   id: string
@@ -30,7 +30,7 @@ function convertRawToExercicio(raw: RawExercise): Exercicio {
   const primaryMuscle = raw.primaryMuscles?.[0] ?? raw.category ?? 'outro'
   const gifUrl =
     raw.images && raw.images.length > 0
-      ? `${GIF_BASE}/${raw.id}/${raw.images[0]}`
+      ? `${GIF_BASE}/${raw.images[0]}`
       : undefined
 
   return {
