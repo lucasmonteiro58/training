@@ -371,7 +371,7 @@ function ExercicioNoPlanoCard({
                   onClick={() => {
                     const updates: Partial<typeof exercicio> = { tipoSerie: proximo }
                     if (proximo === 'tempo') {
-                      updates.seriesDetalhadas = exercicio.seriesDetalhadas.map((s) => ({ ...s, repeticoes: 1 }))
+                      updates.seriesDetalhadas = series.map((s) => ({ ...s, repeticoes: 1 }))
                     }
                     onUpdate(updates)
                     setApplyAll(null)

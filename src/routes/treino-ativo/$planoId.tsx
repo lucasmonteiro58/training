@@ -105,7 +105,7 @@ function TreinoAtivoPage() {
       series: Array.from({ length: ex.series }, (_, i) => ({
         id: uuidv4(),
         ordem: i,
-        repeticoes: ex.repeticoesMeta,
+        repeticoes: ex.seriesDetalhadas?.[i]?.repeticoes ?? ex.repeticoesMeta,
         weight: ex.seriesDetalhadas?.[i]?.peso ?? (ex.pesoMeta ?? 0),
         peso: ex.seriesDetalhadas?.[i]?.peso ?? (ex.pesoMeta ?? 0),
         completada: false,
