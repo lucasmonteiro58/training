@@ -3,8 +3,25 @@ import { useState } from 'react'
 import { usePlanos } from '../../hooks/usePlanos'
 import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
-import type { ExercicioNoPlano, PlanoDeTreino, SeriePlano } from '../../types'
+import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 export const Route = createFileRoute('/treinos/$planoId')({
   component: PlanoDetalheComponent,
@@ -20,6 +37,11 @@ function PlanoDetalheComponent() {
   const [showPicker, setShowPicker] = useState(false)
   const [exerciciosEdit, setExerciciosEdit] = useState<ExercicioNoPlano[]>(plano?.exercicios ?? [])
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   if (!plano) {
     return (
@@ -53,6 +75,34 @@ function PlanoDetalheComponent() {
         return { ...ex, seriesDetalhadas: novas }
       })
     )
+  }
+
+  const atualizarDescansoEdit = (exId: string, segundos: number) => {
+    setExerciciosEdit((prev) =>
+      prev.map((ex) => (ex.id === exId ? { ...ex, descansoSegundos: segundos } : ex))
+    )
+  }
+
+  const atualizarTipoSerieEdit = (exId: string, tipo: TipoSerie) => {
+    setExerciciosEdit((prev) =>
+      prev.map((ex) => {
+        if (ex.id !== exId) return ex
+        const base = ex.seriesDetalhadas ?? Array.from({ length: ex.series }, () => ({ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta }))
+        const seriesDetalhadas = tipo === 'tempo' ? base.map((s) => ({ ...s, repeticoes: 1 })) : base
+        return { ...ex, tipoSerie: tipo, seriesDetalhadas }
+      })
+    )
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setExerciciosEdit((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id)
+        const newIndex = items.findIndex((i) => i.id === over.id)
+        return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({ ...ex, ordem: idx }))
+      })
+    }
   }
 
   const toggleExpandedEx = (id: string) =>
@@ -117,82 +167,43 @@ function PlanoDetalheComponent() {
             </h2>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {(editando ? exerciciosEdit : plano.exercicios).map((ex) => {
-              const isExpanded = editando && expandedEx.has(ex.id)
-              const seriesEdit = isExpanded
-                ? (ex.seriesDetalhadas ?? Array.from({ length: ex.series }, () => ({ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta })))
-                : []
-              return (
-                <div key={ex.id} className="card p-3">
-                  <div className="flex items-center gap-3">
-                    {editando && <GripVertical size={16} className="text-[var(--color-text-subtle)]" />}
-                    {ex.exercicio.gifUrl ? (
-                      <img src={ex.exercicio.gifUrl} alt={ex.exercicio.nome}
-                        className="w-12 h-12 rounded-xl object-cover bg-[var(--color-surface-2)] flex-shrink-0" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center flex-shrink-0">
-                        <span className="text-2xl">💪</span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[var(--color-text)] font-semibold text-sm truncate">{ex.exercicio.nome}</p>
-                      <div className="flex gap-3 mt-1">
-                        <span className="text-xs text-[var(--color-text-muted)]">{ex.series} séries</span>
-                        <span className="text-xs text-[var(--color-text-muted)]">{ex.repeticoesMeta} reps</span>
-                        {ex.pesoMeta ? <span className="text-xs text-[var(--color-text-muted)]">{ex.pesoMeta}kg</span> : null}
-                        <span className="text-xs text-[var(--color-text-muted)]">⏱ {ex.descansoSegundos}s</span>
-                      </div>
-                    </div>
-                    {editando ? (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => toggleExpandedEx(ex.id)}
-                          className="btn-ghost p-2 text-[var(--color-text-subtle)]"
-                          title="Editar séries"
-                        >
-                          <ChevronDown size={15} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                        </button>
-                        <button onClick={() => removerEx(ex.id)} className="btn-ghost p-2 text-[var(--color-danger)]">
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                  {isExpanded && (
-                    <div className="mt-3 pt-3 border-t border-[var(--color-border)] space-y-2">
-                      <div className="grid grid-cols-[30px_1fr_1fr] gap-2 px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-subtle)]">
-                        <span className="text-center">#</span>
-                        <span className="text-center">Peso (kg)</span>
-                        <span className="text-center">Reps</span>
-                      </div>
-                      {seriesEdit.map((s, i) => (
-                        <div key={i} className="grid grid-cols-[30px_1fr_1fr] gap-2 items-center bg-[var(--color-surface-2)]/50 px-1 py-1 rounded-lg">
-                          <span className="text-[11px] font-bold text-[var(--color-text-muted)] text-center">{i + 1}</span>
-                          <input
-                            type="number"
-                            className="set-input h-9! py-0! text-sm!"
-                            value={s.peso === 0 ? '' : s.peso}
-                            onChange={(e) => atualizarSerieEdit(ex.id, i, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
-                            onFocus={(e) => e.target.select()}
-                            placeholder="0"
-                          />
-                          <input
-                            type="number"
-                            className="set-input h-9! py-0! text-sm!"
-                            value={s.repeticoes === 0 ? '' : s.repeticoes}
-                            onChange={(e) => atualizarSerieEdit(ex.id, i, { repeticoes: e.target.value === '' ? 0 : parseInt(e.target.value) })}
-                            onFocus={(e) => e.target.select()}
-                            placeholder="0"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          {editando ? (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={exerciciosEdit.map((ex) => ex.id)} strategy={verticalListSortingStrategy}>
+                <div className="flex flex-col gap-2">
+                  {exerciciosEdit.map((ex) => (
+                    <ExercicioDetalheCard
+                      key={ex.id}
+                      ex={ex}
+                      editando
+                      isExpanded={expandedEx.has(ex.id)}
+                      onToggleExpand={() => toggleExpandedEx(ex.id)}
+                      onRemove={() => removerEx(ex.id)}
+                      onUpdateSerie={(sIdx, campo) => atualizarSerieEdit(ex.id, sIdx, campo)}
+                      onUpdateDescanso={(s) => atualizarDescansoEdit(ex.id, s)}
+                      onUpdateTipoSerie={(tipo) => atualizarTipoSerieEdit(ex.id, tipo)}
+                    />
+                  ))}
                 </div>
-              )
-            })}
-          </div>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {plano.exercicios.map((ex) => (
+                <ExercicioDetalheCard
+                  key={ex.id}
+                  ex={ex}
+                  editando={false}
+                  isExpanded={false}
+                  onToggleExpand={() => {}}
+                  onRemove={() => {}}
+                  onUpdateSerie={() => {}}
+                  onUpdateDescanso={() => {}}
+                  onUpdateTipoSerie={() => {}}
+                />
+              ))}
+            </div>
+          )}
 
           {editando && (
             <button onClick={() => setShowPicker(true)}
@@ -225,5 +236,152 @@ function PlanoDetalheComponent() {
         <ExercicioPicker onSelect={(ex) => { adicionarEx(ex); setShowPicker(false) }} onClose={() => setShowPicker(false)} />
       )}
     </>
+  )
+}
+
+function ExercicioDetalheCard({
+  ex,
+  editando,
+  isExpanded,
+  onToggleExpand,
+  onRemove,
+  onUpdateSerie,
+  onUpdateDescanso,
+  onUpdateTipoSerie,
+}: {
+  ex: ExercicioNoPlano
+  editando: boolean
+  isExpanded: boolean
+  onToggleExpand: () => void
+  onRemove: () => void
+  onUpdateSerie: (sIdx: number, campo: Partial<SeriePlano>) => void
+  onUpdateDescanso: (segundos: number) => void
+  onUpdateTipoSerie: (tipo: TipoSerie) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: ex.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+  }
+
+  const tipo = ex.tipoSerie ?? 'reps'
+  const ciclo: TipoSerie[] = ['reps', 'tempo', 'falha']
+  const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
+  const tipoLabels: Record<TipoSerie, string> = { reps: 'Reps', tempo: 'Min', falha: 'Falha ⚡' }
+
+  const displayReps =
+    tipo === 'tempo'
+      ? `${ex.seriesDetalhadas?.[0]?.repeticoes ?? 1} min`
+      : tipo === 'falha'
+      ? 'Falha ⚡'
+      : `${ex.repeticoesMeta} reps`
+
+  const seriesEdit = isExpanded
+    ? (ex.seriesDetalhadas ?? Array.from({ length: ex.series }, (_, i) => ({ peso: ex.pesoMeta ?? 0, repeticoes: tipo === 'tempo' ? 1 : ex.repeticoesMeta })))
+    : []
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`card p-3 transition-opacity ${isDragging ? 'opacity-50' : ''}`}
+    >
+      <div className="flex items-center gap-3">
+        {editando && (
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1">
+            <GripVertical size={16} className="text-text-subtle shrink-0" />
+          </div>
+        )}
+        {ex.exercicio.gifUrl ? (
+          <img src={ex.exercicio.gifUrl} alt={ex.exercicio.nome}
+            className="w-12 h-12 rounded-xl object-cover bg-surface-2 shrink-0" />
+        ) : (
+          <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center shrink-0">
+            <span className="text-2xl">💪</span>
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-text font-semibold text-sm truncate">{ex.exercicio.nome}</p>
+          <div className="flex gap-3 mt-1 flex-wrap">
+            <span className="text-xs text-text-muted">{ex.series} séries</span>
+            <span className="text-xs text-text-muted">{displayReps}</span>
+            <span className="text-xs text-text-muted">⏱ {ex.descansoSegundos}s</span>
+          </div>
+        </div>
+        {editando && (
+          <div className="flex items-center gap-1">
+            <button onClick={onToggleExpand} className="btn-ghost p-2 text-text-subtle" title="Editar séries">
+              <ChevronDown size={15} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+            </button>
+            <button onClick={onRemove} className="btn-ghost p-2 text-danger">
+              <Trash2 size={15} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isExpanded && (
+        <div className="mt-3 pt-3 border-t border-border space-y-2">
+          {/* Modo (tipoSerie) */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle">Modo</span>
+            <button
+              onClick={() => onUpdateTipoSerie(proximo)}
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-colors ${
+                tipo === 'reps'
+                  ? 'text-text-muted border-border hover:text-accent hover:border-accent/50'
+                  : 'text-accent border-accent/40 bg-accent/10'
+              }`}
+            >
+              {tipoLabels[tipo]} → {tipoLabels[proximo]}
+            </button>
+          </div>
+          {/* Intervalo */}
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-subtle shrink-0">Intervalo (s)</span>
+            <input
+              type="number"
+              className="set-input h-8! py-0! text-sm! flex-1"
+              value={ex.descansoSegundos}
+              min={0}
+              step={15}
+              onChange={(e) => onUpdateDescanso(e.target.value === '' ? 0 : parseInt(e.target.value))}
+              onFocus={(e) => e.target.select()}
+            />
+          </div>
+          {/* Header séries */}
+          <div className="grid grid-cols-[30px_1fr_1fr] gap-2 px-1 text-[10px] font-bold uppercase tracking-wider text-text-subtle">
+            <span className="text-center">#</span>
+            <span className="text-center">Peso (kg)</span>
+            <span className="text-center">{tipoLabels[tipo]}</span>
+          </div>
+          {seriesEdit.map((s, i) => (
+            <div key={i} className="grid grid-cols-[30px_1fr_1fr] gap-2 items-center bg-surface-2/50 px-1 py-1 rounded-lg">
+              <span className="text-[11px] font-bold text-text-muted text-center">{i + 1}</span>
+              <input
+                type="number"
+                className="set-input h-9! py-0! text-sm!"
+                value={s.peso === 0 ? '' : s.peso}
+                onChange={(e) => onUpdateSerie(i, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                onFocus={(e) => e.target.select()}
+                placeholder="0"
+              />
+              <input
+                type="number"
+                className="set-input h-9! py-0! text-sm!"
+                value={s.repeticoes === 0 ? '' : s.repeticoes}
+                onChange={(e) => onUpdateSerie(i, { repeticoes: e.target.value === '' ? 0 : (tipo === 'tempo' ? parseFloat(e.target.value) : parseInt(e.target.value)) })}
+                onFocus={(e) => e.target.select()}
+                placeholder={tipo === 'falha' ? 'Falha' : tipo === 'tempo' ? '0.0' : '0'}
+                step={tipo === 'tempo' ? '0.5' : '1'}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
