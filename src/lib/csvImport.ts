@@ -3,19 +3,24 @@ import type { LinhaCsvTreino, ExercicioNoPlano, Exercicio } from '../types'
 import { GRUPOS_EN_PT } from '../types'
 import { v4 as uuidv4 } from 'uuid'
 
-export interface ResultadoCsv {
+export interface PlanoImportado {
+  id: string
+  nome: string
   exercicios: ExercicioNoPlano[]
+}
+
+export interface ResultadoCsv {
+  planos: PlanoImportado[]
   erros: string[]
 }
 
-// Template CSV para download pelo usuário
-export const CSV_TEMPLATE = `nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos,instrucoes,notas
-Supino Reto,Peito,4,10;10;8;8,80;80;70;70,90,Deite no banco|Desça a barra devagar,Focar na contração
-Rosca Direta,Bíceps,3,12,20,60,Mantenha a postura,Sem roubar
-Agachamento Livre,Quadríceps,4,8,100,120,Pés na largura dos ombros|Desça até 90 graus,Manter o core firme`
+export const CSV_TEMPLATE = `plano,nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos,instrucoes,notas
+Treino A,Supino Reto,Peito,4,10;10;8;8,80;80;70;70,90,Deite no banco|Desça a barra devagar,Focar na contração
+Treino A,Rosca Direta,Bíceps,3,12,20,60,Mantenha a postura,Sem roubar
+Treino B,Agachamento Livre,Quadríceps,4,8,100,120,Pés na largura dos ombros|Desça até 90 graus,Manter o core firme`
 
 export function parsearCsv(conteudo: string): ResultadoCsv {
-  const resultado: ResultadoCsv = { exercicios: [], erros: [] }
+  const resultado: ResultadoCsv = { planos: [], erros: [] }
 
   const { data, errors } = Papa.parse<LinhaCsvTreino>(conteudo, {
     header: true,
@@ -28,8 +33,11 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
     return resultado
   }
 
+  const planosMap = new Map<string, ExercicioNoPlano[]>()
+  const planoNamesOrder: string[] = []
+
   data.forEach((linha, idx) => {
-    const rowNum = idx + 2 // +2 por cabeçalho + 1-indexed
+    const rowNum = idx + 2
 
     if (!linha.nome_exercicio?.trim()) {
       resultado.erros.push(`Linha ${rowNum}: nome_exercicio é obrigatório`)
@@ -42,7 +50,6 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
       return
     }
 
-    // Suporte a múltiplos valores separados por ponto e vírgula
     const repsArr = (linha.repeticoes || '').split(';').map(v => parseInt(v.trim(), 10)).filter(v => !isNaN(v))
     const pesosArr = (linha.peso_kg || '').split(';').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
     const descanso = parseInt(linha.descanso_segundos || '60', 10)
@@ -59,18 +66,24 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
     }))
 
     const grupoEn = linha.grupo_muscular?.trim() ?? ''
-    const grupoPt =
-      GRUPOS_EN_PT[grupoEn.toLowerCase()] ?? (grupoEn || 'Outro')
+    const grupoPt = GRUPOS_EN_PT[grupoEn.toLowerCase()] ?? (grupoEn || 'Outro')
 
     const exercicio: Exercicio = {
       id: `csv-${uuidv4()}`,
       nome: linha.nome_exercicio.trim(),
       grupoMuscular: grupoPt,
       instrucoes: instrucoesArr,
-      personalizado: true, // Marcar como personalizado para permitir salvamento no db
+      personalizado: true,
     }
 
-    const exercicioNoPlano: ExercicioNoPlano = {
+    const planoNome = (linha as any).plano?.trim() || 'Meu Treino'
+    if (!planosMap.has(planoNome)) {
+      planosMap.set(planoNome, [])
+      planoNamesOrder.push(planoNome)
+    }
+
+    const exerciciosDoPlano = planosMap.get(planoNome)!
+    exerciciosDoPlano.push({
       id: uuidv4(),
       exercicioId: exercicio.id,
       exercicio,
@@ -79,12 +92,16 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
       pesoMeta: pesosArr[0] ?? 0,
       seriesDetalhadas,
       descansoSegundos: isNaN(descanso) ? 60 : descanso,
-      ordem: idx,
+      ordem: exerciciosDoPlano.length,
       notas: linha.notas?.trim() || undefined,
-    }
-
-    resultado.exercicios.push(exercicioNoPlano)
+    })
   })
+
+  resultado.planos = planoNamesOrder.map((nome) => ({
+    id: uuidv4(),
+    nome,
+    exercicios: planosMap.get(nome)!,
+  }))
 
   return resultado
 }

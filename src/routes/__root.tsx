@@ -120,7 +120,7 @@ function RootComponent() {
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] relative overflow-x-hidden">
       <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top,0)]">
-        <div className="pt-4">
+        <div className="pt-4 py-2">
           <Outlet />
         </div>
       </main>
