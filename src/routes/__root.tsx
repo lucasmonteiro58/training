@@ -69,16 +69,17 @@ function RootComponent() {
 
   // Sincronizar treino ativo de outros dispositivos
   useEffect(() => {
-    if (!user || iniciado) return
+    if (!user) return
 
     const unsub = subscribeToProgressoTreino(user.uid, (dados) => {
-      if (dados && dados.iniciado && !iniciado) {
-        iniciarTreino(dados.sessao)
+      const state = useTreinoAtivoStore.getState()
+      if (dados?.iniciado && !state.iniciado) {
+        state.restaurarDeExterno(dados)
       }
     })
 
     return unsub
-  }, [user, iniciado, iniciarTreino])
+  }, [user])
 
   // Global timer tick while training is active and not paused
   useEffect(() => {

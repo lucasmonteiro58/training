@@ -102,6 +102,12 @@ export interface TreinoAtivoStoreState {
   tickGeral: () => void
   tickDescanso: () => void
   atualizarCronometroGeral: (segundos: number) => void
+  restaurarDeExterno: (dados: {
+    sessao: SessaoDeTreino
+    exercicioAtualIndex: number
+    serieAtualIndex: number
+    pausado: boolean
+  }) => void
 }
 
 const syncAtivo = (state: TreinoAtivoStoreState) => {
@@ -264,6 +270,21 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         }),
 
       atualizarCronometroGeral: (segundos) => set({ cronometroGeralSegundos: segundos }),
+
+      restaurarDeExterno: (dados) =>
+        set({
+          sessao: dados.sessao,
+          exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
+          serieAtualIndex: dados.serieAtualIndex ?? 0,
+          pausado: dados.pausado ?? false,
+          iniciado: true,
+          cronometroGeralSegundos: 0,
+          cronometroDescansoSegundos: 0,
+          cronometroDescansoAtivo: false,
+          tempoPausadoTotal: 0,
+          ultimaPausaRecordada: null,
+          timestampDescansoFim: null,
+        }),
     }),
     {
       name: 'training-treino-ativo',

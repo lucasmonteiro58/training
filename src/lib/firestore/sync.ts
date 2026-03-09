@@ -147,10 +147,7 @@ export async function syncProgressoTreinoParaFirestore(
 ): Promise<void> {
   try {
     const ref = doc(db, 'ativo', userId)
-    await setDoc(ref, {
-      ...dados,
-      updatedAt: Date.now(),
-    })
+    await setDoc(ref, stripUndefined({ ...dados, updatedAt: Date.now() }))
   } catch (err) {
     console.error('Erro ao sincronizar progresso ativo:', err)
   }
