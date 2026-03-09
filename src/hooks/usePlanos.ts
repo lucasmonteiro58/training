@@ -72,5 +72,42 @@ export function usePlanos() {
     [removePlano]
   )
 
-  return { planos, loading, criarPlano, atualizarPlano, excluirPlano }
+  const arquivarPlano = useCallback(
+    async (id: string): Promise<void> => {
+      const plano = planos.find(p => p.id === id)
+      if (!plano) return
+      const updated = { ...plano, arquivado: true, updatedAt: Date.now() }
+      await salvarPlano(updated)
+      updatePlano(updated)
+      syncPlanoParaFirestore(updated)
+    },
+    [planos, updatePlano]
+  )
+
+  const desarquivarPlano = useCallback(
+    async (id: string): Promise<void> => {
+      const plano = planos.find(p => p.id === id)
+      if (!plano) return
+      const updated = { ...plano, arquivado: false, updatedAt: Date.now() }
+      await salvarPlano(updated)
+      updatePlano(updated)
+      syncPlanoParaFirestore(updated)
+    },
+    [planos, updatePlano]
+  )
+
+  const planosAtivos = planos.filter(p => !p.arquivado)
+  const planosArquivados = planos.filter(p => p.arquivado)
+
+  return {
+    planos,
+    planosAtivos,
+    planosArquivados,
+    loading,
+    criarPlano,
+    atualizarPlano,
+    excluirPlano,
+    arquivarPlano,
+    desarquivarPlano
+  }
 }

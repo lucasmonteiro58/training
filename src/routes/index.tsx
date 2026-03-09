@@ -12,7 +12,7 @@ export const Route = createFileRoute('/')({
 
 function HomePage() {
   const user = useAuthStore((s) => s.user)
-  const { planos } = usePlanos()
+  const { planosAtivos, loading } = usePlanos()
   const { sessoes } = useHistorico()
   const treinoAtivo = useTreinoAtivoStore((s) => s.iniciado)
   const sessaoAtiva = useTreinoAtivoStore((s) => s.sessao)
@@ -159,7 +159,7 @@ function HomePage() {
           </Link>
         </div>
 
-        {planos.length === 0 ? (
+        {planosAtivos.length === 0 ? (
           <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
             <div className="card p-5 border-dashed border-[var(--color-border-strong)] flex flex-col items-center gap-2 text-center">
               <Plus size={24} className="text-[var(--color-text-subtle)]" />
@@ -168,7 +168,7 @@ function HomePage() {
           </Link>
         ) : (
           <div className="flex flex-col gap-2">
-            {planos.slice(0, 3).map((plano) => (
+            {planosAtivos.slice(0, 3).map((plano) => (
               <Link key={plano.id} to="/treinos/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
                 <div className="card p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">

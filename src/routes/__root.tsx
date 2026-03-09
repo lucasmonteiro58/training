@@ -78,8 +78,8 @@ function RootComponent() {
     return (
       <div className="flex items-center justify-center min-h-dvh bg-[var(--color-bg)]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent)] flex items-center justify-center animate-pulse">
-            <span className="text-white text-xl font-bold">F</span>
+          <div className="flex items-center justify-center animate-pulse">
+            <img src="/icon.png" alt="Logo" className="w-14 h-14 rounded-xl" />
           </div>
           <p className="text-[var(--color-text-muted)] text-sm">Carregando...</p>
         </div>
@@ -93,7 +93,7 @@ function RootComponent() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] h-dvh overflow-hidden relative">
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto pt-4">
         <Outlet />
       </main>
       <FloatingWorkoutButton />
