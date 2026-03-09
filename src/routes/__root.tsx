@@ -129,7 +129,7 @@ function LoginPage() {
       <div className="w-full max-w-sm flex flex-col items-center gap-8 relative z-10 animate-fade-up">
         {/* Logo */}
         <div className="flex flex-col items-center gap-4">
-         <img src="/icon.png" alt="Logo" className="w-14 h-14 rounded-xl" />
+          <img src="/icon.png" alt="Logo" className="w-20 h-20 rounded-xl" />
           <div className="text-center">
             <h1 className="text-4xl font-black gradient-text">Training</h1>
             <p className="text-[var(--color-text-muted)] mt-2 text-base">
