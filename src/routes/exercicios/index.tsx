@@ -61,7 +61,7 @@ function ExerciciosPage() {
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 240,
+    estimateSize: () => 280,
     overscan: 5,
   })
 
@@ -149,21 +149,21 @@ function ExerciciosPage() {
                 >
                   {rows[virtualRow.index].map((ex) => (
                     <button key={ex.id} onClick={() => setSelecionado(ex)}
-                      className="card p-0 overflow-hidden text-left h-full">
+                      className="card p-0 overflow-hidden text-left flex flex-col h-full">
                       {ex.gifUrl ? (
                         <img src={ex.gifUrl} alt={ex.nome}
-                          className="w-full aspect-square object-contain bg-surface-2" loading="lazy" />
+                          className="w-full aspect-square object-cover bg-surface-2" loading="lazy" />
                       ) : (
                         <div className="w-full aspect-square bg-surface-2 flex items-center justify-center">
                           <span className="text-4xl">💪</span>
                         </div>
                       )}
-                      <div className="p-2.5 flex items-center justify-between gap-2">
+                      <div className="p-3 pb-4 flex flex-col gap-1 min-h-0">
                         <div className="flex-1 min-w-0">
-                          <p className="text-text text-sm font-medium truncate">
+                          <p className="text-text text-sm font-bold line-clamp-2 leading-tight">
                             {ex.nome}
                           </p>
-                          <p className="text-text-muted text-xs mt-0.5">
+                          <p className="text-text-muted text-xs mt-1 capitalize">
                             {ex.grupoMuscular}
                           </p>
                         </div>

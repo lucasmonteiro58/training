@@ -53,7 +53,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
   const rowVirtualizer = useVirtualizer({
     count: filtrados.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 72,
+    estimateSize: () => 84,
     overscan: 10,
   })
 
@@ -171,7 +171,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-text text-sm font-medium truncate">
+                        <p className="text-text text-sm font-medium line-clamp-2">
                           {ex.nome}
                         </p>
                         <p className="text-text-muted text-xs mt-0.5">
