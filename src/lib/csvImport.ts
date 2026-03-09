@@ -10,7 +10,7 @@ export interface ResultadoCsv {
 
 // Template CSV para download pelo usuário
 export const CSV_TEMPLATE = `nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos
-Supino Reto,Peito,4,10,80,90
+Supino Reto,Peito,4,10;10;8;8,80;80;70;70,90
 Rosca Direta,Bíceps,3,12,20,60
 Agachamento Livre,Quadríceps,4,8,100,120`
 
@@ -36,19 +36,26 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
       return
     }
 
-    const series = parseInt(linha.series, 10)
-    const repeticoes = parseInt(linha.repeticoes, 10)
-    const peso = parseFloat(linha.peso_kg || '0')
-    const descanso = parseInt(linha.descanso_segundos || '60', 10)
-
-    if (isNaN(series) || series < 1) {
+    const numSeries = parseInt(linha.series, 10)
+    if (isNaN(numSeries) || numSeries < 1) {
       resultado.erros.push(`Linha ${rowNum}: séries inválidas (deve ser um número >= 1)`)
       return
     }
-    if (isNaN(repeticoes) || repeticoes < 1) {
-      resultado.erros.push(`Linha ${rowNum}: repetições inválidas (deve ser um número >= 1)`)
+
+    // Suporte a múltiplos valores separados por ponto e vírgula
+    const repsArr = (linha.repeticoes || '').split(';').map(v => parseInt(v.trim(), 10)).filter(v => !isNaN(v))
+    const pesosArr = (linha.peso_kg || '').split(';').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
+    const descanso = parseInt(linha.descanso_segundos || '60', 10)
+
+    if (repsArr.length === 0) {
+      resultado.erros.push(`Linha ${rowNum}: repetições inválidas`)
       return
     }
+
+    const seriesDetalhadas = Array.from({ length: numSeries }).map((_, i) => ({
+      repeticoes: repsArr[i] ?? repsArr[repsArr.length - 1],
+      peso: pesosArr[i] ?? pesosArr[pesosArr.length - 1] ?? 0,
+    }))
 
     const grupoEn = linha.grupo_muscular?.trim() ?? ''
     const grupoPt =
@@ -64,9 +71,10 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
       id: uuidv4(),
       exercicioId: exercicio.id,
       exercicio,
-      series,
-      repeticoesMeta: repeticoes,
-      pesoMeta: isNaN(peso) ? 0 : peso,
+      series: numSeries,
+      repeticoesMeta: repsArr[0],
+      pesoMeta: pesosArr[0] ?? 0,
+      seriesDetalhadas,
       descansoSegundos: isNaN(descanso) ? 60 : descanso,
       ordem: idx,
     }

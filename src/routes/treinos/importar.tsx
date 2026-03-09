@@ -75,8 +75,8 @@ function ImportarCsvPage() {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h2 className="text-sm font-bold text-[var(--color-text)]">Formato do CSV</h2>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                  O arquivo deve ter estas colunas:
+                <p className="text-xs text-text-muted mt-1">
+                  Use ponto e vírgula (;) para repetições ou pesos diferentes por série (ex: 10;10;8).
                 </p>
               </div>
               <button onClick={downloadTemplateCsv}
@@ -85,7 +85,7 @@ function ImportarCsvPage() {
                 Template
               </button>
             </div>
-            <pre className="text-[10px] text-[var(--color-text-muted)] bg-[var(--color-surface-2)] p-3 rounded-xl overflow-x-auto font-mono">
+            <pre className="text-[10px] text-text-muted bg-surface-2 p-3 rounded-xl overflow-x-auto font-mono">
               {`nome_exercicio,grupo_muscular,series,\nrepeticoes,peso_kg,descanso_segundos`}
             </pre>
           </div>

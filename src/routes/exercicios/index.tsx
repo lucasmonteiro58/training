@@ -56,8 +56,8 @@ function ExerciciosPage() {
 
         {/* Search */}
         <div className="relative mb-3 animate-fade-up" style={{ animationDelay: '50ms' }}>
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" />
-          <input className="input pl-10" placeholder="Buscar por nome ou músculo..."
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+          <input className="input !pl-10" placeholder="Buscar por nome ou músculo..."
             value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
 
@@ -66,10 +66,10 @@ function ExerciciosPage() {
           {['', ...gruposUnicos].map((g) => (
             <button key={g}
               onClick={() => setGrupo(g)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
                 grupo === g
-                  ? 'bg-[var(--color-accent)] text-white'
-                  : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
+                  ? 'bg-accent text-white'
+                  : 'bg-surface-2 text-text-muted border border-border'
               }`}>
               {g || 'Todos'}
             </button>
