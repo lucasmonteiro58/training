@@ -55,6 +55,7 @@ export interface PlanoDeTreino {
   exercicios: ExercicioNoPlano[]
   cor?: string // hex color para card
   arquivado?: boolean
+  ordem?: number // posição na lista
   createdAt: number // timestamp
   updatedAt: number
   syncedAt?: number

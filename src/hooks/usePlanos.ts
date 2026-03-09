@@ -106,8 +106,25 @@ export function usePlanos() {
     [planos, updatePlano]
   )
 
-  const planosAtivos = planos.filter(p => !p.arquivado)
-  const planosArquivados = planos.filter(p => p.arquivado)
+  const reordenarPlanos = useCallback(
+    async (idsOrdenados: string[]): Promise<void> => {
+      const atualizados = planos.map((p) => {
+        const idx = idsOrdenados.indexOf(p.id)
+        if (idx === -1) return p
+        const updated = { ...p, ordem: idx, updatedAt: Date.now() }
+        salvarPlano(updated)
+        syncPlanoParaFirestore(updated)
+        return updated
+      })
+      setPlanos(atualizados)
+    },
+    [planos, setPlanos]
+  )
+
+  const planosAtivos = planos
+    .filter((p) => !p.arquivado)
+    .sort((a, b) => (a.ordem ?? a.createdAt) - (b.ordem ?? b.createdAt))
+  const planosArquivados = planos.filter((p) => p.arquivado)
 
   return {
     planos,
@@ -118,6 +135,7 @@ export function usePlanos() {
     atualizarPlano,
     excluirPlano,
     arquivarPlano,
-    desarquivarPlano
+    desarquivarPlano,
+    reordenarPlanos,
   }
 }
