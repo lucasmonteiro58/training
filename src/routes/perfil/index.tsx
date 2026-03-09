@@ -15,7 +15,7 @@ function PerfilPage() {
   const { user, logout } = useAuth()
   const planos = usePlanosStore((s) => s.planos)
   const sessoes = useHistoricoStore((s) => s.sessoes)
-  const [notifPermitida, setNotifPermitida] = useState(Notification?.permission === 'granted')
+  const [notifPermitida, setNotifPermitida] = useState(typeof Notification !== 'undefined' && Notification.permission === 'granted')
 
   const totalDuracao = sessoes.reduce((sum, s) => sum + (s.duracaoSegundos ?? 0), 0)
   const totalVolume = sessoes.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)

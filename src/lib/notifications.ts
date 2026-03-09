@@ -22,7 +22,7 @@ export function enviarNotificacaoTreino(
   corpo: string,
   tag = 'training-workout'
 ): void {
-  if (!swRegistration?.active || Notification.permission !== 'granted') return
+  if (typeof Notification === 'undefined' || !swRegistration?.active || Notification.permission !== 'granted') return
   swRegistration.active.postMessage({
     type: 'WORKOUT_NOTIFICATION',
     payload: { titulo, corpo, tag },
