@@ -2,7 +2,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
+import { useAuthStore } from '../../stores'
 import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ExercicioNoPlano, SeriePlano } from '../../types'
 import { CORES_PLANO } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
@@ -30,6 +32,8 @@ export const Route = createFileRoute('/treinos/novo')({
 
 function NovoPlanoPage() {
   const navigate = useNavigate()
+  const id = uuidv4()
+  const user = useAuthStore((s) => s.user)
   const { criarPlano, atualizarPlano } = usePlanos()
   const [nome, setNome] = useState('')
   const [descricao, setDescricao] = useState('')
@@ -85,8 +89,9 @@ function NovoPlanoPage() {
       const plano = await criarPlano(nome.trim(), descricao.trim() || undefined)
       await atualizarPlano({ ...plano, exercicios, cor: corSelecionada })
       navigate({ to: '/treinos' })
-    } catch (e) {
-      alert('Erro ao salvar plano')
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao salvar plano')
     } finally {
       setSaving(false)
     }

@@ -5,6 +5,7 @@ import { formatarTempo } from '../../lib/notifications'
 import { LogOut, User, Dumbbell, History, TrendingUp, Bell, Info } from 'lucide-react'
 import { solicitarPermissaoNotificacao } from '../../lib/notifications'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/perfil/')({
   component: PerfilPage,
@@ -22,8 +23,8 @@ function PerfilPage() {
   const handleNotif = async () => {
     const ok = await solicitarPermissaoNotificacao()
     setNotifPermitida(ok)
-    if (ok) alert('Notificações ativadas! Você receberá alertas durante o treino.')
-    else alert('Permissão negada. Ative nas configurações do seu navegador.')
+    if (ok) toast.success('Notificações ativadas! Você receberá alertas durante o treino.')
+    else toast.error('Permissão negada. Ative nas configurações do seu navegador.')
   }
 
   return (

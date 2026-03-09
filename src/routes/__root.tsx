@@ -56,6 +56,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 import { useTreinoAtivoStore } from '../stores'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
+import { Toaster, toast } from 'sonner'
+import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
 
 function RootComponent() {
   const { user, loading } = useAuth()
@@ -96,6 +98,8 @@ function RootComponent() {
       <main className="flex-1 overflow-y-auto pt-4">
         <Outlet />
       </main>
+      <Toaster position="top-center" richColors />
+      <PWAInstallPrompt />
       <FloatingWorkoutButton />
       <BottomNav />
     </div>
@@ -114,7 +118,7 @@ function LoginPage() {
     try {
       await loginComGoogle()
     } catch {
-      alert('Erro ao fazer login. Tente novamente.')
+      toast.error('Erro ao fazer login. Tente novamente.')
     }
   }
 

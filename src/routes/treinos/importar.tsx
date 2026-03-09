@@ -7,6 +7,7 @@ import type { ExercicioNoPlano } from '../../types'
 import { useAuthStore } from '../../stores'
 import { salvarExercicioPersonalizado } from '../../lib/db/dexie'
 import { syncExercicioParaFirestore } from '../../lib/firestore/sync'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/treinos/importar')({
   component: ImportarCsvPage,
@@ -60,7 +61,7 @@ function ImportarCsvPage() {
       setTimeout(() => navigate({ to: '/treinos' }), 1500)
     } catch (e) {
       console.error(e)
-      alert('Erro ao salvar plano.')
+      toast.error('Erro ao salvar plano.')
     } finally {
       setSalvando(false)
     }
