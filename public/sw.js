@@ -1,7 +1,7 @@
-// Service Worker para FitTrack
+// Service Worker para Training
 // Responsável por: notificações de treino em andamento
 
-const CACHE_NAME = 'fittrack-v1'
+const CACHE_NAME = 'training-v1'
 
 // Instalar SW
 self.addEventListener('install', (event) => {
@@ -22,7 +22,7 @@ self.addEventListener('message', (event) => {
       body: corpo,
       icon: '/android-chrome-192x192.png',
       badge: '/android-chrome-192x192.png',
-      tag: tag || 'fittrack-workout',
+      tag: tag || 'training-workout',
       requireInteraction: true,
       vibrate: [200, 100, 200],
       actions: [
@@ -33,7 +33,7 @@ self.addEventListener('message', (event) => {
   }
 
   if (type === 'CLEAR_NOTIFICATIONS') {
-    self.registration.getNotifications({ tag: 'fittrack-workout' }).then((notifs) => {
+    self.registration.getNotifications({ tag: 'training-workout' }).then((notifs) => {
       notifs.forEach((n) => n.close())
     })
   }
@@ -45,10 +45,10 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'open' || !event.action) {
     event.waitUntil(
       self.clients.matchAll({ type: 'window' }).then((clients) => {
-        const fittrackClient = clients.find((c) => c.url.includes(self.location.origin))
-        if (fittrackClient) {
-          fittrackClient.focus()
-          fittrackClient.postMessage({ type: 'OPEN_WORKOUT' })
+        const trainingClient = clients.find((c) => c.url.includes(self.location.origin))
+        if (trainingClient) {
+          trainingClient.focus()
+          trainingClient.postMessage({ type: 'OPEN_WORKOUT' })
         } else {
           self.clients.openWindow('/treino-ativo')
         }

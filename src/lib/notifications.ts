@@ -20,7 +20,7 @@ export async function solicitarPermissaoNotificacao(): Promise<boolean> {
 export function enviarNotificacaoTreino(
   titulo: string,
   corpo: string,
-  tag = 'fittrack-workout'
+  tag = 'training-workout'
 ): void {
   if (!swRegistration?.active || Notification.permission !== 'granted') return
   swRegistration.active.postMessage({

@@ -1,14 +1,14 @@
 import Dexie, { type Table } from 'dexie'
 import type { PlanoDeTreino, SessaoDeTreino, Exercicio } from '../../types'
 
-class FitTrackDB extends Dexie {
+class TrainingDB extends Dexie {
   planos!: Table<PlanoDeTreino>
   sessoes!: Table<SessaoDeTreino>
   exerciciosPersonalizados!: Table<Exercicio>
   exerciciosCache!: Table<Exercicio>
 
   constructor() {
-    super('fittrack-db')
+    super('training-db')
     this.version(1).stores({
       planos: 'id, userId, updatedAt, syncedAt',
       sessoes: 'id, userId, planoId, iniciadoEm, finalizadoEm, syncedAt',
@@ -18,7 +18,7 @@ class FitTrackDB extends Dexie {
   }
 }
 
-export const localDB = new FitTrackDB()
+export const localDB = new TrainingDB()
 
 // ============
 // Planos

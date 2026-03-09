@@ -1,6 +1,6 @@
 {
-  "name": "FitTrack",
-  "short_name": "FitTrack",
+  "name": "Training",
+  "short_name": "Training",
   "description": "Aplicativo de acompanhamento e registro de treinos",
   "start_url": "/",
   "display": "standalone",

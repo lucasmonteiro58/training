@@ -102,7 +102,7 @@ function PerfilPage() {
             <Info size={18} className="text-[var(--color-accent)]" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-[var(--color-text)]">FitTrack</p>
+            <p className="text-sm font-medium text-[var(--color-text)]">Training</p>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Versão 1.0.0</p>
           </div>
         </div>

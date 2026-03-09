@@ -1,5 +1,5 @@
 // ============================================================
-// FitTrack – Type Definitions
+// Training – Type Definitions
 // ============================================================
 
 export interface Exercicio {

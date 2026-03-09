@@ -266,7 +266,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
       atualizarCronometroGeral: (segundos) => set({ cronometroGeralSegundos: segundos }),
     }),
     {
-      name: 'fittrack-treino-ativo',
+      name: 'training-treino-ativo',
       partialize: (s) => ({
         sessao: s.sessao,
         exercicioAtualIndex: s.exercicioAtualIndex,

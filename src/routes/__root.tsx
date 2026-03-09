@@ -129,11 +129,9 @@ function LoginPage() {
       <div className="w-full max-w-sm flex flex-col items-center gap-8 relative z-10 animate-fade-up">
         {/* Logo */}
         <div className="flex flex-col items-center gap-4">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] flex items-center justify-center shadow-[0_0_40px_rgba(99,102,241,0.4)]">
-            <span className="text-white text-4xl font-black">F</span>
-          </div>
+         <img src="/icon.png" alt="Logo" className="w-14 h-14 rounded-xl" />
           <div className="text-center">
-            <h1 className="text-4xl font-black gradient-text">FitTrack</h1>
+            <h1 className="text-4xl font-black gradient-text">Training</h1>
             <p className="text-[var(--color-text-muted)] mt-2 text-base">
               Seu parceiro de treino inteligente
             </p>
