@@ -71,7 +71,7 @@ function RootComponent() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)]">
-      <main className="flex-1">
+      <main className="flex-1 pt-4">
         <Outlet />
       </main>
       <BottomNav />

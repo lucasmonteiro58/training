@@ -56,10 +56,9 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowCriar(true)}
-              className="btn-ghost p-2 text-accent"
-              title="Criar Exercício"
+              className="px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-bold hover:bg-accent/20 transition-colors"
             >
-              <Plus size={20} />
+              Novo
             </button>
             <button onClick={onClose} className="btn-ghost p-2">
               <X size={18} />
@@ -133,7 +132,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-surface-3 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-surface-3 flex items-center justify-center shrink-0">
                       <span className="text-2xl">💪</span>
                     </div>
                   )}
@@ -146,7 +145,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
                       {ex.equipamento ? ` · ${ex.equipamento}` : ''}
                     </p>
                   </div>
-                  <Plus size={18} className="text-accent flex-shrink-0" />
+                  <Plus size={18} className="text-accent shrink-0" />
                 </button>
               ))}
             </div>
