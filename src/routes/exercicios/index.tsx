@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
 import type { Exercicio } from '../../types'
-import { GRUPOS_MUSCULARES } from '../../types'
-import { Search } from 'lucide-react'
+import { Search, Plus } from 'lucide-react'
+import { getExerciciosPersonalizados } from '../../lib/db/dexie'
+import { useAuthStore } from '../../stores'
+import { CriarExercicioModal } from '../../components/exercicios/CriarExercicioModal'
 
 export const Route = createFileRoute('/exercicios/')({
   component: ExerciciosPage,
@@ -16,18 +18,34 @@ function ExerciciosPage() {
   const [query, setQuery] = useState('')
   const [grupo, setGrupo] = useState('')
   const [selecionado, setSelecionado] = useState<Exercicio | null>(null)
+  const [showCriar, setShowCriar] = useState(false)
+  const user = useAuthStore((s) => s.user)
+
+  const carregarTudo = async () => {
+    setLoading(true)
+    const base = await carregarExercicios()
+    let custom: Exercicio[] = []
+    if (user) {
+      custom = await getExerciciosPersonalizados(user.uid)
+    }
+    const todos = [...custom, ...base]
+    setExercicios(todos)
+    setFiltrados(todos)
+    setLoading(false)
+  }
 
   useEffect(() => {
-    carregarExercicios().then((data) => {
-      setExercicios(data)
-      setFiltrados(data.slice(0, 40))
-      setLoading(false)
-    })
-  }, [])
+    carregarTudo()
+  }, [user])
 
   useEffect(() => {
-    setFiltrados(buscarExercicios(exercicios, query, grupo || undefined).slice(0, 60))
+    setFiltrados(buscarExercicios(exercicios, query, grupo || undefined))
   }, [query, grupo, exercicios])
+
+  const gruposUnicos = useMemo(() => {
+    const setGrupos = new Set(exercicios.map(ex => ex.grupoMuscular).filter(Boolean))
+    return Array.from(setGrupos).sort((a, b) => a.localeCompare(b))
+  }, [exercicios])
 
   return (
     <>
@@ -44,8 +62,8 @@ function ExerciciosPage() {
         </div>
 
         {/* Grupos */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 animate-fade-up" style={{ animationDelay: '100ms' }}>
-          {['', ...GRUPOS_MUSCULARES.slice(0, 12)].map((g) => (
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 animate-fade-up scrollbar-hide" style={{ animationDelay: '100ms' }}>
+          {['', ...gruposUnicos].map((g) => (
             <button key={g}
               onClick={() => setGrupo(g)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
@@ -58,8 +76,17 @@ function ExerciciosPage() {
           ))}
         </div>
 
-        {/* count */}
-        <p className="text-xs text-[var(--color-text-muted)] mb-3">{filtrados.length} exercícios</p>
+        {/* count & action */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-[var(--color-text-muted)]">{filtrados.length} exercícios</p>
+          <button
+            onClick={() => setShowCriar(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-accent)] bg-[rgba(99,102,241,0.1)] px-3 py-1.5 rounded-full"
+          >
+            <Plus size={14} />
+            Criar
+          </button>
+        </div>
 
         {/* Grid */}
         {loading ? (
@@ -122,6 +149,19 @@ function ExerciciosPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* modal criar */}
+      {showCriar && (
+        <CriarExercicioModal
+          gruposExistentes={gruposUnicos}
+          onClose={() => setShowCriar(false)}
+          onSuccess={(ex) => {
+            setShowCriar(false)
+            setSelecionado(ex)
+            carregarTudo()
+          }}
+        />
       )}
     </>
   )

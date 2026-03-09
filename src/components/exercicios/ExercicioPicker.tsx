@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
 import type { Exercicio } from '../../types'
-import { GRUPOS_MUSCULARES } from '../../types'
 import { Search, X, Plus } from 'lucide-react'
+import { getExerciciosPersonalizados } from '../../lib/db/dexie'
+import { useAuthStore } from '../../stores'
+import { CriarExercicioModal } from './CriarExercicioModal'
 
 interface ExercicioPicker {
   onSelect: (ex: Exercicio) => void
@@ -10,41 +12,57 @@ interface ExercicioPicker {
 }
 
 export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
+  const user = useAuthStore((s) => s.user)
   const [exercicios, setExercicios] = useState<Exercicio[]>([])
   const [filtrados, setFiltrados] = useState<Exercicio[]>([])
   const [query, setQuery] = useState('')
   const [grupo, setGrupo] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showCriar, setShowCriar] = useState(false)
+
+  const carregarTudo = async () => {
+    setLoading(true)
+    const base = await carregarExercicios()
+    let custom: Exercicio[] = []
+    if (user) {
+      custom = await getExerciciosPersonalizados(user.uid)
+    }
+    const todos = [...custom, ...base]
+    setExercicios(todos)
+    setFiltrados(todos)
+    setLoading(false)
+  }
 
   useEffect(() => {
-    carregarExercicios().then((data) => {
-      setExercicios(data)
-      setFiltrados(data.slice(0, 30))
-      setLoading(false)
-    })
-  }, [])
+    carregarTudo()
+  }, [user])
 
   useEffect(() => {
     const result = buscarExercicios(exercicios, query, grupo || undefined)
-    setFiltrados(result.slice(0, 50))
+    setFiltrados(result)
   }, [query, grupo, exercicios])
+
+  const gruposUnicos = useMemo(() => {
+    const setGrupos = new Set(exercicios.map(ex => ex.grupoMuscular).filter(Boolean))
+    return Array.from(setGrupos).sort((a, b) => a.localeCompare(b))
+  }, [exercicios])
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content max-h-[85dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content max-h-[88dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-[var(--color-text)]">Adicionar Exercício</h2>
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <h2 className="text-lg font-bold text-text">Adicionar Exercício</h2>
           <button onClick={onClose} className="btn-ghost p-2">
             <X size={18} />
           </button>
         </div>
 
         {/* Search */}
-        <div className="relative mb-3">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" />
+        <div className="relative mb-3 shrink-0">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
           <input
-            className="input pl-10"
+            className="input !pl-10"
             placeholder="Buscar exercício..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -53,25 +71,25 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
         </div>
 
         {/* Grupo filter */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide shrink-0 items-center min-h-[40px]">
           <button
             onClick={() => setGrupo('')}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap capitalize ${
               grupo === ''
-                ? 'bg-[var(--color-accent)] text-white'
-                : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
+                ? 'bg-accent text-white'
+                : 'bg-surface-2 text-text-muted'
             }`}
           >
             Todos
           </button>
-          {GRUPOS_MUSCULARES.slice(0, 10).map((g) => (
+          {gruposUnicos.map((g) => (
             <button
               key={g}
               onClick={() => setGrupo(g)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap capitalize ${
                 grupo === g
-                  ? 'bg-[var(--color-accent)] text-white'
-                  : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
+                  ? 'bg-accent text-white'
+                  : 'bg-surface-2 text-text-muted'
               }`}
             >
               {g}
@@ -79,8 +97,15 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
           ))}
         </div>
 
-        {/* Exercise list */}
         <div className="flex-1 overflow-y-auto -mx-4 px-4">
+          <button
+            onClick={() => setShowCriar(true)}
+            className="w-full mb-3 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl text-accent font-semibold hover:bg-surface-2 transition-colors"
+          >
+            <Plus size={18} />
+            Criar Exercício Personalizado
+          </button>
+
           {loading ? (
             <div className="flex flex-col gap-2">
               {[...Array(5)].map((_, i) => (
@@ -88,7 +113,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
               ))}
             </div>
           ) : filtrados.length === 0 ? (
-            <p className="text-center text-[var(--color-text-muted)] py-8 text-sm">
+            <p className="text-center text-text-muted py-8 text-sm">
               Nenhum exercício encontrado
             </p>
           ) : (
@@ -97,36 +122,47 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
                 <button
                   key={ex.id}
                   onClick={() => onSelect(ex)}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] transition-colors text-left w-full"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors text-left w-full"
                 >
                   {ex.gifUrl ? (
                     <img
                       src={ex.gifUrl}
                       alt={ex.nome}
-                      className="w-12 h-12 rounded-lg object-cover bg-[var(--color-surface-3)] flex-shrink-0"
+                      className="w-12 h-12 rounded-lg object-cover bg-surface-3 flex-shrink-0"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-[var(--color-surface-3)] flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-surface-3 flex items-center justify-center flex-shrink-0">
                       <span className="text-2xl">💪</span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[var(--color-text)] text-sm font-medium truncate">
+                    <p className="text-text text-sm font-medium truncate">
                       {ex.nome}
                     </p>
-                    <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+                    <p className="text-text-muted text-xs mt-0.5">
                       {ex.grupoMuscular}
                       {ex.equipamento ? ` · ${ex.equipamento}` : ''}
                     </p>
                   </div>
-                  <Plus size={18} className="text-[var(--color-accent)] flex-shrink-0" />
+                  <Plus size={18} className="text-accent flex-shrink-0" />
                 </button>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {showCriar && (
+        <CriarExercicioModal
+          gruposExistentes={gruposUnicos}
+          onClose={() => setShowCriar(false)}
+          onSuccess={(ex) => {
+            setShowCriar(false)
+            onSelect(ex)
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -11,8 +11,8 @@ import {
   getDocs,
 } from 'firebase/firestore'
 import { db } from '../firebase'
-import { salvarPlano, salvarSessao } from '../db/dexie'
-import type { PlanoDeTreino, SessaoDeTreino } from '../../types'
+import { salvarPlano, salvarSessao, salvarExercicioPersonalizado } from '../db/dexie'
+import type { PlanoDeTreino, SessaoDeTreino, Exercicio } from '../../types'
 
 // ============================
 // Planos
@@ -130,4 +130,42 @@ export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoD
   } catch {
     return []
   }
+}
+
+// ============================
+// Exercícios Personalizados
+// ============================
+export async function syncExercicioParaFirestore(exercicio: Exercicio): Promise<void> {
+  try {
+    const ref = doc(db, 'exercicios', exercicio.id)
+    await setDoc(ref, {
+      ...exercicio,
+      syncedAt: Date.now(),
+    })
+    await salvarExercicioPersonalizado({ ...exercicio, syncedAt: Date.now() } as any)
+  } catch (err) {
+    console.error('Erro ao sincronizar exercicios:', err)
+  }
+}
+
+export function subscribeToExercicios(
+  userId: string,
+  callback: (exercicios: Exercicio[]) => void
+): () => void {
+  const q = query(
+    collection(db, 'exercicios'),
+    where('userId', '==', userId)
+  )
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const exercicios: Exercicio[] = []
+    snapshot.forEach((d) => {
+      const data = d.data() as Exercicio
+      exercicios.push(data)
+      salvarExercicioPersonalizado(data)
+    })
+    callback(exercicios)
+  })
+
+  return unsubscribe
 }
