@@ -49,16 +49,24 @@ export function subscribeToPlanos(
     orderBy('updatedAt', 'desc')
   )
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const planos: PlanoDeTreino[] = []
-    snapshot.forEach((d) => {
-      const data = d.data() as PlanoDeTreino
-      planos.push(data)
-      // Sync para local
-      salvarPlano(data)
-    })
-    callback(planos)
-  })
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const planos: PlanoDeTreino[] = []
+      snapshot.forEach((d) => {
+        const data = d.data() as PlanoDeTreino
+        planos.push(data)
+        salvarPlano(data)
+      })
+      callback(planos)
+    },
+    (err) => {
+      console.error('Erro no subscribe de Planos:', err)
+      if (err.code === 'failed-precondition') {
+        console.warn('Dica: Você provavelmente precisa criar um índice no Console do Firebase. Verifique o log acima para o link.')
+      }
+    }
+  )
 
   return unsubscribe
 }
@@ -99,15 +107,21 @@ export function subscribeToSessoes(
     limit(limitN)
   )
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const sessoes: SessaoDeTreino[] = []
-    snapshot.forEach((d) => {
-      const data = d.data() as SessaoDeTreino
-      sessoes.push(data)
-      salvarSessao(data)
-    })
-    callback(sessoes)
-  })
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const sessoes: SessaoDeTreino[] = []
+      snapshot.forEach((d) => {
+        const data = d.data() as SessaoDeTreino
+        sessoes.push(data)
+        salvarSessao(data)
+      })
+      callback(sessoes)
+    },
+    (err) => {
+      console.error('Erro no subscribe de Sessões:', err)
+    }
+  )
 
   return unsubscribe
 }
@@ -128,6 +142,20 @@ export async function syncProgressoTreinoParaFirestore(
   } catch (err) {
     console.error('Erro ao sincronizar progresso ativo:', err)
   }
+}
+
+export function subscribeToProgressoTreino(
+  userId: string,
+  callback: (dados: any) => void
+): () => void {
+  const ref = doc(db, 'ativo', userId)
+  return onSnapshot(ref, (d) => {
+    if (d.exists()) {
+      callback(d.data())
+    } else {
+      callback(null)
+    }
+  })
 }
 
 export async function limparProgressoTreinoFirestore(userId: string): Promise<void> {

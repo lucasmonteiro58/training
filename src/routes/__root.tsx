@@ -1,8 +1,12 @@
-import { HeadContent, Scripts, createRootRoute, Outlet, redirect } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
 import { BottomNav } from '../components/layout/BottomNav'
+import { useAuthStore, useTreinoAtivoStore } from '../stores'
 import { registrarServiceWorker } from '../lib/notifications'
+import { subscribeToProgressoTreino } from '../lib/firestore/sync'
+import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
+import { Toaster, toast } from 'sonner'
+import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
 
 import appCss from '../styles.css?url'
 
@@ -29,7 +33,6 @@ export const Route = createRootRoute({
       { rel: 'apple-touch-icon', sizes: '152x152', href: '/apple-touch-icon.png' },
       { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
       { rel: 'apple-touch-icon', sizes: '167x167', href: '/apple-touch-icon.png' },
-      // Splash Screens iPhone
       { rel: 'apple-touch-startup-image', href: '/iPhone_16_Plus__iPhone_15_Pro_Max__iPhone_15_Plus__iPhone_14_Pro_Max_portrait.png', media: '(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
       { rel: 'apple-touch-startup-image', href: '/iPhone_16__iPhone_15_Pro__iPhone_15__iPhone_14_Pro_portrait.png', media: '(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
       { rel: 'apple-touch-startup-image', href: '/iPhone_14_Plus__iPhone_13_Pro_Max__iPhone_12_Pro_Max_portrait.png', media: '(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)' },
@@ -54,20 +57,27 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
-import { useTreinoAtivoStore } from '../stores'
-import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
-import { Toaster, toast } from 'sonner'
-import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
-
 function RootComponent() {
-  const { user, loading } = useAuth()
-  const iniciado = useTreinoAtivoStore((s) => s.iniciado)
-  const pausado = useTreinoAtivoStore((s) => s.pausado)
-  const tickGeral = useTreinoAtivoStore((s) => s.tickGeral)
+  const user = useAuthStore((s) => s.user)
+  const loadingAuth = useAuthStore((s) => s.loading)
+  const { iniciado, iniciarTreino, pausado, tickGeral } = useTreinoAtivoStore()
 
   useEffect(() => {
     registrarServiceWorker()
   }, [])
+
+  // Sincronizar treino ativo de outros dispositivos
+  useEffect(() => {
+    if (!user || iniciado) return
+
+    const unsub = subscribeToProgressoTreino(user.uid, (dados) => {
+      if (dados && dados.iniciado && !iniciado) {
+        iniciarTreino(dados.sessao)
+      }
+    })
+
+    return unsub
+  }, [user, iniciado, iniciarTreino])
 
   // Global timer tick while training is active and not paused
   useEffect(() => {
@@ -76,7 +86,7 @@ function RootComponent() {
     return () => clearInterval(interval)
   }, [iniciado, pausado, tickGeral])
 
-  if (loading) {
+  if (loadingAuth) {
     return (
       <div className="flex items-center justify-center min-h-dvh bg-[var(--color-bg)]">
         <div className="flex flex-col items-center gap-4">
@@ -126,14 +136,12 @@ function LoginPage() {
 
   return (
     <div className="min-h-dvh bg-[var(--color-bg)] flex flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top,0)] pb-[max(20px,env(safe-area-inset-bottom,0))] relative overflow-hidden">
-      {/* Background gradient orbs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full bg-[var(--color-accent)] opacity-[0.07] blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-20%] w-[400px] h-[400px] rounded-full bg-purple-500 opacity-[0.06] blur-[80px]" />
       </div>
 
       <div className="w-full max-w-sm flex flex-col items-center gap-8 relative z-10 animate-fade-up">
-        {/* Logo */}
         <div className="flex flex-col items-center gap-4">
           <img src="/icon.png" alt="Logo" className="w-20 h-20 rounded-xl" />
           <div className="text-center">
@@ -144,7 +152,6 @@ function LoginPage() {
           </div>
         </div>
 
-        {/* Features pills */}
         <div className="flex flex-wrap gap-2 justify-center">
           {['📊 Registro de séries', '⏱️ Cronômetro', '📈 Histórico', '🔔 Notificações'].map(
             (f) => (
@@ -158,7 +165,6 @@ function LoginPage() {
           )}
         </div>
 
-        {/* Login button */}
         <div className="w-full flex flex-col gap-3">
           <button
             onClick={handleLogin}
