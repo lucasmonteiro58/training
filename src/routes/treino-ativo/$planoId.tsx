@@ -156,7 +156,7 @@ function TreinoAtivoPage() {
   const seriesCompletadas = exercicioAtual.series.filter((s) => s.completada).length
 
   return (
-    <div className="flex flex-col min-h-dvh bg-[var(--color-bg)]">
+    <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
       {/* ─── Header fixo ───────────────────────────────────────────── */}
       <div className="px-4 pt-4 pb-2 flex flex-col gap-2">
         {/* Top bar */}
@@ -219,13 +219,13 @@ function TreinoAtivoPage() {
       </div>
 
       {/* ─── GIF do exercício ──────────────────────────────────────── */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-4 flex items-center justify-center">
         {exercicioAtual.gifUrl ? (
-          <div className="aspect-[16/9] max-h-48 rounded-2xl overflow-hidden bg-[var(--color-surface)]">
+          <div className="aspect-[16/9] max-h-48  rounded-2xl overflow-hidden bg-[var(--color-surface)]">
             <img
               src={exercicioAtual.gifUrl}
               alt={exercicioAtual.exercicioNome}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
             />
           </div>
         ) : (
@@ -357,7 +357,7 @@ function TreinoAtivoPage() {
                 />
               )}
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-6">
                 <div>
                   <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-1">Músculo</p>
                   <span className="px-2.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium capitalize">
