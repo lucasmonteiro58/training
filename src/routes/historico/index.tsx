@@ -3,7 +3,7 @@ import { useHistorico } from '../../hooks/useHistorico'
 import { formatarTempo } from '../../lib/notifications'
 import { History, Dumbbell, Clock, TrendingUp, ChevronRight, Trash2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 export const Route = createFileRoute('/historico/')({
   component: HistoricoPage,
@@ -11,6 +11,7 @@ export const Route = createFileRoute('/historico/')({
 
 function HistoricoPage() {
   const { sessoes, loading, excluirSessao } = useHistorico()
+  const [confirmExcluir, setConfirmExcluir] = useState<string | null>(null)
 
   // Agrupar volume por semana para o gráfico
   const dadosGrafico = useMemo(() => {
@@ -88,7 +89,7 @@ function HistoricoPage() {
                     <p className="text-[var(--color-text-muted)] text-xs mt-0.5 capitalize">{dataStr}</p>
                   </div>
                   <button
-                    onClick={() => excluirSessao(sessao.id)}
+                    onClick={() => setConfirmExcluir(sessao.id)}
                     className="btn-ghost p-2 text-[var(--color-text-subtle)] hover:text-[var(--color-danger)]"
                   >
                     <Trash2 size={14} />
@@ -126,6 +127,38 @@ function HistoricoPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* ─── Modal de Confirmação Excluir ────────────────────────── */}
+      {confirmExcluir && (
+        <div className="modal-overlay" onClick={() => setConfirmExcluir(null)}>
+          <div className="modal-content text-center" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-3xl bg-[rgba(239,68,68,0.12)] flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={32} className="text-[var(--color-danger)]" />
+            </div>
+            <h2 className="text-xl font-bold text-[var(--color-text)] mb-2">Excluir Sessão?</h2>
+            <p className="text-[var(--color-text-muted)] text-sm mb-6">
+              Esta ação não pode ser desfeita. O registro deste treino será removido do seu histórico.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  excluirSessao(confirmExcluir)
+                  setConfirmExcluir(null)
+                }}
+                className="btn-danger w-full py-4 text-base"
+              >
+                Sim, Excluir
+              </button>
+              <button
+                onClick={() => setConfirmExcluir(null)}
+                className="btn-ghost w-full py-3"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
