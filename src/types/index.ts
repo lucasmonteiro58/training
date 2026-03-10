@@ -12,6 +12,7 @@ export interface Exercicio {
   instrucoes?: string[]
   personalizado?: boolean
   userId?: string
+  favoritado?: boolean
 }
 
 export interface SerieRegistrada {
@@ -31,6 +32,7 @@ export interface SeriePlano {
 }
 
 export type TipoSerie = 'reps' | 'tempo' | 'falha'
+export type TipoAgrupamento = 'superset' | 'dropset' | 'giantset'
 
 export interface ExercicioNoPlano {
   id: string
@@ -45,6 +47,8 @@ export interface ExercicioNoPlano {
   notas?: string
   tipoSerie?: TipoSerie
   duracaoMetaSegundos?: number // usado quando tipoSerie === 'tempo'
+  agrupamentoId?: string // ID compartilhado entre exercícios do mesmo grupo (superset/dropset/giantset)
+  tipoAgrupamento?: TipoAgrupamento
 }
 
 export interface PlanoDeTreino {
@@ -73,6 +77,8 @@ export interface ExercicioNaSessao {
   instrucoes?: string[] // Instruções originais do exercício
   tipoSerie?: TipoSerie
   duracaoMetaSegundos?: number
+  agrupamentoId?: string
+  tipoAgrupamento?: TipoAgrupamento
 }
 
 export interface SessaoDeTreino {
@@ -216,4 +222,40 @@ export const CORES_PLANO = [
   '#10b981', // emerald
   '#06b6d4', // cyan
   '#3b82f6', // blue
+]
+
+// Labels e cores para agrupamentos (superset, dropset, giantset)
+export const AGRUPAMENTO_CONFIG: Record<string, { label: string; cor: string; corBg: string }> = {
+  superset: { label: 'Superset', cor: '#f59e0b', corBg: 'rgba(245,158,11,0.15)' },
+  dropset: { label: 'Drop Set', cor: '#ef4444', corBg: 'rgba(239,68,68,0.15)' },
+  giantset: { label: 'Giant Set', cor: '#8b5cf6', corBg: 'rgba(139,92,246,0.15)' },
+}
+
+// ============================================================
+// Medidas Corporais
+// ============================================================
+export interface MedidaCorporal {
+  id: string
+  userId: string
+  data: number // timestamp
+  peso?: number // kg
+  gordura?: number // % bf
+  braco?: number // cm
+  peito?: number
+  cintura?: number
+  quadril?: number
+  coxa?: number
+  panturrilha?: number
+  notas?: string
+}
+
+export const CAMPOS_MEDIDA: { key: keyof MedidaCorporal; label: string; unidade: string }[] = [
+  { key: 'peso', label: 'Peso', unidade: 'kg' },
+  { key: 'gordura', label: 'Gordura Corporal', unidade: '%' },
+  { key: 'braco', label: 'Braço', unidade: 'cm' },
+  { key: 'peito', label: 'Peito', unidade: 'cm' },
+  { key: 'cintura', label: 'Cintura', unidade: 'cm' },
+  { key: 'quadril', label: 'Quadril', unidade: 'cm' },
+  { key: 'coxa', label: 'Coxa', unidade: 'cm' },
+  { key: 'panturrilha', label: 'Panturrilha', unidade: 'cm' },
 ]

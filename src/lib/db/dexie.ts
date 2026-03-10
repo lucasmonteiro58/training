@@ -1,11 +1,12 @@
 import Dexie, { type Table } from 'dexie'
-import type { PlanoDeTreino, SessaoDeTreino, Exercicio } from '../../types'
+import type { PlanoDeTreino, SessaoDeTreino, Exercicio, MedidaCorporal } from '../../types'
 
 class TrainingDB extends Dexie {
   planos!: Table<PlanoDeTreino>
   sessoes!: Table<SessaoDeTreino>
   exerciciosPersonalizados!: Table<Exercicio>
   exerciciosCache!: Table<Exercicio>
+  medidas!: Table<MedidaCorporal>
 
   constructor() {
     super('training-db')
@@ -14,6 +15,13 @@ class TrainingDB extends Dexie {
       sessoes: 'id, userId, planoId, iniciadoEm, finalizadoEm, syncedAt',
       exerciciosPersonalizados: 'id, userId, grupoMuscular',
       exerciciosCache: 'id, grupoMuscular, nome',
+    })
+    this.version(2).stores({
+      planos: 'id, userId, updatedAt, syncedAt',
+      sessoes: 'id, userId, planoId, iniciadoEm, finalizadoEm, syncedAt',
+      exerciciosPersonalizados: 'id, userId, grupoMuscular',
+      exerciciosCache: 'id, grupoMuscular, nome',
+      medidas: 'id, userId, data',
     })
   }
 }
@@ -90,4 +98,46 @@ export async function getCachedExercicios(): Promise<Exercicio[]> {
 
 export async function setCachedExercicios(exercicios: Exercicio[]): Promise<void> {
   await localDB.exerciciosCache.bulkPut(exercicios)
+}
+
+// ============
+// Favoritos
+// ============
+export async function toggleFavoritoExercicio(exercicioId: string, favoritado: boolean): Promise<void> {
+  // Tenta atualizar no cache
+  const cached = await localDB.exerciciosCache.get(exercicioId)
+  if (cached) {
+    await localDB.exerciciosCache.put({ ...cached, favoritado })
+    return
+  }
+  // Se for personalizado
+  const custom = await localDB.exerciciosPersonalizados.get(exercicioId)
+  if (custom) {
+    await localDB.exerciciosPersonalizados.put({ ...custom, favoritado })
+  }
+}
+
+export async function getFavoritoIds(): Promise<Set<string>> {
+  const cached = await localDB.exerciciosCache.filter(ex => ex.favoritado === true).toArray()
+  const custom = await localDB.exerciciosPersonalizados.filter(ex => ex.favoritado === true).toArray()
+  return new Set([...cached, ...custom].map(ex => ex.id))
+}
+
+// ============
+// Medidas Corporais
+// ============
+export async function getMedidas(userId: string): Promise<MedidaCorporal[]> {
+  return localDB.medidas
+    .where('userId')
+    .equals(userId)
+    .reverse()
+    .sortBy('data')
+}
+
+export async function salvarMedida(medida: MedidaCorporal): Promise<void> {
+  await localDB.medidas.put(medida)
+}
+
+export async function deletarMedida(id: string): Promise<void> {
+  await localDB.medidas.delete(id)
 }

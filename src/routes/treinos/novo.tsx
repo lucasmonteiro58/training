@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate, useBlocker } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
 import { useAuthStore } from '../../stores'
-import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown, XCircle, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown, XCircle, RefreshCw, Link2, Unlink } from 'lucide-react'
 import { toast } from 'sonner'
-import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
-import { CORES_PLANO } from '../../types'
+import type { ExercicioNoPlano, SeriePlano, TipoSerie, TipoAgrupamento } from '../../types'
+import { CORES_PLANO, AGRUPAMENTO_CONFIG } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
 import {
   DndContext,
@@ -43,11 +43,39 @@ function NovoPlanoPage() {
   const [saving, setSaving] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [corSelecionada, setCorSelecionada] = useState(CORES_PLANO[0])
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [showGroupMenu, setShowGroupMenu] = useState(false)
+  const salvouRef = useRef(false)
 
   const isDirty = nome.trim() !== '' || descricao.trim() !== '' || exercicios.length > 0 || corSelecionada !== CORES_PLANO[0]
 
+  const criarAgrupamento = (tipo: TipoAgrupamento) => {
+    if (selecionados.size < 2) return
+    const agrupamentoId = uuidv4()
+    setExercicios(prev => prev.map(ex =>
+      selecionados.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex
+    ))
+    setSelecionados(new Set())
+    setShowGroupMenu(false)
+  }
+
+  const removerDoAgrupamento = (exId: string) => {
+    setExercicios(prev => prev.map(ex =>
+      ex.id === exId ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined } : ex
+    ))
+  }
+
+  const toggleSelecionado = (id: string) => {
+    setSelecionados(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } = useBlocker({
-    shouldBlockFn: () => isDirty,
+    shouldBlockFn: () => isDirty && !salvouRef.current,
     withResolver: true,
   })
 
@@ -102,6 +130,7 @@ function NovoPlanoPage() {
     try {
       const plano = await criarPlano(nome.trim(), descricao.trim() || undefined)
       await atualizarPlano({ ...plano, exercicios, cor: corSelecionada })
+      salvouRef.current = true
       navigate({ to: '/treinos' })
     } catch (err) {
       console.error(err)
@@ -187,6 +216,27 @@ function NovoPlanoPage() {
             <h2 className="text-sm font-bold text-text">
               EXERCÍCIOS ({exercicios.length})
             </h2>
+            {exercicios.length >= 2 && (
+              <div className="flex items-center gap-2">
+                {selecionados.size >= 2 && (
+                  <button
+                    onClick={() => setShowGroupMenu(true)}
+                    className="flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 px-2.5 py-1 rounded-lg"
+                  >
+                    <Link2 size={12} />
+                    Agrupar ({selecionados.size})
+                  </button>
+                )}
+                {selecionados.size > 0 && (
+                  <button
+                    onClick={() => setSelecionados(new Set())}
+                    className="text-xs text-text-muted"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <DndContext
@@ -200,14 +250,52 @@ function NovoPlanoPage() {
               strategy={verticalListSortingStrategy}
             >
               <div className="flex flex-col gap-2">
-                {exercicios.map((ex) => (
-                  <ExercicioNoPlanoCard
-                    key={ex.id}
-                    exercicio={ex}
-                    onUpdate={(campo) => atualizarExercicio(ex.id, campo)}
-                    onRemove={() => removerExercicio(ex.id)}
-                  />
-                ))}
+                {(() => {
+                  const rendered = new Set<string>()
+                  return exercicios.map((ex, idx) => {
+                    // Group container for agrupamento
+                    if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
+                      rendered.add(ex.agrupamentoId)
+                      const groupExs = exercicios.filter(e => e.agrupamentoId === ex.agrupamentoId)
+                      const config = AGRUPAMENTO_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                      return (
+                        <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
+                          <div className="flex items-center justify-between px-2 py-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.cor }}>
+                              {config.label} ({groupExs.length})
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            {groupExs.map(gex => (
+                              <ExercicioNoPlanoCard
+                                key={gex.id}
+                                exercicio={gex}
+                                onUpdate={(campo) => atualizarExercicio(gex.id, campo)}
+                                onRemove={() => removerExercicio(gex.id)}
+                                isSelected={selecionados.has(gex.id)}
+                                onToggleSelect={() => toggleSelecionado(gex.id)}
+                                showSelect={exercicios.length >= 2}
+                                onRemoveFromGroup={() => removerDoAgrupamento(gex.id)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    }
+                    if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
+                    return (
+                      <ExercicioNoPlanoCard
+                        key={ex.id}
+                        exercicio={ex}
+                        onUpdate={(campo) => atualizarExercicio(ex.id, campo)}
+                        onRemove={() => removerExercicio(ex.id)}
+                        isSelected={selecionados.has(ex.id)}
+                        onToggleSelect={() => toggleSelecionado(ex.id)}
+                        showSelect={exercicios.length >= 2}
+                      />
+                    )
+                  })
+                })()}
               </div>
             </SortableContext>
           </DndContext>
@@ -268,6 +356,35 @@ function NovoPlanoPage() {
           onClose={() => setShowPicker(false)}
         />
       )}
+
+      {/* Group type selector modal */}
+      {showGroupMenu && (
+        <div className="modal-overlay" onClick={() => setShowGroupMenu(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-text mb-4">Tipo de Agrupamento</h2>
+            <div className="flex flex-col gap-2">
+              {(Object.entries(AGRUPAMENTO_CONFIG) as [TipoAgrupamento, typeof AGRUPAMENTO_CONFIG[string]][]).map(([tipo, config]) => (
+                <button
+                  key={tipo}
+                  onClick={() => criarAgrupamento(tipo)}
+                  className="flex items-center gap-3 p-4 rounded-xl transition-colors hover:bg-surface-2"
+                  style={{ background: config.corBg }}
+                >
+                  <Link2 size={18} style={{ color: config.cor }} />
+                  <div className="text-left">
+                    <p className="font-semibold text-text text-sm">{config.label}</p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {tipo === 'superset' && 'Executa exercícios alternados sem descanso'}
+                      {tipo === 'dropset' && 'Reduz peso progressivamente sem pausa'}
+                      {tipo === 'giantset' && 'Circuito de 3+ exercícios sem descanso'}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
@@ -276,10 +393,18 @@ function ExercicioNoPlanoCard({
   exercicio,
   onUpdate,
   onRemove,
+  isSelected,
+  onToggleSelect,
+  showSelect,
+  onRemoveFromGroup,
 }: {
   exercicio: ExercicioNoPlano
   onUpdate: (campo: Partial<ExercicioNoPlano>) => void
   onRemove: () => void
+  isSelected?: boolean
+  onToggleSelect?: () => void
+  showSelect?: boolean
+  onRemoveFromGroup?: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
@@ -336,6 +461,25 @@ function ExercicioNoPlanoCard({
         <div ref={setActivatorNodeRef} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 touch-none select-none">
           <GripVertical size={16} className="text-text-subtle shrink-0" />
         </div>
+        {showSelect && !exercicio.agrupamentoId && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleSelect?.() }}
+            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+              isSelected ? 'bg-accent border-accent text-white' : 'border-border-strong'
+            }`}
+          >
+            {isSelected && <span className="text-xs">✓</span>}
+          </button>
+        )}
+        {exercicio.agrupamentoId && onRemoveFromGroup && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemoveFromGroup() }}
+            className="p-1 rounded-lg hover:bg-surface-2 text-text-subtle"
+            title="Remover do agrupamento"
+          >
+            <Unlink size={14} />
+          </button>
+        )}
         {exercicio.exercicio.gifUrl ? (
           <img
             src={exercicio.exercicio.gifUrl}

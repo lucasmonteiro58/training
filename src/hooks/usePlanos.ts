@@ -127,6 +127,32 @@ export function usePlanos() {
     [planos, setPlanos]
   )
 
+  const clonarPlano = useCallback(
+    async (planoId: string): Promise<PlanoDeTreino | null> => {
+      if (!user) throw new Error('Usuário não autenticado')
+      const original = planos.find(p => p.id === planoId)
+      if (!original) return null
+      const clone: PlanoDeTreino = {
+        ...original,
+        id: uuidv4(),
+        nome: `${original.nome} (cópia)`,
+        exercicios: original.exercicios.map(ex => ({
+          ...ex,
+          id: uuidv4(),
+        })),
+        arquivado: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        syncedAt: undefined,
+      }
+      await salvarPlano(clone)
+      addPlano(clone)
+      syncPlanoParaFirestore(clone)
+      return clone
+    },
+    [user, planos, addPlano]
+  )
+
   const planosAtivos = planos
     .filter((p) => !p.arquivado)
     .sort((a, b) => (a.ordem ?? a.createdAt) - (b.ordem ?? b.createdAt))
@@ -143,6 +169,7 @@ export function usePlanos() {
     arquivarPlano,
     desarquivarPlano,
     reordenarPlanos,
+    clonarPlano,
     sincronizar,
   }
 }

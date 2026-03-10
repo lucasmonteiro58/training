@@ -85,6 +85,8 @@ export interface TreinoAtivoStoreState {
   tempoPausadoTotal: number
   ultimaPausaRecordada: number | null
   timestampDescansoFim: number | null
+  // Undo
+  ultimaSerieCompletada: { exercicioIdx: number; serieIdx: number } | null
   // Ações
   iniciarTreino: (sessao: SessaoDeTreino) => void
   finalizarTreino: () => SessaoDeTreino | null
@@ -97,6 +99,8 @@ export interface TreinoAtivoStoreState {
     serieIdx: number,
     dados: Partial<{ repeticoes: number; peso: number; completada: boolean }>
   ) => void
+  marcarSerieCompletada: (exercicioIdx: number, serieIdx: number) => void
+  desfazerUltimaSerie: () => void
   iniciarDescanso: (segundos: number) => void
   pararDescanso: () => void
   tickGeral: () => void
@@ -120,6 +124,7 @@ export interface TreinoAtivoStoreState {
     ultimaPausaRecordada?: number | null
     timestampDescansoFim?: number | null
   }) => void
+  atualizarNotas: (notas: string) => void
   limparLocal: () => void
 }
 
@@ -152,6 +157,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
       tempoPausadoTotal: 0,
       ultimaPausaRecordada: null,
       timestampDescansoFim: null,
+      ultimaSerieCompletada: null,
 
       iniciarTreino: (sessao) => {
         set({
@@ -166,6 +172,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           tempoPausadoTotal: 0,
           ultimaPausaRecordada: null,
           timestampDescansoFim: null,
+          ultimaSerieCompletada: null,
         })
         syncAtivo(get())
       },
@@ -190,6 +197,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           tempoPausadoTotal: 0,
           ultimaPausaRecordada: null,
           timestampDescansoFim: null,
+          ultimaSerieCompletada: null,
         })
         if (userId) limparProgressoTreinoFirestore(userId)
         return finalizada
@@ -242,6 +250,54 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
             }
           })
           return { sessao: { ...s.sessao, exercicios } }
+        })
+        syncAtivo(get())
+      },
+
+      marcarSerieCompletada: (exercicioIdx, serieIdx) => {
+        set((s) => {
+          if (!s.sessao) return {}
+          const exercicios = s.sessao.exercicios.map((ex, eIdx) => {
+            if (eIdx !== exercicioIdx) return ex
+            return {
+              ...ex,
+              series: ex.series.map((serie, sIdx) => {
+                if (sIdx !== serieIdx) return serie
+                return { ...serie, completada: true }
+              }),
+            }
+          })
+          return {
+            sessao: { ...s.sessao, exercicios },
+            ultimaSerieCompletada: { exercicioIdx, serieIdx },
+          }
+        })
+        syncAtivo(get())
+      },
+
+      desfazerUltimaSerie: () => {
+        const { ultimaSerieCompletada } = get()
+        if (!ultimaSerieCompletada) return
+        const { exercicioIdx, serieIdx } = ultimaSerieCompletada
+        set((s) => {
+          if (!s.sessao) return {}
+          const exercicios = s.sessao.exercicios.map((ex, eIdx) => {
+            if (eIdx !== exercicioIdx) return ex
+            return {
+              ...ex,
+              series: ex.series.map((serie, sIdx) => {
+                if (sIdx !== serieIdx) return serie
+                return { ...serie, completada: false }
+              }),
+            }
+          })
+          return {
+            sessao: { ...s.sessao, exercicios },
+            ultimaSerieCompletada: null,
+            cronometroDescansoAtivo: false,
+            cronometroDescansoSegundos: 0,
+            timestampDescansoFim: null,
+          }
         })
         syncAtivo(get())
       },
@@ -327,6 +383,14 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           cronometroDescansoAtivo: dados.timestampDescansoFim != null && dados.timestampDescansoFim > Date.now(),
         }),
 
+      atualizarNotas: (notas) => {
+        set((s) => {
+          if (!s.sessao) return {}
+          return { sessao: { ...s.sessao, notas } }
+        })
+        syncAtivo(get())
+      },
+
       limparLocal: () =>
         set({
           sessao: null,
@@ -339,6 +403,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           tempoPausadoTotal: 0,
           ultimaPausaRecordada: null,
           timestampDescansoFim: null,
+          ultimaSerieCompletada: null,
         }),
     }),
     {

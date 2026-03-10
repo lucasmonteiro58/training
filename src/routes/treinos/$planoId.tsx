@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link, useBlocker } from '@tanstack/react-router'
 import { useState } from 'react'
 import { usePlanos } from '../../hooks/usePlanos'
-import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown, Search, RefreshCw, XCircle } from 'lucide-react'
+import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, ChevronDown, Search, RefreshCw, XCircle, Copy, Link2, Unlink } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
-import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
-import { GRUPOS_MUSCULARES } from '../../types'
+import type { ExercicioNoPlano, SeriePlano, TipoSerie, TipoAgrupamento } from '../../types'
+import { GRUPOS_MUSCULARES, AGRUPAMENTO_CONFIG } from '../../types'
 import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
 import { toast } from 'sonner'
 import { useIniciarTreino } from '../../hooks/useIniciarTreino'
@@ -34,7 +34,7 @@ export const Route = createFileRoute('/treinos/$planoId')({
 function PlanoDetalheComponent() {
   const { planoId } = Route.useParams()
   const navigate = useNavigate()
-  const { planos, atualizarPlano, excluirPlano } = usePlanos()
+  const { planos, atualizarPlano, excluirPlano, clonarPlano } = usePlanos()
   const plano = planos.find((p) => p.id === planoId)
   const [editando, setEditando] = useState(false)
   const [nome, setNome] = useState(plano?.nome ?? '')
@@ -42,6 +42,8 @@ function PlanoDetalheComponent() {
   const [exerciciosEdit, setExerciciosEdit] = useState<ExercicioNoPlano[]>(plano?.exercicios ?? [])
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
   const { handleIniciar, modal: modalInicio } = useIniciarTreino()
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [showGroupMenu, setShowGroupMenu] = useState(false)
 
   const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } = useBlocker({
     shouldBlockFn: () => editando,
@@ -132,6 +134,31 @@ function PlanoDetalheComponent() {
       return next
     })
 
+  const criarAgrupamento = (tipo: TipoAgrupamento) => {
+    if (selecionados.size < 2) return
+    const agrupamentoId = uuidv4()
+    setExerciciosEdit(prev => prev.map(ex =>
+      selecionados.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex
+    ))
+    setSelecionados(new Set())
+    setShowGroupMenu(false)
+  }
+
+  const removerDoAgrupamento = (exId: string) => {
+    setExerciciosEdit(prev => prev.map(ex =>
+      ex.id === exId ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined } : ex
+    ))
+  }
+
+  const toggleSelecionado = (id: string) => {
+    setSelecionados(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
     <>
       <div className="page-container pt-4">
@@ -187,45 +214,123 @@ function PlanoDetalheComponent() {
             <h2 className="text-sm font-bold text-[var(--color-text)]">
               EXERCÍCIOS
             </h2>
+            {editando && exerciciosEdit.length >= 2 && (
+              <div className="flex items-center gap-2">
+                {selecionados.size >= 2 && (
+                  <button
+                    onClick={() => setShowGroupMenu(true)}
+                    className="flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 px-2.5 py-1 rounded-lg"
+                  >
+                    <Link2 size={12} />
+                    Agrupar ({selecionados.size})
+                  </button>
+                )}
+                {selecionados.size > 0 && (
+                  <button
+                    onClick={() => setSelecionados(new Set())}
+                    className="text-xs text-text-muted"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {editando ? (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={exerciciosEdit.map((ex) => ex.id)} strategy={verticalListSortingStrategy}>
                 <div className="flex flex-col gap-2">
-                  {exerciciosEdit.map((ex) => (
-                    <ExercicioDetalheCard
-                      key={ex.id}
-                      ex={ex}
-                      editando
-                      isExpanded={expandedEx.has(ex.id)}
-                      onToggleExpand={() => toggleExpandedEx(ex.id)}
-                      onRemove={() => removerEx(ex.id)}
-                      onUpdateSerie={(sIdx, campo) => atualizarSerieEdit(ex.id, sIdx, campo)}
-                      onUpdateDescanso={(s) => atualizarDescansoEdit(ex.id, s)}
-                      onUpdateTipoSerie={(tipo) => atualizarTipoSerieEdit(ex.id, tipo)}
-                      onUpdateExercicio={(campos) => atualizarExercicioEdit(ex.id, campos)}
-                    />
-                  ))}
+                  {(() => {
+                    const rendered = new Set<string>()
+                    return exerciciosEdit.map((ex) => {
+                      if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
+                        rendered.add(ex.agrupamentoId)
+                        const groupExs = exerciciosEdit.filter(e => e.agrupamentoId === ex.agrupamentoId)
+                        const config = AGRUPAMENTO_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                        return (
+                          <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
+                            <div className="flex items-center justify-between px-2 py-1.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.cor }}>
+                                {config.label} ({groupExs.length})
+                              </span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              {groupExs.map(gex => (
+                                <ExercicioDetalheCard
+                                  key={gex.id}
+                                  ex={gex}
+                                  editando
+                                  isExpanded={expandedEx.has(gex.id)}
+                                  onToggleExpand={() => toggleExpandedEx(gex.id)}
+                                  onRemove={() => removerEx(gex.id)}
+                                  onUpdateSerie={(sIdx, campo) => atualizarSerieEdit(gex.id, sIdx, campo)}
+                                  onUpdateDescanso={(s) => atualizarDescansoEdit(gex.id, s)}
+                                  onUpdateTipoSerie={(tipo) => atualizarTipoSerieEdit(gex.id, tipo)}
+                                  onUpdateExercicio={(campos) => atualizarExercicioEdit(gex.id, campos)}
+                                  showSelect
+                                  isSelected={selecionados.has(gex.id)}
+                                  onToggleSelect={() => toggleSelecionado(gex.id)}
+                                  onRemoveFromGroup={() => removerDoAgrupamento(gex.id)}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      }
+                      if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
+                      return (
+                        <ExercicioDetalheCard
+                          key={ex.id}
+                          ex={ex}
+                          editando
+                          isExpanded={expandedEx.has(ex.id)}
+                          onToggleExpand={() => toggleExpandedEx(ex.id)}
+                          onRemove={() => removerEx(ex.id)}
+                          onUpdateSerie={(sIdx, campo) => atualizarSerieEdit(ex.id, sIdx, campo)}
+                          onUpdateDescanso={(s) => atualizarDescansoEdit(ex.id, s)}
+                          onUpdateTipoSerie={(tipo) => atualizarTipoSerieEdit(ex.id, tipo)}
+                          onUpdateExercicio={(campos) => atualizarExercicioEdit(ex.id, campos)}
+                          showSelect={exerciciosEdit.length >= 2}
+                          isSelected={selecionados.has(ex.id)}
+                          onToggleSelect={() => toggleSelecionado(ex.id)}
+                        />
+                      )
+                    })
+                  })()}
                 </div>
               </SortableContext>
             </DndContext>
           ) : (
             <div className="flex flex-col gap-2">
-              {plano.exercicios.map((ex) => (
-                <ExercicioDetalheCard
-                  key={ex.id}
-                  ex={ex}
-                  editando={false}
-                  isExpanded={false}
-                  onToggleExpand={() => {}}
-                  onRemove={() => {}}
-                  onUpdateSerie={() => {}}
-                  onUpdateDescanso={() => {}}
-                  onUpdateTipoSerie={() => {}}
-                  onUpdateExercicio={() => {}}
-                />
-              ))}
+              {(() => {
+                const rendered = new Set<string>()
+                return plano.exercicios.map((ex) => {
+                  if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
+                    rendered.add(ex.agrupamentoId)
+                    const groupExs = plano.exercicios.filter(e => e.agrupamentoId === ex.agrupamentoId)
+                    const config = AGRUPAMENTO_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                    return (
+                      <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
+                        <div className="px-2 py-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.cor }}>
+                            {config.label} ({groupExs.length})
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {groupExs.map(gex => (
+                            <ExercicioDetalheCard key={gex.id} ex={gex} editando={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  }
+                  if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
+                  return (
+                    <ExercicioDetalheCard key={ex.id} ex={ex} editando={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
+                  )
+                })
+              })()}
             </div>
           )}
 
@@ -239,7 +344,20 @@ function PlanoDetalheComponent() {
 
         {/* Danger zone */}
         {!editando && (
-          <div className="mt-8 mb-4 animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <div className="mt-8 mb-4 animate-fade-up flex flex-col gap-3" style={{ animationDelay: '200ms' }}>
+            <button
+              onClick={async () => {
+                const clone = await clonarPlano(plano.id)
+                if (clone) {
+                  toast.success(`"${clone.nome}" criado!`)
+                  navigate({ to: '/treinos/$planoId', params: { planoId: clone.id } })
+                }
+              }}
+              className="btn-secondary w-full"
+            >
+              <Copy size={16} />
+              Duplicar Plano
+            </button>
             <button
               onClick={async () => {
                 if (confirm(`Excluir "${plano.nome}"?`)) {
@@ -258,6 +376,34 @@ function PlanoDetalheComponent() {
 
       {showPicker && (
         <ExercicioPicker onSelect={(ex) => { adicionarEx(ex); setShowPicker(false) }} onClose={() => setShowPicker(false)} />
+      )}
+
+      {showGroupMenu && (
+        <div className="modal-overlay" onClick={() => setShowGroupMenu(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-text mb-4">Tipo de Agrupamento</h2>
+            <div className="flex flex-col gap-2">
+              {(Object.entries(AGRUPAMENTO_CONFIG) as [TipoAgrupamento, typeof AGRUPAMENTO_CONFIG[string]][]).map(([tipo, config]) => (
+                <button
+                  key={tipo}
+                  onClick={() => criarAgrupamento(tipo)}
+                  className="flex items-center gap-3 p-4 rounded-xl transition-colors hover:bg-surface-2"
+                  style={{ background: config.corBg }}
+                >
+                  <Link2 size={18} style={{ color: config.cor }} />
+                  <div className="text-left">
+                    <p className="font-semibold text-text text-sm">{config.label}</p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {tipo === 'superset' && 'Executa exercícios alternados sem descanso'}
+                      {tipo === 'dropset' && 'Reduz peso progressivamente sem pausa'}
+                      {tipo === 'giantset' && 'Circuito de 3+ exercícios sem descanso'}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {blockerStatus === 'blocked' && (
@@ -295,6 +441,10 @@ function ExercicioDetalheCard({
   onUpdateDescanso,
   onUpdateTipoSerie,
   onUpdateExercicio,
+  showSelect,
+  isSelected,
+  onToggleSelect,
+  onRemoveFromGroup,
 }: {
   ex: ExercicioNoPlano
   editando: boolean
@@ -305,6 +455,10 @@ function ExercicioDetalheCard({
   onUpdateDescanso: (segundos: number) => void
   onUpdateTipoSerie: (tipo: TipoSerie) => void
   onUpdateExercicio: (campos: Partial<ExercicioNoPlano['exercicio']>) => void
+  showSelect?: boolean
+  isSelected?: boolean
+  onToggleSelect?: () => void
+  onRemoveFromGroup?: () => void
 }) {
   const [buscandoImagem, setBuscandoImagem] = useState(false)
   const [imagensWeb, setImagensWeb] = useState<string[]>([])
@@ -370,6 +524,25 @@ function ExercicioDetalheCard({
           <div ref={setActivatorNodeRef} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 touch-none select-none">
             <GripVertical size={16} className="text-text-subtle shrink-0" />
           </div>
+        )}
+        {showSelect && !ex.agrupamentoId && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleSelect?.() }}
+            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+              isSelected ? 'bg-accent border-accent text-white' : 'border-border-strong'
+            }`}
+          >
+            {isSelected && <span className="text-xs">✓</span>}
+          </button>
+        )}
+        {ex.agrupamentoId && onRemoveFromGroup && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemoveFromGroup() }}
+            className="p-1 rounded-lg hover:bg-surface-2 text-text-subtle"
+            title="Remover do agrupamento"
+          >
+            <Unlink size={14} />
+          </button>
         )}
         {ex.exercicio.gifUrl ? (
           <img src={ex.exercicio.gifUrl} alt={ex.exercicio.nome}

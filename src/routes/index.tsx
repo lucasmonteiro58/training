@@ -1,12 +1,15 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import { useAuthStore, useHistoricoStore } from '../stores'
 import { useHistorico } from '../hooks/useHistorico'
 import { usePlanos } from '../hooks/usePlanos'
 import { useTreinoAtivoStore } from '../stores'
 import { formatarTempo } from '../lib/notifications'
 import { useIniciarTreino } from '../hooks/useIniciarTreino'
-import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus, Zap, RefreshCw } from 'lucide-react'
+import { calcularStreaks } from '../lib/streaks'
+import { getConfigUsuario, salvarConfigUsuario } from '../lib/firestore/sync'
+import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus, Zap, RefreshCw, Trophy, Target } from 'lucide-react'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -54,7 +57,7 @@ function HomePage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const { planosAtivos, loading, sincronizar: sincronizarPlanos } = usePlanos()
-  const { sessoes, sincronizar: sincronizarSessoes } = useHistorico()
+  const { sessoes, loading: loadingSessoes, sincronizar: sincronizarSessoes } = useHistorico()
   const [sincronizando, setSincronizando] = useState(false)
   const treinoAtivo = useTreinoAtivoStore((s) => s.iniciado)
   const sessaoAtiva = useTreinoAtivoStore((s) => s.sessao)
@@ -62,6 +65,53 @@ function HomePage() {
   const pausado = useTreinoAtivoStore((s) => s.pausado)
   const cronometroGeralSegundos = useTreinoAtivoStore((s) => s.cronometroGeralSegundos)
   const { handleIniciar, modal: modalProximo } = useIniciarTreino()
+  const [metaSemanal, setMetaSemanal] = useState(4)
+  const [showEditMeta, setShowEditMeta] = useState(false)
+  const [metaInput, setMetaInput] = useState('4')
+
+  // Load user's weekly goal from Firebase
+  useEffect(() => {
+    if (!user) return
+    getConfigUsuario(user.uid).then(config => {
+      if (config.metaSemanal) {
+        setMetaSemanal(config.metaSemanal)
+      }
+    })
+  }, [user])
+
+  // Pull-to-refresh
+  const [pullDistance, setPullDistance] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const touchStartY = useRef(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const PULL_THRESHOLD = 80
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (containerRef.current && containerRef.current.scrollTop === 0) {
+      touchStartY.current = e.touches[0].clientY
+    } else {
+      touchStartY.current = 0
+    }
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartY.current === 0 || isRefreshing) return
+    const diff = e.touches[0].clientY - touchStartY.current
+    if (diff > 0) {
+      setPullDistance(Math.min(diff * 0.5, 120))
+    }
+  }, [isRefreshing])
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+      setIsRefreshing(true)
+      setPullDistance(PULL_THRESHOLD)
+      await Promise.all([sincronizarPlanos(), sincronizarSessoes()])
+      setIsRefreshing(false)
+    }
+    setPullDistance(0)
+    touchStartY.current = 0
+  }, [pullDistance, isRefreshing, sincronizarPlanos, sincronizarSessoes])
 
   const nome = user?.displayName?.split(' ')[0] ?? 'Atleta'
   const hora = new Date().getHours()
@@ -75,6 +125,8 @@ function HomePage() {
   const treinosSemana = sessoes.filter((s) => s.iniciadoEm >= inicioSemana.getTime()).length
   const volumeTotal = sessoes.reduce((acc, s) => acc + (s.volumeTotal ?? 0), 0)
   const ultimasSessoes = sessoes.slice(0, 3)
+  const carregando = loading || loadingSessoes
+  const streaks = useMemo(() => calcularStreaks(sessoes, metaSemanal), [sessoes, metaSemanal])
 
   const exercicioAtual = sessaoAtiva?.exercicios[exercicioAtualIndex]
 
@@ -91,7 +143,29 @@ function HomePage() {
   const diasDaSemana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
   return (
-    <div className="page-container pt-6">
+    <div
+      ref={containerRef}
+      className="page-container pt-6 relative"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      {(pullDistance > 0 || isRefreshing) && (
+        <div
+          className="flex items-center justify-center transition-all duration-150"
+          style={{ height: pullDistance > 0 ? pullDistance : PULL_THRESHOLD, marginTop: -8 }}
+        >
+          <div className={`w-8 h-8 flex items-center justify-center rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] ${isRefreshing ? '' : ''}`}>
+            <RefreshCw
+              size={16}
+              className={`text-[var(--color-accent)] transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`}
+              style={{ transform: isRefreshing ? undefined : `rotate(${Math.min(pullDistance / PULL_THRESHOLD, 1) * 360}deg)` }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6 animate-fade-up flex items-start justify-between">
         <div>
@@ -161,6 +235,13 @@ function HomePage() {
       )}
 
       {/* Stats */}
+      {carregando ? (
+        <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="skeleton h-[88px] rounded-2xl" />
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
         <div className="card p-3 text-center">
           <Flame size={18} className="text-orange-400 mx-auto mb-1" />
@@ -182,6 +263,49 @@ function HomePage() {
           <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">treinos total</p>
         </div>
       </div>
+      )}
+
+      {/* Streak + Meta Semanal */}
+      {!carregando && sessoes.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 mb-6 animate-fade-up" style={{ animationDelay: '75ms' }}>
+          {/* Streak */}
+          <div className="card p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
+              <Flame size={20} className="text-orange-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-black text-[var(--color-text)] tabular-nums">{streaks.streakAtual}</p>
+              <p className="text-[10px] text-[var(--color-text-muted)]">
+                {streaks.streakAtual === 1 ? 'dia seguido' : 'dias seguidos'}
+              </p>
+            </div>
+          </div>
+          {/* Meta Semanal */}
+          <button
+            onClick={() => { setMetaInput(String(metaSemanal)); setShowEditMeta(true) }}
+            className="card p-4 text-left"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Meta Semanal</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-[var(--color-text)]">{streaks.treinosEstaSemana}/{streaks.metaSemanal}</span>
+                <Target size={12} className="text-[var(--color-text-subtle)]" />
+              </div>
+            </div>
+            <div className="progress-bar h-2!">
+              <div
+                className="progress-fill"
+                style={{ width: `${Math.min(100, (streaks.treinosEstaSemana / streaks.metaSemanal) * 100)}%` }}
+              />
+            </div>
+            {streaks.treinosEstaSemana >= streaks.metaSemanal && (
+              <p className="text-[10px] text-[var(--color-success)] font-semibold mt-1.5 flex items-center gap-1">
+                <Trophy size={10} /> Meta batida!
+              </p>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Dias da semana */}
       <div className="card p-4 mb-6 animate-fade-up" style={{ animationDelay: '100ms' }}>
@@ -265,11 +389,22 @@ function HomePage() {
           </Link>
         </div>
 
-        {planosAtivos.length === 0 ? (
+        {carregando ? (
+          <div className="flex flex-col gap-2">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="skeleton h-[68px] rounded-2xl" />
+            ))}
+          </div>
+        ) : planosAtivos.length === 0 ? (
           <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
-            <div className="card p-5 border-dashed border-[var(--color-border-strong)] flex flex-col items-center gap-2 text-center">
-              <Plus size={24} className="text-[var(--color-text-subtle)]" />
-              <p className="text-[var(--color-text-muted)] text-sm">Crie seu primeiro plano</p>
+            <div className="card p-6 border-dashed border-[var(--color-border-strong)] flex flex-col items-center gap-3 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
+                <Plus size={24} className="text-[var(--color-accent)]" />
+              </div>
+              <div>
+                <p className="text-[var(--color-text)] font-semibold text-sm">Crie seu primeiro plano</p>
+                <p className="text-[var(--color-text-muted)] text-xs mt-1">Monte sua rotina de treino personalizada</p>
+              </div>
             </div>
           </Link>
         ) : (
@@ -282,7 +417,18 @@ function HomePage() {
       </div>
 
       {/* Últimos treinos */}
-      {ultimasSessoes.length > 0 && (
+      {carregando ? (
+        <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-[var(--color-text)]">Últimos Treinos</h2>
+          </div>
+          <div className="flex flex-col gap-2">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="skeleton h-[68px] rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      ) : ultimasSessoes.length > 0 && (
         <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-bold text-[var(--color-text)]">Últimos Treinos</h2>
@@ -319,6 +465,45 @@ function HomePage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Editar Meta Semanal */}
+      {showEditMeta && (
+        <div className="modal-overlay" onClick={() => setShowEditMeta(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-[var(--color-text)] mb-1">Meta Semanal</h2>
+            <p className="text-sm text-[var(--color-text-muted)] mb-4">Quantos treinos por semana você quer fazer?</p>
+            <div className="flex items-center justify-center gap-4 mb-6">
+              {[2, 3, 4, 5, 6, 7].map(n => (
+                <button
+                  key={n}
+                  onClick={() => setMetaInput(String(n))}
+                  className={`w-11 h-11 rounded-xl font-bold text-lg transition-all ${
+                    String(n) === metaInput
+                      ? 'bg-[var(--color-accent)] text-white scale-110'
+                      : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={async () => {
+                const valor = parseInt(metaInput)
+                if (valor >= 1 && valor <= 7) {
+                  setMetaSemanal(valor)
+                  setShowEditMeta(false)
+                  if (user) salvarConfigUsuario(user.uid, { metaSemanal: valor })
+                  toast.success(`Meta atualizada para ${valor}x por semana`)
+                }
+              }}
+              className="btn-primary w-full"
+            >
+              Salvar
+            </button>
           </div>
         </div>
       )}

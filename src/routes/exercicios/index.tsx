@@ -2,11 +2,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
 import type { Exercicio } from '../../types'
-import { Search, Plus } from 'lucide-react'
-import { getExerciciosPersonalizados } from '../../lib/db/dexie'
+import { Search, Plus, SearchX, Heart, Calculator } from 'lucide-react'
+import { getExerciciosPersonalizados, toggleFavoritoExercicio, getFavoritoIds } from '../../lib/db/dexie'
 import { useAuthStore } from '../../stores'
 import { CriarExercicioModal } from '../../components/exercicios/CriarExercicioModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { Calculadora1RM } from '../../components/ui/Calculadora1RM'
 
 export const Route = createFileRoute('/exercicios/')({
   component: ExerciciosPage,
@@ -20,6 +21,9 @@ function ExerciciosPage() {
   const [grupo, setGrupo] = useState('')
   const [selecionado, setSelecionado] = useState<Exercicio | null>(null)
   const [showCriar, setShowCriar] = useState(false)
+  const [show1RM, setShow1RM] = useState(false)
+  const [favoritoIds, setFavoritoIds] = useState<Set<string>>(new Set())
+  const [showFavoritos, setShowFavoritos] = useState(false)
   const user = useAuthStore((s) => s.user)
 
   const parentRef = useRef<HTMLDivElement>(null)
@@ -34,6 +38,8 @@ function ExerciciosPage() {
     const todos = [...custom, ...base].sort((a, b) => a.nome.localeCompare(b.nome))
     setExercicios(todos)
     setFiltrados(todos)
+    const favIds = await getFavoritoIds()
+    setFavoritoIds(favIds)
     setLoading(false)
   }
 
@@ -42,8 +48,12 @@ function ExerciciosPage() {
   }, [user])
 
   useEffect(() => {
-    setFiltrados(buscarExercicios(exercicios, query, grupo || undefined))
-  }, [query, grupo, exercicios])
+    let result = buscarExercicios(exercicios, query, grupo || undefined)
+    if (showFavoritos) {
+      result = result.filter(ex => favoritoIds.has(ex.id))
+    }
+    setFiltrados(result)
+  }, [query, grupo, exercicios, showFavoritos, favoritoIds])
 
   const gruposUnicos = useMemo(() => {
     const setGrupos = new Set(exercicios.map(ex => ex.grupoMuscular).filter(Boolean))
@@ -67,7 +77,19 @@ function ExerciciosPage() {
 
   useEffect(() => {
     rowVirtualizer.scrollToOffset(0)
-  }, [query, grupo])
+  }, [query, grupo, showFavoritos])
+
+  const handleToggleFavorito = async (e: React.MouseEvent, exId: string) => {
+    e.stopPropagation()
+    const novoValor = !favoritoIds.has(exId)
+    await toggleFavoritoExercicio(exId, novoValor)
+    setFavoritoIds(prev => {
+      const next = new Set(prev)
+      if (novoValor) next.add(exId)
+      else next.delete(exId)
+      return next
+    })
+  }
 
   return (
     <>
@@ -86,6 +108,16 @@ function ExerciciosPage() {
 
           {/* Grupos */}
           <div className="flex gap-2 overflow-x-auto pb-3 mb-1 animate-fade-up scrollbar-hide" style={{ animationDelay: '100ms' }}>
+            <button
+              onClick={() => setShowFavoritos(!showFavoritos)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                showFavoritos
+                  ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                  : 'bg-surface-2 text-text-muted border border-border'
+              }`}>
+              <Heart size={12} className={showFavoritos ? 'fill-red-400' : ''} />
+              Favoritos{favoritoIds.size > 0 ? ` (${favoritoIds.size})` : ''}
+            </button>
             {['', ...gruposUnicos].map((g) => (
               <button key={g}
                 onClick={() => setGrupo(g)}
@@ -102,13 +134,22 @@ function ExerciciosPage() {
           {/* count & action */}
           <div className="flex items-center justify-between mb-3 animate-fade-up" style={{ animationDelay: '150ms' }}>
             <p className="text-xs text-text-muted">{filtrados.length} exercícios</p>
-            <button
-              onClick={() => setShowCriar(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-full"
-            >
-              <Plus size={14} />
-              Criar
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShow1RM(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted bg-surface-2 px-3 py-1.5 rounded-full border border-border hover:text-accent hover:border-accent/30 transition-colors"
+              >
+                <Calculator size={14} />
+                1RM
+              </button>
+              <button
+                onClick={() => setShowCriar(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-full"
+              >
+                <Plus size={14} />
+                Criar
+              </button>
+            </div>
           </div>
         </div>
 
@@ -123,7 +164,18 @@ function ExerciciosPage() {
               {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-36 rounded-2xl" />)}
             </div>
           ) : rows.length === 0 ? (
-             <p className="text-center text-text-muted py-8 text-sm">Nenhum exercício encontrado</p>
+            <div className="flex flex-col items-center gap-4 mt-12 animate-scale-in text-center px-4">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-2)] flex items-center justify-center">
+                <SearchX size={28} className="text-[var(--color-text-subtle)]" />
+              </div>
+              <p className="text-[var(--color-text)] font-semibold">Nenhum exercício encontrado</p>
+              <p className="text-[var(--color-text-muted)] text-sm">
+                Tente buscar com outro nome ou crie um exercício personalizado
+              </p>
+              <button onClick={() => setShowCriar(true)} className="btn-primary mt-1">
+                <Plus size={16} /> Criar Exercício
+              </button>
+            </div>
           ) : (
             <div
               style={{
@@ -150,7 +202,13 @@ function ExerciciosPage() {
                 >
                   {rows[virtualRow.index].map((ex) => (
                     <button key={ex.id} onClick={() => setSelecionado(ex)}
-                      className="card p-0 overflow-hidden text-left flex flex-col h-full">
+                      className="card p-0 overflow-hidden text-left flex flex-col h-full relative">
+                      <button
+                        onClick={(e) => handleToggleFavorito(e, ex.id)}
+                        className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-colors hover:bg-black/60"
+                      >
+                        <Heart size={16} className={favoritoIds.has(ex.id) ? 'fill-red-400 text-red-400' : 'text-white/70'} />
+                      </button>
                       {ex.gifUrl ? (
                         <img src={ex.gifUrl} alt={ex.nome}
                           className="w-full aspect-square object-cover bg-surface-2" loading="lazy" />
@@ -230,6 +288,9 @@ function ExerciciosPage() {
           }}
         />
       )}
+
+      {/* modal 1RM */}
+      {show1RM && <Calculadora1RM onClose={() => setShow1RM(false)} />}
     </>
   )
 }

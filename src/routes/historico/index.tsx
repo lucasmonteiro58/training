@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useHistorico } from '../../hooks/useHistorico'
+import { usePlanosStore } from '../../stores'
 import { formatarTempo } from '../../lib/notifications'
-import { History, Dumbbell, Clock, TrendingUp, ChevronRight, Trash2 } from 'lucide-react'
+import { History, Dumbbell, Clock, TrendingUp, ChevronRight, Trash2, Filter, X } from 'lucide-react'
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { useMemo, useState } from 'react'
 
@@ -9,14 +10,42 @@ export const Route = createFileRoute('/historico/')({
   component: HistoricoPage,
 })
 
+type Periodo = 'todos' | '7d' | '30d' | '90d'
+
 function HistoricoPage() {
   const { sessoes, loading, excluirSessao } = useHistorico()
+  const planos = usePlanosStore(s => s.planos)
   const [confirmExcluir, setConfirmExcluir] = useState<string | null>(null)
+  const [filtroPlano, setFiltroPlano] = useState<string>('todos')
+  const [filtroPeriodo, setFiltroPeriodo] = useState<Periodo>('todos')
+  const [showFiltros, setShowFiltros] = useState(false)
+
+  const sessoesNomes = useMemo(() => {
+    const nomes = new Set<string>()
+    sessoes.forEach(s => nomes.add(s.planoNome))
+    return Array.from(nomes).sort()
+  }, [sessoes])
+
+  const sessoesFiltradas = useMemo(() => {
+    let resultado = sessoes
+    if (filtroPlano !== 'todos') {
+      resultado = resultado.filter(s => s.planoNome === filtroPlano)
+    }
+    if (filtroPeriodo !== 'todos') {
+      const agora = Date.now()
+      const dias = filtroPeriodo === '7d' ? 7 : filtroPeriodo === '30d' ? 30 : 90
+      const limite = agora - dias * 24 * 60 * 60 * 1000
+      resultado = resultado.filter(s => s.iniciadoEm >= limite)
+    }
+    return resultado
+  }, [sessoes, filtroPlano, filtroPeriodo])
+
+  const filtroAtivo = filtroPlano !== 'todos' || filtroPeriodo !== 'todos'
 
   // Agrupar volume por semana para o gráfico
   const dadosGrafico = useMemo(() => {
     const semanas: Record<string, number> = {}
-    sessoes.forEach((s) => {
+    sessoesFiltradas.forEach((s) => {
       const d = new Date(s.iniciadoEm)
       const inicio = new Date(d)
       inicio.setDate(d.getDate() - d.getDay())
@@ -26,11 +55,70 @@ function HistoricoPage() {
     return Object.entries(semanas)
       .slice(-8)
       .map(([semana, volume]) => ({ semana, volume: Math.round(volume) }))
-  }, [sessoes])
+  }, [sessoesFiltradas])
 
   return (
     <div className="page-container pt-6">
-      <h1 className="text-2xl font-bold text-[var(--color-text)] mb-6 animate-fade-up">Histórico</h1>
+      <div className="flex items-center justify-between mb-6 animate-fade-up">
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">Histórico</h1>
+        {sessoes.length > 0 && (
+          <button
+            onClick={() => setShowFiltros(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+              filtroAtivo ? 'bg-accent/15 text-accent' : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
+            }`}
+          >
+            <Filter size={14} />
+            {filtroAtivo ? 'Filtrado' : 'Filtrar'}
+          </button>
+        )}
+      </div>
+
+      {/* Filtros */}
+      {showFiltros && (
+        <div className="card p-4 mb-4 animate-scale-in space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Filtros</p>
+            {filtroAtivo && (
+              <button
+                onClick={() => { setFiltroPlano('todos'); setFiltroPeriodo('todos') }}
+                className="text-xs text-accent flex items-center gap-1"
+              >
+                <X size={12} /> Limpar
+              </button>
+            )}
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-text-subtle uppercase tracking-wider block mb-1.5">Plano</label>
+            <select
+              className="input text-sm w-full"
+              value={filtroPlano}
+              onChange={e => setFiltroPlano(e.target.value)}
+            >
+              <option value="todos">Todos os planos</option>
+              {sessoesNomes.map(nome => (
+                <option key={nome} value={nome}>{nome}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-text-subtle uppercase tracking-wider block mb-1.5">Período</label>
+            <div className="flex gap-2">
+              {([['todos', 'Todos'], ['7d', '7 dias'], ['30d', '30 dias'], ['90d', '90 dias']] as [Periodo, string][]).map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => setFiltroPeriodo(val)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                    filtroPeriodo === val ? 'bg-accent text-white' : 'bg-[var(--color-surface-2)] text-text-muted'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Gráfico de volume */}
       {dadosGrafico.length > 1 && (
@@ -57,22 +145,29 @@ function HistoricoPage() {
         <div className="flex flex-col gap-3">
           {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
         </div>
-      ) : sessoes.length === 0 ? (
+      ) : sessoesFiltradas.length === 0 ? (
         <div className="flex flex-col items-center gap-4 mt-16 animate-scale-in text-center">
           <div className="w-20 h-20 rounded-3xl bg-[var(--color-surface-2)] flex items-center justify-center">
             <History size={36} className="text-[var(--color-text-subtle)]" />
           </div>
-          <p className="text-[var(--color-text)] font-semibold">Nenhum treino registrado ainda</p>
+          <p className="text-[var(--color-text)] font-semibold">{filtroAtivo ? 'Nenhum treino encontrado' : 'Nenhum treino registrado ainda'}</p>
           <p className="text-[var(--color-text-muted)] text-sm">
-            Faça seu primeiro treino para começar o histórico
+            {filtroAtivo ? 'Tente ajustar os filtros' : 'Faça seu primeiro treino para começar o histórico'}
           </p>
-          <Link to="/treinos" style={{ textDecoration: 'none' }}>
-            <button className="btn-primary">Ver Planos</button>
-          </Link>
+          {filtroAtivo ? (
+            <button onClick={() => { setFiltroPlano('todos'); setFiltroPeriodo('todos') }} className="btn-secondary">Limpar Filtros</button>
+          ) : (
+            <Link to="/treinos" style={{ textDecoration: 'none' }}>
+              <button className="btn-primary">Ver Planos</button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {sessoes.map((sessao, idx) => {
+          {filtroAtivo && (
+            <p className="text-xs text-text-muted mb-1">{sessoesFiltradas.length} resultado{sessoesFiltradas.length !== 1 ? 's' : ''}</p>
+          )}
+          {sessoesFiltradas.map((sessao, idx) => {
             const data = new Date(sessao.iniciadoEm)
             const dataStr = data.toLocaleDateString('pt-BR', {
               weekday: 'long', day: 'numeric', month: 'short',

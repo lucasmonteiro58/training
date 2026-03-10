@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
 import { useHistorico } from '../../hooks/useHistorico'
-import { useAuthStore, useTreinoAtivoStore } from '../../stores'
+import { useAuthStore, useTreinoAtivoStore, useHistoricoStore } from '../../stores'
 import {
   enviarNotificacaoTreino,
   limparNotificacoesTreino,
@@ -17,6 +17,10 @@ import {
   formatarTempo,
 } from '../../lib/notifications'
 import type { SessaoDeTreino, SerieRegistrada, ExercicioNaSessao } from '../../types'
+import { AGRUPAMENTO_CONFIG } from '../../types'
+import { toast } from 'sonner'
+import { calcular1RM } from '../../lib/calculadora1rm'
+import { calcularRecordes, detectarNovoPR } from '../../lib/records'
 import {
   ChevronLeft,
   ChevronRight,
@@ -32,6 +36,7 @@ import {
   ExternalLink,
   Zap,
   Share2,
+  FileText,
   Trophy,
 } from 'lucide-react'
 
@@ -46,6 +51,8 @@ function TreinoAtivoPage() {
   const { planos, atualizarPlano } = usePlanos()
   const { salvarSessaoCompleta } = useHistorico()
   const plano = planos.find((p) => p.id === planoId)
+  const sessoes = useHistoricoStore((s) => s.sessoes)
+  const recordes = useMemo(() => calcularRecordes(sessoes), [sessoes])
 
   const store = useTreinoAtivoStore()
   const {
@@ -54,7 +61,9 @@ function TreinoAtivoPage() {
     pausado, iniciado,
     iniciarTreino, finalizarTreino, pausarTreino, retomar,
     proximoExercicio, exercicioAnterior, atualizarSerie,
+    marcarSerieCompletada, desfazerUltimaSerie,
     iniciarDescanso, pararDescanso, tickGeral, tickDescanso,
+    atualizarNotas,
   } = store
 
   const timerRef = useRef<number | null>(null)
@@ -67,6 +76,8 @@ function TreinoAtivoPage() {
   const [copiado, setCopiado] = useState(false)
   const [gerandoImagem, setGerandoImagem] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
+  const [showNotas, setShowNotas] = useState(false)
+  const [notasTemp, setNotasTemp] = useState('')
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
 
   // ─── Cronômetro de série (para exercícios por tempo) ──────────────────────
@@ -113,6 +124,8 @@ function TreinoAtivoPage() {
       instrucoes: ex.exercicio.instrucoes,
       tipoSerie: ex.tipoSerie,
       duracaoMetaSegundos: ex.duracaoMetaSegundos,
+      agrupamentoId: ex.agrupamentoId,
+      tipoAgrupamento: ex.tipoAgrupamento,
       series: Array.from({ length: ex.series }, (_, i) => ({
         id: uuidv4(),
         ordem: i,
@@ -203,36 +216,143 @@ function TreinoAtivoPage() {
     if (!exercicioAtual || !sessao) return
     const serie = exercicioAtual.series[serieIdx]
     const novaCompletada = !serie.completada
-    atualizarSerie(exercicioAtualIndex, serieIdx, { completada: novaCompletada })
-
-    // Prepara audio context em evento de interação (necessário p/ iOS)
-    prepararAudio()
 
     if (novaCompletada) {
-      iniciarDescanso(exercicioAtual.descansoSegundos)
+      marcarSerieCompletada(exercicioAtualIndex, serieIdx)
+
+      // PR detection
+      const serieAtual = exercicioAtual.series[serieIdx]
+      const prCheck = detectarNovoPR(
+        { ...serieAtual, completada: true },
+        exercicioAtual.exercicioId,
+        recordes,
+      )
+      if (prCheck) {
+        const prLabels = { peso: 'Peso', volume: 'Volume', '1rm': '1RM' }
+        toast.success(`🏆 Novo Recorde de ${prLabels[prCheck.tipo]}! ${prCheck.tipo === 'peso' ? `${prCheck.valor} kg` : prCheck.tipo === '1rm' ? `${prCheck.valor} kg` : `${Math.round(prCheck.valor)} kg`}`, { duration: 4000 })
+      }
+
+      // Prepara audio context em evento de interação (necessário p/ iOS)
+      prepararAudio()
+
+      // Superset/group logic: skip rest if next exercise is in same group
+      const isInGroup = !!exercicioAtual.agrupamentoId
+      const groupExercises = isInGroup
+        ? sessao.exercicios
+            .map((ex, idx) => ({ ex, idx }))
+            .filter(({ ex }) => ex.agrupamentoId === exercicioAtual.agrupamentoId)
+        : []
+      const currentGroupPos = groupExercises.findIndex(g => g.idx === exercicioAtualIndex)
+      const nextInGroup = currentGroupPos >= 0 && currentGroupPos < groupExercises.length - 1
+        ? groupExercises[currentGroupPos + 1]
+        : null
+
       // Verifica se todas as séries do exercício atual foram concluídas
       const todasExercicioCompletas = exercicioAtual.series.every((s, i) =>
         i === serieIdx ? true : s.completada
       )
-      const isLastExercicio = exercicioAtualIndex === sessao.exercicios.length - 1
-      if (todasExercicioCompletas) {
-        if (!isLastExercicio) {
-          // Avança automaticamente pro próximo exercício
-          setTimeout(() => proximoExercicio(), 800)
-        } else {
-          // Último exercício — verifica se TODOS os exercícios estão completos
-          const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) => {
-            if (eIdx === exercicioAtualIndex) {
-              return ex.series.every((s, i) => i === serieIdx ? true : s.completada)
+
+      if (todasExercicioCompletas && isInGroup && nextInGroup) {
+        // Move to next exercise in group without rest
+        toast(`Série ${serieIdx + 1} completada ✓ → Próximo do ${AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label ?? 'grupo'}`, {
+          action: {
+            label: 'Desfazer',
+            onClick: () => {
+              desfazerUltimaSerie()
+              cancelarNotificacaoDescanso()
+            },
+          },
+          duration: 3000,
+        })
+        setTimeout(() => {
+          // Navigate to next exercise in group
+          const target = nextInGroup.idx
+          // Set directly via store to avoid step-by-step navigation
+          const diff = target - exercicioAtualIndex
+          for (let i = 0; i < diff; i++) proximoExercicio()
+        }, 600)
+      } else if (todasExercicioCompletas && isInGroup && !nextInGroup) {
+        // Last in group: rest then loop back to first in group or move on
+        iniciarDescanso(exercicioAtual.descansoSegundos)
+        toast(`${AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label ?? 'Grupo'} completo! Descanse.`, {
+          action: {
+            label: 'Desfazer',
+            onClick: () => {
+              desfazerUltimaSerie()
+              cancelarNotificacaoDescanso()
+            },
+          },
+          duration: 5000,
+        })
+        // Check if all series in entire group are done
+        const allGroupDone = groupExercises.every(({ idx }) =>
+          sessao.exercicios[idx].series.every((s, i) =>
+            idx === exercicioAtualIndex ? (i === serieIdx ? true : s.completada) : s.completada
+          )
+        )
+        if (allGroupDone) {
+          // Move past the group
+          const lastGroupIdx = groupExercises[groupExercises.length - 1].idx
+          const isLastExercicio = lastGroupIdx === sessao.exercicios.length - 1
+          if (!isLastExercicio) {
+            setTimeout(() => {
+              const target = lastGroupIdx + 1
+              const diff = target - exercicioAtualIndex
+              for (let i = 0; i < diff; i++) proximoExercicio()
+            }, 800)
+          } else {
+            // Check if entire workout is done
+            const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) =>
+              ex.series.every((s, i) =>
+                eIdx === exercicioAtualIndex && i === serieIdx ? true : s.completada
+              )
+            )
+            if (todosTreinoCompleto) {
+              setTimeout(() => setShowConfirmFinalizar(true), 800)
             }
-            return ex.series.every(s => s.completada)
-          })
-          if (todosTreinoCompleto) {
-            setTimeout(() => setShowConfirmFinalizar(true), 800)
+          }
+        } else {
+          // Go back to first exercise in group for next round
+          setTimeout(() => {
+            const target = groupExercises[0].idx
+            const diff = exercicioAtualIndex - target
+            for (let i = 0; i < diff; i++) exercicioAnterior()
+          }, 800)
+        }
+      } else {
+        // Normal (non-group) behavior
+        iniciarDescanso(exercicioAtual.descansoSegundos)
+
+        toast(`Série ${serieIdx + 1} completada ✓`, {
+          action: {
+            label: 'Desfazer',
+            onClick: () => {
+              desfazerUltimaSerie()
+              cancelarNotificacaoDescanso()
+            },
+          },
+          duration: 5000,
+        })
+
+        const isLastExercicio = exercicioAtualIndex === sessao.exercicios.length - 1
+        if (todasExercicioCompletas) {
+          if (!isLastExercicio) {
+            setTimeout(() => proximoExercicio(), 800)
+          } else {
+            const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) => {
+              if (eIdx === exercicioAtualIndex) {
+                return ex.series.every((s, i) => i === serieIdx ? true : s.completada)
+              }
+              return ex.series.every(s => s.completada)
+            })
+            if (todosTreinoCompleto) {
+              setTimeout(() => setShowConfirmFinalizar(true), 800)
+            }
           }
         }
       }
     } else {
+      atualizarSerie(exercicioAtualIndex, serieIdx, { completada: false })
       descansoAcabouNatural.current = false
       cancelarNotificacaoDescanso()
       pararDescanso()
@@ -631,6 +751,11 @@ function TreinoAtivoPage() {
               {pausado ? <Play size={16} /> : <Pause size={16} />}
             </button>
           </div>
+          <button onClick={() => { setNotasTemp(sessao?.notas ?? ''); setShowNotas(true) }}
+            className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)] relative">
+            <FileText size={16} />
+            {sessao?.notas && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--color-accent)]" />}
+          </button>
           <button onClick={() => setShowConfirmFinalizar(true)} disabled={finalizando}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(34,197,94,0.12)] text-[var(--color-success)] text-sm font-semibold">
             <Flag size={14} />
@@ -659,6 +784,17 @@ function TreinoAtivoPage() {
             <p className="text-[10px] text-[var(--color-text-muted)]">
               {exercicioAtual.grupoMuscular}
             </p>
+            {exercicioAtual.agrupamentoId && (
+              <span
+                className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                style={{
+                  color: AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.cor,
+                  background: AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.corBg,
+                }}
+              >
+                {AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1">
             <button onClick={() => setShowInfo(true)} className="btn-ghost p-1.5">
@@ -689,31 +825,58 @@ function TreinoAtivoPage() {
         )}
       </div>
 
-      {/* ─── Cronômetro de descanso ────────────────────────────────── */}
+      {/* ─── Cronômetro de descanso (inline) ──────────────────── */}
       {cronometroDescansoAtivo && (
-        <div className="mx-4 mb-4 card p-4 border-[var(--color-accent)] bg-[var(--color-accent-subtle)] animate-scale-in">
-          <div className="flex items-center justify-between">
+        <div className="mx-4 mb-4 p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between animate-scale-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+              <Timer size={20} className="text-accent" />
+            </div>
             <div>
-              <p className="text-xs text-[var(--color-text-muted)] font-medium">DESCANSO</p>
-              <p className="timer-display text-[var(--color-accent)]">
+              <p className="text-xs text-[var(--color-text-muted)] font-medium">Descanso</p>
+              <p className={`text-2xl font-black tabular-nums ${
+                cronometroDescansoSegundos <= 10 && cronometroDescansoSegundos > 0
+                  ? 'text-[var(--color-warning)]'
+                  : 'text-[var(--color-text)]'
+              }`}>
                 {formatarTempo(cronometroDescansoSegundos)}
               </p>
             </div>
-            <button onClick={() => {
+          </div>
+          <button
+            onClick={() => {
               descansoAcabouNatural.current = false
               cancelarNotificacaoDescanso()
               pararDescanso()
             }}
-              className="btn-ghost flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
-              <SkipForward size={16} />
-              Pular
-            </button>
-          </div>
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--color-surface-2)] text-[var(--color-text-muted)] text-sm font-semibold hover:bg-[var(--color-surface-3)] transition-colors"
+          >
+            <SkipForward size={14} />
+            Pular
+          </button>
         </div>
       )}
 
       {/* ─── Tabela de séries ──────────────────────────────────────── */}
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
+        {/* 1RM estimate */}
+        {(() => {
+          const seriesCompletas = exercicioAtual.series.filter(s => s.completada && s.peso > 0 && s.repeticoes > 0)
+          if (seriesCompletas.length === 0) return null
+          const melhor = seriesCompletas.reduce((best, s) => {
+            const rm = calcular1RM(s.peso, s.repeticoes)
+            return rm > best.rm ? { rm, peso: s.peso, reps: s.repeticoes } : best
+          }, { rm: 0, peso: 0, reps: 0 })
+          if (melhor.rm <= 0) return null
+          return (
+            <div className="flex items-center justify-center gap-2 mb-2 px-3 py-1.5 rounded-xl bg-[var(--color-accent-subtle)] animate-scale-in">
+              <span className="text-[10px] font-bold text-[var(--color-accent)] uppercase tracking-wider">
+                1RM estimado: {Math.round(melhor.rm)} kg
+              </span>
+            </div>
+          )
+        })()}
+
         {/* Header */}
         {(() => {
           const tipo = exercicioAtual.tipoSerie ?? 'reps'
@@ -971,6 +1134,35 @@ function TreinoAtivoPage() {
           </div>
         </div>
       )}
+
+      {/* ─── Modal de Notas ──────────────────────────────────────── */}
+      {showNotas && (
+        <div className="modal-overlay" onClick={() => setShowNotas(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-[var(--color-text)] mb-3">📝 Notas do Treino</h2>
+            <textarea
+              value={notasTemp}
+              onChange={e => setNotasTemp(e.target.value)}
+              placeholder="Como está se sentindo? Algo diferente hoje?..."
+              className="input-field w-full text-sm resize-none"
+              rows={4}
+              autoFocus
+            />
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowNotas(false)} className="btn-secondary flex-1">
+                Cancelar
+              </button>
+              <button
+                onClick={() => { atualizarNotas(notasTemp); setShowNotas(false); toast.success('Notas salvas!') }}
+                className="btn-primary flex-1"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── Modal de Confirmação Finalizar ────────────────────────── */}
       {showConfirmFinalizar && (
         <div className="modal-overlay" onClick={() => setShowConfirmFinalizar(false)}>

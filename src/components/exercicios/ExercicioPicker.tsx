@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
 import type { Exercicio } from '../../types'
-import { Search, X, Plus } from 'lucide-react'
-import { getExerciciosPersonalizados } from '../../lib/db/dexie'
+import { Search, X, Plus, Heart } from 'lucide-react'
+import { getExerciciosPersonalizados, getFavoritoIds, toggleFavoritoExercicio } from '../../lib/db/dexie'
 import { useAuthStore } from '../../stores'
 import { CriarExercicioModal } from './CriarExercicioModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -20,6 +20,8 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
   const [grupo, setGrupo] = useState('')
   const [loading, setLoading] = useState(true)
   const [showCriar, setShowCriar] = useState(false)
+  const [favoritoIds, setFavoritoIds] = useState<Set<string>>(new Set())
+  const [showFavoritos, setShowFavoritos] = useState(false)
 
   const parentRef = useRef<HTMLDivElement>(null)
 
@@ -33,6 +35,8 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
     const todos = [...custom, ...base].sort((a, b) => a.nome.localeCompare(b.nome))
     setExercicios(todos)
     setFiltrados(todos)
+    const favIds = await getFavoritoIds()
+    setFavoritoIds(favIds)
     setLoading(false)
   }
 
@@ -41,9 +45,12 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
   }, [user])
 
   useEffect(() => {
-    const result = buscarExercicios(exercicios, query, grupo || undefined)
+    let result = buscarExercicios(exercicios, query, grupo || undefined)
+    if (showFavoritos) {
+      result = result.filter(ex => favoritoIds.has(ex.id))
+    }
     setFiltrados(result)
-  }, [query, grupo, exercicios])
+  }, [query, grupo, exercicios, showFavoritos, favoritoIds])
 
   const gruposUnicos = useMemo(() => {
     const setGrupos = new Set(exercicios.map(ex => ex.grupoMuscular).filter(Boolean))
@@ -59,7 +66,19 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
 
   useEffect(() => {
     rowVirtualizer.scrollToOffset(0)
-  }, [query, grupo])
+  }, [query, grupo, showFavoritos])
+
+  const handleToggleFavorito = async (e: React.MouseEvent, exId: string) => {
+    e.stopPropagation()
+    const novoValor = !favoritoIds.has(exId)
+    await toggleFavoritoExercicio(exId, novoValor)
+    setFavoritoIds(prev => {
+      const next = new Set(prev)
+      if (novoValor) next.add(exId)
+      else next.delete(exId)
+      return next
+    })
+  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -93,6 +112,17 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
 
         {/* Grupo filter */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide shrink-0 items-center min-h-[40px]">
+          <button
+            onClick={() => setShowFavoritos(!showFavoritos)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+              showFavoritos
+                ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                : 'bg-surface-2 text-text-muted'
+            }`}
+          >
+            <Heart size={11} className={showFavoritos ? 'fill-red-400' : ''} />
+            Favoritos
+          </button>
           <button
             onClick={() => setGrupo('')}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap capitalize ${
@@ -178,7 +208,15 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
                           {ex.equipamento ? ` · ${ex.equipamento}` : ''}
                         </p>
                       </div>
-                      <Plus size={18} className="text-accent shrink-0" />
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={(e) => handleToggleFavorito(e, ex.id)}
+                          className="p-1.5 rounded-lg hover:bg-surface-3 transition-colors"
+                        >
+                          <Heart size={16} className={favoritoIds.has(ex.id) ? 'fill-red-400 text-red-400' : 'text-text-subtle'} />
+                        </button>
+                        <Plus size={18} className="text-accent" />
+                      </div>
                     </button>
                   </div>
                 )

@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
   deleteDoc,
   onSnapshot,
   query,
@@ -182,6 +183,29 @@ export async function limparProgressoTreinoFirestore(userId: string): Promise<vo
     await deleteDoc(doc(db, 'ativo', userId))
   } catch (err) {
     console.error('Erro ao limpar progresso ativo:', err)
+  }
+}
+
+// ============================
+// Configurações do Usuário
+// ============================
+export async function getConfigUsuario(userId: string): Promise<{ metaSemanal?: number }> {
+  try {
+    const ref = doc(db, 'configuracoes', userId)
+    const snap = await getDoc(ref)
+    if (snap.exists()) return snap.data() as { metaSemanal?: number }
+    return {}
+  } catch {
+    return {}
+  }
+}
+
+export async function salvarConfigUsuario(userId: string, config: { metaSemanal: number }): Promise<void> {
+  try {
+    const ref = doc(db, 'configuracoes', userId)
+    await setDoc(ref, stripUndefined({ ...config, updatedAt: Date.now() }), { merge: true })
+  } catch (err) {
+    console.error('Erro ao salvar config:', err)
   }
 }
 
