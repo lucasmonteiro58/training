@@ -8,6 +8,12 @@ import {
   enviarNotificacaoTreino,
   limparNotificacoesTreino,
   solicitarPermissaoNotificacao,
+  agendarNotificacaoDescanso,
+  cancelarNotificacaoDescanso,
+  tocarAlertaDescanso,
+  vibrarDescansoFim,
+  prepararAudio,
+  onSwMessage,
   formatarTempo,
 } from '../../lib/notifications'
 import type { SessaoDeTreino, SerieRegistrada, ExercicioNaSessao } from '../../types'
@@ -144,17 +150,49 @@ function TreinoAtivoPage() {
     return () => { if (descansoRef.current) clearInterval(descansoRef.current) }
   }, [cronometroDescansoAtivo, tickDescanso])
 
-  // ─── Notificação ao iniciar descanso ──────────────────────────────────────
+  // ─── Ref para rastrear se descanso acabou naturalmente ──────────────────
+  const descansoAcabouNatural = useRef(false)
+
+  // ─── Notificação ao iniciar/finalizar descanso ─────────────────────────────
   useEffect(() => {
     if (cronometroDescansoAtivo && sessao) {
       const ex = sessao.exercicios[exercicioAtualIndex]
+      descansoAcabouNatural.current = true
+
+      // Notificação de descanso em andamento
       enviarNotificacaoTreino(
         `⏱ Descanso – ${cronometroDescansoSegundos}s`,
         `Próximo: ${ex?.exercicioNome ?? ''}`,
       )
+
+      // Agenda notificação no SW para quando o descanso terminar
+      // (funciona mesmo com aba em background)
+      agendarNotificacaoDescanso(
+        cronometroDescansoSegundos,
+        ex?.exercicioNome,
+      )
     }
-    if (!cronometroDescansoAtivo) limparNotificacoesTreino()
+
+    if (!cronometroDescansoAtivo) {
+      // Se o descanso terminou naturalmente (não foi pulado)
+      if (descansoAcabouNatural.current) {
+        tocarAlertaDescanso()
+        vibrarDescansoFim()
+        descansoAcabouNatural.current = false
+      }
+      limparNotificacoesTreino()
+    }
   }, [cronometroDescansoAtivo])
+
+  // ─── Listener SW: REST_ENDED (aba em background) ──────────────────────────
+  useEffect(() => {
+    return onSwMessage((msg) => {
+      if (msg?.type === 'REST_ENDED') {
+        tocarAlertaDescanso()
+        vibrarDescansoFim()
+      }
+    })
+  }, [])
 
   const exercicioAtual = sessao?.exercicios[exercicioAtualIndex]
   const planoExercicio = plano?.exercicios.find(ex => ex.exercicioId === exercicioAtual?.exercicioId)
@@ -166,6 +204,10 @@ function TreinoAtivoPage() {
     const serie = exercicioAtual.series[serieIdx]
     const novaCompletada = !serie.completada
     atualizarSerie(exercicioAtualIndex, serieIdx, { completada: novaCompletada })
+
+    // Prepara audio context em evento de interação (necessário p/ iOS)
+    prepararAudio()
+
     if (novaCompletada) {
       iniciarDescanso(exercicioAtual.descansoSegundos)
       // Verifica se todas as séries do exercício atual foram concluídas
@@ -191,6 +233,8 @@ function TreinoAtivoPage() {
         }
       }
     } else {
+      descansoAcabouNatural.current = false
+      cancelarNotificacaoDescanso()
       pararDescanso()
     }
   }
@@ -198,6 +242,7 @@ function TreinoAtivoPage() {
   const handleFinalizar = async () => {
     setFinalizando(true)
     const sessaoFinalizada = finalizarTreino()
+    cancelarNotificacaoDescanso()
     limparNotificacoesTreino()
     if (sessaoFinalizada) {
       await salvarSessaoCompleta(sessaoFinalizada)
@@ -654,7 +699,11 @@ function TreinoAtivoPage() {
                 {formatarTempo(cronometroDescansoSegundos)}
               </p>
             </div>
-            <button onClick={pararDescanso}
+            <button onClick={() => {
+              descansoAcabouNatural.current = false
+              cancelarNotificacaoDescanso()
+              pararDescanso()
+            }}
               className="btn-ghost flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
               <SkipForward size={16} />
               Pular
