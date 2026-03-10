@@ -171,6 +171,7 @@ function TreinoAtivoPage() {
         tipoAgrupamento: ex.tipoAgrupamento,
         series: Array.from({ length: ex.series }, (_, i) => {
           // Prioridade: seriesDetalhadas do plano > última sessão > pesoMeta > 0
+          // Usa || ao invés de ?? pois 0 significa "não definido"
           const pesoPlano = ex.seriesDetalhadas?.[i]?.peso
           const repsPlano = ex.seriesDetalhadas?.[i]?.repeticoes
           const pesoSessao = exUltimaSessao?.series[i]?.peso
@@ -178,8 +179,8 @@ function TreinoAtivoPage() {
           return {
             id: uuidv4(),
             ordem: i,
-            repeticoes: repsPlano ?? repsSessao ?? ex.repeticoesMeta,
-            peso: pesoPlano ?? pesoSessao ?? (ex.pesoMeta ?? 0),
+            repeticoes: repsPlano || repsSessao || ex.repeticoesMeta,
+            peso: pesoPlano || pesoSessao || (ex.pesoMeta ?? 0),
             completada: false,
           } as SerieRegistrada
         }),
