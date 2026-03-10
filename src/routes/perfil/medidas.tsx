@@ -112,7 +112,7 @@ function MedidasPage() {
       </div>
 
       {/* Gráfico */}
-      {medidas.length >= 2 && (
+      {medidas.length >= 1 && (
         <div className="card p-4 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase">Evolução</p>
@@ -126,7 +126,7 @@ function MedidasPage() {
               ))}
             </select>
           </div>
-          {dadosGrafico.length >= 2 ? (
+          {dadosGrafico.length >= 1 ? (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={dadosGrafico}>
                 <XAxis dataKey="data" tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} />
@@ -142,7 +142,7 @@ function MedidasPage() {
                     borderRadius: 12,
                     fontSize: 12,
                   }}
-                  formatter={(v: number) => [`${v} ${campoAtual?.unidade ?? ''}`, campoAtual?.label ?? '']}
+                  formatter={(v: any) => [`${v} ${campoAtual?.unidade ?? ''}`, campoAtual?.label ?? '']}
                 />
                 <Line
                   type="monotone"

@@ -65,16 +65,20 @@ function HomePage() {
   const pausado = useTreinoAtivoStore((s) => s.pausado)
   const cronometroGeralSegundos = useTreinoAtivoStore((s) => s.cronometroGeralSegundos)
   const { handleIniciar, modal: modalProximo } = useIniciarTreino()
-  const [metaSemanal, setMetaSemanal] = useState(4)
+  const [metaSemanal, setMetaSemanal] = useState(() => {
+    const saved = localStorage.getItem('metaSemanal')
+    return saved ? parseInt(saved, 10) : 4
+  })
   const [showEditMeta, setShowEditMeta] = useState(false)
   const [metaInput, setMetaInput] = useState('4')
 
-  // Load user's weekly goal from Firebase
+  // Sync weekly goal from Firebase (once, on login)
   useEffect(() => {
     if (!user) return
     getConfigUsuario(user.uid).then(config => {
       if (config.metaSemanal) {
         setMetaSemanal(config.metaSemanal)
+        localStorage.setItem('metaSemanal', String(config.metaSemanal))
       }
     })
   }, [user])
@@ -495,6 +499,7 @@ function HomePage() {
                 const valor = parseInt(metaInput)
                 if (valor >= 1 && valor <= 7) {
                   setMetaSemanal(valor)
+                  localStorage.setItem('metaSemanal', String(valor))
                   setShowEditMeta(false)
                   if (user) salvarConfigUsuario(user.uid, { metaSemanal: valor })
                   toast.success(`Meta atualizada para ${valor}x por semana`)
