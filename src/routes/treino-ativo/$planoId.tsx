@@ -162,18 +162,33 @@ function TreinoAtivoPage() {
   const progresso = totalExercicios ? (exercicioAtualIndex / totalExercicios) * 100 : 0
 
   const handleCompletarSerie = (serieIdx: number) => {
-    if (!exercicioAtual) return
+    if (!exercicioAtual || !sessao) return
     const serie = exercicioAtual.series[serieIdx]
     const novaCompletada = !serie.completada
     atualizarSerie(exercicioAtualIndex, serieIdx, { completada: novaCompletada })
     if (novaCompletada) {
       iniciarDescanso(exercicioAtual.descansoSegundos)
-      // Verifica se todas as séries foram concluídas após este update
-      const todasCompletas = exercicioAtual.series.every((s, i) =>
+      // Verifica se todas as séries do exercício atual foram concluídas
+      const todasExercicioCompletas = exercicioAtual.series.every((s, i) =>
         i === serieIdx ? true : s.completada
       )
-      if (todasCompletas && exercicioAtualIndex < (sessao?.exercicios.length ?? 0) - 1) {
-        setTimeout(() => proximoExercicio(), 800)
+      const isLastExercicio = exercicioAtualIndex === sessao.exercicios.length - 1
+      if (todasExercicioCompletas) {
+        if (!isLastExercicio) {
+          // Avança automaticamente pro próximo exercício
+          setTimeout(() => proximoExercicio(), 800)
+        } else {
+          // Último exercício — verifica se TODOS os exercícios estão completos
+          const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) => {
+            if (eIdx === exercicioAtualIndex) {
+              return ex.series.every((s, i) => i === serieIdx ? true : s.completada)
+            }
+            return ex.series.every(s => s.completada)
+          })
+          if (todosTreinoCompleto) {
+            setTimeout(() => setShowConfirmFinalizar(true), 800)
+          }
+        }
       }
     } else {
       pararDescanso()
