@@ -194,9 +194,17 @@ function TreinosPage() {
   return (
     <div className="page-container pt-6" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">Meus Treinos</h1>
-        <div className="flex gap-2 items-center">
+      <div className="flex flex-col gap-2 mb-6 animate-fade-up">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Meus Treinos</h1>
+          <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
+            <button className="btn-primary flex items-center gap-1.5 py-2 px-3 text-sm">
+              <Plus size={16} />
+              Novo
+            </button>
+          </Link>
+        </div>
+        <div className="flex items-center gap-2">
           {planosAtivos.length > 1 && (
             <button
               className={`btn-ghost flex items-center gap-1.5 text-sm ${
@@ -205,27 +213,19 @@ function TreinosPage() {
               onClick={handleToggleReordenar}
             >
               <ArrowUpDown size={16} />
-              {reordenando ? 'Salvar' : 'Ordenar'}
+              {reordenando ? 'Salvar ordem' : 'Ordenar'}
             </button>
           )}
           {!reordenando && (
-            <>
-              <Link to="/treinos/importar" style={{ textDecoration: 'none' }}>
-                <button
-                  className="btn-ghost flex items-center gap-1.5 text-sm"
-                  title="Importar CSV"
-                >
-                  <FileUp size={16} />
-                  CSV
-                </button>
-              </Link>
-              <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
-                <button className="btn-primary flex items-center gap-1.5 py-2.5 px-4 text-sm">
-                  <Plus size={16} />
-                  Novo
-                </button>
-              </Link>
-            </>
+            <Link to="/treinos/importar" style={{ textDecoration: 'none' }}>
+              <button
+                className="btn-ghost flex items-center gap-1.5 text-sm"
+                title="Importar CSV"
+              >
+                <FileUp size={16} />
+                Importar CSV
+              </button>
+            </Link>
           )}
         </div>
       </div>
