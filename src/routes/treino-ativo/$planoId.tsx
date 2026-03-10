@@ -69,7 +69,42 @@ function TreinoAtivoPage() {
   const timerRef = useRef<number | null>(null)
   const descansoRef = useRef<number | null>(null)
 
-  useEffect(() => { setApplyAll(null) }, [exercicioAtualIndex])
+  // ─── Salvar pesos no plano quando muda de exercício ───────────────────────
+  const salvarPesosNoPlano = (exIdx?: number) => {
+    if (!plano || !sessao) return
+    const idx = exIdx ?? exercicioAtualIndex
+    const exSessao = sessao.exercicios[idx]
+    if (!exSessao) return
+    const planoExIdx = plano.exercicios.findIndex(e => e.exercicioId === exSessao.exercicioId)
+    if (planoExIdx === -1) return
+    const exPlano = plano.exercicios[planoExIdx]
+    const seriesDetalhadas = exSessao.series.map((s, i) => ({
+      ...(exPlano.seriesDetalhadas?.[i] ?? {}),
+      peso: s.peso,
+      repeticoes: s.repeticoes,
+    }))
+    // Só salvar se houve mudança
+    const changed = seriesDetalhadas.some((sd, i) => {
+      const old = exPlano.seriesDetalhadas?.[i]
+      return !old || old.peso !== sd.peso || old.repeticoes !== sd.repeticoes
+    })
+    if (!changed) return
+    const exercicios = plano.exercicios.map((ex, i) =>
+      i === planoExIdx ? { ...ex, seriesDetalhadas } : ex
+    )
+    atualizarPlano({ ...plano, exercicios })
+  }
+
+  const prevExIdxRef = useRef(exercicioAtualIndex)
+  useEffect(() => {
+    // Salva pesos do exercício anterior quando troca
+    if (prevExIdxRef.current !== exercicioAtualIndex) {
+      salvarPesosNoPlano(prevExIdxRef.current)
+      prevExIdxRef.current = exercicioAtualIndex
+    }
+    setApplyAll(null)
+  }, [exercicioAtualIndex])
+
   const [finalizando, setFinalizando] = useState(false)
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
   const [relatorio, setRelatorio] = useState<SessaoDeTreino | null>(null)
@@ -113,28 +148,43 @@ function TreinoAtivoPage() {
     // Se já há sessão ativa desse plano, continua
     if (iniciado && sessao?.planoId === planoId) return
     // Se há sessão de outro plano ativa, finaliza e começa nova
-    const exerciciosNaSessao: ExercicioNaSessao[] = plano.exercicios.map((ex) => ({
-      exercicioId: ex.exercicioId,
-      exercicioNome: ex.exercicio.nome,
-      gifUrl: ex.exercicio.gifUrl,
-      grupoMuscular: ex.exercicio.grupoMuscular,
-      descansoSegundos: ex.descansoSegundos,
-      ordem: ex.ordem,
-      notas: ex.notas,
-      instrucoes: ex.exercicio.instrucoes,
-      tipoSerie: ex.tipoSerie,
-      duracaoMetaSegundos: ex.duracaoMetaSegundos,
-      agrupamentoId: ex.agrupamentoId,
-      tipoAgrupamento: ex.tipoAgrupamento,
-      series: Array.from({ length: ex.series }, (_, i) => ({
-        id: uuidv4(),
-        ordem: i,
-        repeticoes: ex.seriesDetalhadas?.[i]?.repeticoes ?? ex.repeticoesMeta,
-        weight: ex.seriesDetalhadas?.[i]?.peso ?? (ex.pesoMeta ?? 0),
-        peso: ex.seriesDetalhadas?.[i]?.peso ?? (ex.pesoMeta ?? 0),
-        completada: false,
-      } as SerieRegistrada)),
-    }))
+    // Buscar última sessão desse plano para pré-preencher pesos
+    const ultimaSessao = sessoes
+      .filter(s => s.planoId === planoId && s.finalizadoEm)
+      .sort((a, b) => (b.finalizadoEm ?? 0) - (a.finalizadoEm ?? 0))[0]
+
+    const exerciciosNaSessao: ExercicioNaSessao[] = plano.exercicios.map((ex) => {
+      // Buscar pesos da última sessão para este exercício
+      const exUltimaSessao = ultimaSessao?.exercicios.find(e => e.exercicioId === ex.exercicioId)
+      return {
+        exercicioId: ex.exercicioId,
+        exercicioNome: ex.exercicio.nome,
+        gifUrl: ex.exercicio.gifUrl,
+        grupoMuscular: ex.exercicio.grupoMuscular,
+        descansoSegundos: ex.descansoSegundos,
+        ordem: ex.ordem,
+        notas: ex.notas,
+        instrucoes: ex.exercicio.instrucoes,
+        tipoSerie: ex.tipoSerie,
+        duracaoMetaSegundos: ex.duracaoMetaSegundos,
+        agrupamentoId: ex.agrupamentoId,
+        tipoAgrupamento: ex.tipoAgrupamento,
+        series: Array.from({ length: ex.series }, (_, i) => {
+          // Prioridade: seriesDetalhadas do plano > última sessão > pesoMeta > 0
+          const pesoPlano = ex.seriesDetalhadas?.[i]?.peso
+          const repsPlano = ex.seriesDetalhadas?.[i]?.repeticoes
+          const pesoSessao = exUltimaSessao?.series[i]?.peso
+          const repsSessao = exUltimaSessao?.series[i]?.repeticoes
+          return {
+            id: uuidv4(),
+            ordem: i,
+            repeticoes: repsPlano ?? repsSessao ?? ex.repeticoesMeta,
+            peso: pesoPlano ?? pesoSessao ?? (ex.pesoMeta ?? 0),
+            completada: false,
+          } as SerieRegistrada
+        }),
+      }
+    })
     const novaSessao: SessaoDeTreino = {
       id: uuidv4(),
       userId: user.uid,
@@ -219,6 +269,9 @@ function TreinoAtivoPage() {
 
     if (novaCompletada) {
       marcarSerieCompletada(exercicioAtualIndex, serieIdx)
+
+      // Salvar pesos no plano ao completar série
+      setTimeout(() => salvarPesosNoPlano(), 0)
 
       // PR detection
       const serieAtual = exercicioAtual.series[serieIdx]
@@ -360,6 +413,8 @@ function TreinoAtivoPage() {
   }
 
   const handleFinalizar = async () => {
+    // Salvar pesos do exercício atual antes de finalizar
+    salvarPesosNoPlano()
     setFinalizando(true)
     const sessaoFinalizada = finalizarTreino()
     cancelarNotificacaoDescanso()
