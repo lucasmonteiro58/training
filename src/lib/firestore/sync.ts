@@ -185,6 +185,27 @@ export async function limparProgressoTreinoFirestore(userId: string): Promise<vo
   }
 }
 
+// Busca inicial de planos (para sync manual)
+export async function fetchPlanos(userId: string): Promise<PlanoDeTreino[]> {
+  try {
+    const q = query(
+      collection(db, 'planos'),
+      where('userId', '==', userId),
+      orderBy('updatedAt', 'desc')
+    )
+    const snapshot = await getDocs(q)
+    const planos: PlanoDeTreino[] = []
+    snapshot.forEach((d) => {
+      const data = d.data() as PlanoDeTreino
+      planos.push(data)
+      salvarPlano(data)
+    })
+    return planos
+  } catch {
+    return []
+  }
+}
+
 // Busca inicial de sessões (para carregar dados offline rapidamente)
 export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoDeTreino[]> {
   try {

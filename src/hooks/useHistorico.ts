@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react'
 import { useHistoricoStore, useAuthStore } from '../stores'
 import { getSessoes, salvarSessao, deletarSessao } from '../lib/db/dexie'
-import { syncSessaoParaFirestore, deletarSessaoFirestore, subscribeToSessoes } from '../lib/firestore/sync'
+import { syncSessaoParaFirestore, deletarSessaoFirestore, subscribeToSessoes, fetchSessoes } from '../lib/firestore/sync'
 import type { SessaoDeTreino } from '../types'
 
 export function useHistorico() {
@@ -42,5 +42,11 @@ export function useHistorico() {
     [removeSessao]
   )
 
-  return { sessoes, loading, salvarSessaoCompleta, excluirSessao }
+  const sincronizar = useCallback(async () => {
+    if (!user) return
+    const remote = await fetchSessoes(user.uid)
+    if (remote.length > 0) setSessoes(remote)
+  }, [user, setSessoes])
+
+  return { sessoes, loading, salvarSessaoCompleta, excluirSessao, sincronizar }
 }

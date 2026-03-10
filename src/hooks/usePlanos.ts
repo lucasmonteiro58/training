@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { usePlanosStore } from '../stores'
 import { useAuthStore } from '../stores'
 import { getPlanos, salvarPlano, deletarPlano } from '../lib/db/dexie'
-import { syncPlanoParaFirestore, deletarPlanoFirestore, subscribeToPlanos, subscribeToExercicios } from '../lib/firestore/sync'
+import { syncPlanoParaFirestore, deletarPlanoFirestore, subscribeToPlanos, subscribeToExercicios, fetchPlanos } from '../lib/firestore/sync'
 import type { PlanoDeTreino, ExercicioNoPlano } from '../types'
 import { CORES_PLANO } from '../types'
 
@@ -82,6 +82,12 @@ export function usePlanos() {
     [removePlano]
   )
 
+  const sincronizar = useCallback(async () => {
+    if (!user) return
+    const remote = await fetchPlanos(user.uid)
+    if (remote.length > 0) setPlanos(remote)
+  }, [user, setPlanos])
+
   const arquivarPlano = useCallback(
     async (id: string): Promise<void> => {
       const plano = planos.find(p => p.id === id)
@@ -137,5 +143,6 @@ export function usePlanos() {
     arquivarPlano,
     desarquivarPlano,
     reordenarPlanos,
+    sincronizar,
   }
 }

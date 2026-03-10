@@ -196,191 +196,239 @@ function TreinoAtivoPage() {
 
   const gerarImagemRelatorio = async (s: SessaoDeTreino): Promise<Blob | null> => {
     const W = 1080
-    const PAD = 64
+    const PAD = 72
+    const PALETTE = ['#6366f1', '#a78bfa', '#38bdf8', '#f59e0b', '#f472b6', '#22c55e']
     const C = {
       bg: '#0d0f14', surface: '#161820', surface2: '#1e2028',
-      accent: '#6366f1', success: '#22c55e',
+      accent: '#6366f1', accentLight: 'rgba(99,102,241,0.15)',
       text: '#f0f0f5', muted: '#8b8fa8', subtle: '#565870',
       border: 'rgba(255,255,255,0.08)',
     }
 
-    const exerciciosVisiveis = s.exercicios.filter(ex => ex.series.some(sr => sr.completada))
+    // ── Compute stats ──────────────────────────────────────────────────
     const totalSeries = s.exercicios.reduce((a, ex) => a + ex.series.filter(sr => sr.completada).length, 0)
-    const duracao = s.duracaoSegundos ? formatarTempo(s.duracaoSegundos) : '–'
-    const volume = s.volumeTotal ? `${Math.round(s.volumeTotal)} kg` : '–'
-    const data = new Date(s.iniciadoEm).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+    const totalReps   = s.exercicios.reduce((a, ex) => a + ex.series.filter(sr => sr.completada).reduce((b, sr) => b + (sr.repeticoes ?? 0), 0), 0)
+    const volumeKg    = s.volumeTotal ? Math.round(s.volumeTotal) : 0
+    const exercFeitos = s.exercicios.filter(ex => ex.series.some(sr => sr.completada)).length
+    const mediaSerie  = totalSeries > 0 && volumeKg > 0 ? `${Math.round(volumeKg / totalSeries)}kg` : '–'
+    const duracao     = s.duracaoSegundos ? formatarTempo(s.duracaoSegundos) : '–'
+    const data        = new Date(s.iniciadoEm).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
-    // Estimate height
-    const headerH = 320
-    const statsH = 160
-    const exH = exerciciosVisiveis.reduce((acc, ex) => {
-      const sets = ex.series.filter(sr => sr.completada)
-      const rows = Math.ceil(sets.length / 4)
-      return acc + 80 + rows * 52 + 32
-    }, 0)
-    const footerH = 100
-    const H = headerH + statsH + exH + footerH + PAD * 2
+    // ── Volume per exercise (for bar chart) ────────────────────────────
+    const barData = s.exercicios
+      .map(ex => ({
+        nome: ex.exercicioNome,
+        vol: ex.series.filter(sr => sr.completada).reduce((a, sr) => a + (sr.peso ?? 0) * (sr.repeticoes ?? 0), 0),
+        sets: ex.series.filter(sr => sr.completada).length,
+      }))
+      .filter(ex => ex.sets > 0)
+      .sort((a, b) => b.vol - a.vol)
+      .slice(0, 6)
+
+    // ── Muscle groups ──────────────────────────────────────────────────
+    const muscleMap = new Map<string, number>()
+    s.exercicios.forEach(ex => {
+      if (ex.series.some(sr => sr.completada) && ex.grupoMuscular)
+        muscleMap.set(ex.grupoMuscular, (muscleMap.get(ex.grupoMuscular) ?? 0) + 1)
+    })
+    const muscles = [...muscleMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
+
+    // ── Height estimate ────────────────────────────────────────────────
+    const H =
+      520 +                                          // header
+      (2 * 132 + 16 + 44) +                          // stats grid
+      (barData.length > 0 ? 36 + barData.length * 68 + 24 : 0) +
+      (muscles.length > 0 ? 36 + Math.ceil(muscles.length / 4) * 62 + 40 : 0) +
+      140                                            // footer + bottom pad
 
     const canvas = document.createElement('canvas')
     canvas.width = W
     canvas.height = H
     const ctx = canvas.getContext('2d')!
 
-    const roundRect = (x: number, y: number, w: number, h: number, r: number) => {
-      ctx.beginPath()
-      ctx.roundRect(x, y, w, h, r)
-      ctx.fill()
-    }
-
-    // Background
+    // ── Background ─────────────────────────────────────────────────────
     ctx.fillStyle = C.bg
     ctx.fillRect(0, 0, W, H)
 
-    // Top accent bar
-    const grad = ctx.createLinearGradient(0, 0, W, 0)
-    grad.addColorStop(0, '#6366f1')
-    grad.addColorStop(1, '#a78bfa')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, W, 8)
+    // Top gradient bar
+    const topGrad = ctx.createLinearGradient(0, 0, W, 0)
+    topGrad.addColorStop(0, '#6366f1')
+    topGrad.addColorStop(1, '#a78bfa')
+    ctx.fillStyle = topGrad
+    ctx.fillRect(0, 0, W, 10)
 
-    // Subtle top glow
-    const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.7)
-    glow.addColorStop(0, 'rgba(99,102,241,0.18)')
+    // Radial glow
+    const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 60, W * 0.75)
+    glow.addColorStop(0, 'rgba(99,102,241,0.2)')
     glow.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = glow
-    ctx.fillRect(0, 0, W, 300)
+    ctx.fillRect(0, 0, W, 400)
 
-    let y = 48
-
-    // App label
-    ctx.fillStyle = C.muted
-    ctx.font = `500 ${36}px -apple-system, Inter, sans-serif`
+    let y = 60
     ctx.textAlign = 'center'
-    ctx.fillText('Training App', W / 2, (y += 48))
+
+    // ── App label ──────────────────────────────────────────────────────
+    ctx.fillStyle = C.muted
+    ctx.font = `500 30px -apple-system, Inter, sans-serif`
+    y += 44; ctx.fillText('Training App', W / 2, y)
 
     // Trophy
-    ctx.font = `${96}px serif`
-    ctx.fillText('🏆', W / 2, (y += 114))
+    ctx.font = `84px serif`
+    y += 102; ctx.fillText('🏆', W / 2, y)
 
     // Title
     ctx.fillStyle = C.text
-    ctx.font = `800 ${72}px -apple-system, Inter, sans-serif`
-    ctx.fillText('Treino Concluído!', W / 2, (y += 88))
+    ctx.font = `800 64px -apple-system, Inter, sans-serif`
+    y += 80; ctx.fillText('Treino Concluído!', W / 2, y)
 
-    // Plan name
+    // Plan name pill
+    ctx.font = `600 36px -apple-system, Inter, sans-serif`
+    const pillW = ctx.measureText(s.planoNome).width + 56
+    y += 24
+    const pillY = y
+    ctx.fillStyle = C.accentLight
+    ctx.beginPath(); ctx.roundRect(W / 2 - pillW / 2, pillY, pillW, 54, 27); ctx.fill()
     ctx.fillStyle = C.accent
-    ctx.font = `600 ${44}px -apple-system, Inter, sans-serif`
-    ctx.fillText(s.planoNome, W / 2, (y += 58))
+    ctx.fillText(s.planoNome, W / 2, pillY + 36)
+    y = pillY + 54 + 16
 
     // Date
     ctx.fillStyle = C.muted
-    ctx.font = `400 ${34}px -apple-system, Inter, sans-serif`
-    ctx.fillText(data, W / 2, (y += 50))
+    ctx.font = `400 30px -apple-system, Inter, sans-serif`
+    y += 32; ctx.fillText(data, W / 2, y)
+    y += 36
 
     // Divider
-    y += 36
-    ctx.strokeStyle = C.border
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(PAD, y)
-    ctx.lineTo(W - PAD, y)
-    ctx.stroke()
+    ctx.strokeStyle = C.border; ctx.lineWidth = 1.5
+    ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke()
     y += 40
 
-    // Stats cards
-    const stats = [
-      { label: 'DURAÇÃO', value: duracao },
-      { label: 'VOLUME', value: volume },
-      { label: 'SÉRIES', value: String(totalSeries) },
+    // ── Stats Grid 2×3 ─────────────────────────────────────────────────
+    const statsData = [
+      { icon: '⏱', label: 'DURAÇÃO',      value: duracao },
+      { icon: '📦', label: 'VOLUME TOTAL', value: volumeKg > 0 ? `${volumeKg}kg` : '–' },
+      { icon: '✅', label: 'SÉRIES',       value: String(totalSeries) },
+      { icon: '🔁', label: 'REPETIÇÕES',   value: String(totalReps) },
+      { icon: '💪', label: 'EXERCÍCIOS',   value: String(exercFeitos) },
+      { icon: '⚖️', label: 'MÉDIA/SÉRIE',  value: mediaSerie },
     ]
-    const cardW = (W - PAD * 2 - 24) / 3
-    const cardH = 130
-    stats.forEach((st, i) => {
-      const cx = PAD + i * (cardW + 12)
-      ctx.fillStyle = C.surface
-      roundRect(cx, y, cardW, cardH, 20)
-      // border
-      ctx.strokeStyle = C.border
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.roundRect(cx, y, cardW, cardH, 20)
-      ctx.stroke()
-      // value
-      ctx.fillStyle = C.text
-      ctx.font = `700 ${48}px -apple-system, Inter, sans-serif`
-      ctx.textAlign = 'center'
-      ctx.fillText(st.value, cx + cardW / 2, y + 72)
-      // label
-      ctx.fillStyle = C.subtle
-      ctx.font = `500 ${26}px -apple-system, Inter, sans-serif`
-      ctx.fillText(st.label, cx + cardW / 2, y + 108)
-    })
-    y += cardH + 48
+    const COLS = 3, ROWS = 2, GAP = 16
+    const cellW = (W - PAD * 2 - GAP * (COLS - 1)) / COLS
+    const cellH = 132
 
-    // Exercises
-    ctx.textAlign = 'left'
-    exerciciosVisiveis.forEach((ex) => {
-      const sets = ex.series.filter(sr => sr.completada)
-      if (!sets.length) return
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const st = statsData[r * COLS + c]
+        const cx = PAD + c * (cellW + GAP)
+        const cy = y + r * (cellH + GAP)
+        ctx.fillStyle = C.surface
+        ctx.beginPath(); ctx.roundRect(cx, cy, cellW, cellH, 20); ctx.fill()
+        ctx.strokeStyle = C.border; ctx.lineWidth = 1.5
+        ctx.beginPath(); ctx.roundRect(cx, cy, cellW, cellH, 20); ctx.stroke()
+        ctx.font = `28px serif`; ctx.textAlign = 'center'
+        ctx.fillText(st.icon, cx + cellW / 2, cy + 36)
+        ctx.fillStyle = C.text
+        ctx.font = `700 40px -apple-system, Inter, sans-serif`
+        ctx.fillText(st.value, cx + cellW / 2, cy + 78)
+        ctx.fillStyle = C.subtle
+        ctx.font = `500 20px -apple-system, Inter, sans-serif`
+        ctx.fillText(st.label, cx + cellW / 2, cy + 110)
+      }
+    }
+    y += ROWS * cellH + (ROWS - 1) * GAP + 44
 
-      // Exercise name row
-      ctx.fillStyle = C.text
-      ctx.font = `600 ${38}px -apple-system, Inter, sans-serif`
-      ctx.fillText(ex.exercicioNome, PAD, y)
+    // ── Bar Chart: volume por exercício ────────────────────────────────
+    if (barData.length > 0) {
+      const maxVol = Math.max(...barData.map(e => e.vol), 1)
+      const LABEL_W = 196
+      const barAreaW = W - PAD * 2 - LABEL_W - 16
+      const BAR_H = 36
+
       ctx.fillStyle = C.muted
-      ctx.font = `400 ${30}px -apple-system, Inter, sans-serif`
-      ctx.fillText(`${sets.length} séries`, W - PAD - 140, y)
-      y += 44
+      ctx.font = `600 24px -apple-system, Inter, sans-serif`
+      ctx.textAlign = 'left'
+      ctx.fillText('VOLUME POR EXERCÍCIO', PAD, y)
+      y += 36
 
-      // Set chips
-      let chipX = PAD
-      const chipH = 44
-      const chipPadX = 24
-      sets.forEach((sr) => {
-        const label = `${sr.peso ?? 0}kg × ${sr.repeticoes ?? 0}`
-        ctx.font = `500 ${26}px -apple-system, Inter, sans-serif`
-        const tw = ctx.measureText(label).width
-        const cw = tw + chipPadX * 2
+      barData.forEach((ex, i) => {
+        const color = PALETTE[i % PALETTE.length]
+        const barFill = (ex.vol / maxVol) * barAreaW
+        const barX = PAD + LABEL_W + 16
+        const barY = y
 
-        if (chipX + cw > W - PAD) {
-          chipX = PAD
-          y += chipH + 10
+        // Label
+        const shortName = ex.nome.length > 15 ? ex.nome.slice(0, 13) + '…' : ex.nome
+        ctx.fillStyle = C.muted
+        ctx.font = `400 23px -apple-system, Inter, sans-serif`
+        ctx.textAlign = 'left'
+        ctx.fillText(shortName, PAD, barY + 25)
+
+        // Track
+        ctx.fillStyle = C.surface2
+        ctx.beginPath(); ctx.roundRect(barX, barY, barAreaW, BAR_H, 8); ctx.fill()
+
+        // Fill
+        if (barFill > 8) {
+          const bg = ctx.createLinearGradient(barX, 0, barX + barAreaW, 0)
+          bg.addColorStop(0, color)
+          bg.addColorStop(1, color + '55')
+          ctx.fillStyle = bg
+          ctx.beginPath(); ctx.roundRect(barX, barY, barFill, BAR_H, 8); ctx.fill()
         }
 
-        ctx.fillStyle = C.surface2
-        ctx.beginPath()
-        ctx.roundRect(chipX, y, cw, chipH, 12)
-        ctx.fill()
-        ctx.strokeStyle = C.border
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.roundRect(chipX, y, cw, chipH, 12)
-        ctx.stroke()
+        // Value after bar
+        if (ex.vol > 0) {
+          ctx.fillStyle = C.subtle
+          ctx.font = `500 21px -apple-system, Inter, sans-serif`
+          ctx.textAlign = 'left'
+          ctx.fillText(`${Math.round(ex.vol)}kg`, barX + barFill + 10, barY + 25)
+        }
 
-        ctx.fillStyle = C.muted
-        ctx.textAlign = 'center'
-        ctx.fillText(label, chipX + cw / 2, y + chipH - 12)
-        ctx.textAlign = 'left'
-        chipX += cw + 10
+        y += BAR_H + 32
       })
-      y += chipH + 32
-    })
+      y += 12
+    }
 
-    // Footer divider
-    y += 8
-    ctx.strokeStyle = C.border
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    ctx.moveTo(PAD, y)
-    ctx.lineTo(W - PAD, y)
-    ctx.stroke()
-    y += 32
+    // ── Muscle Group Pills ─────────────────────────────────────────────
+    if (muscles.length > 0) {
+      ctx.fillStyle = C.muted
+      ctx.font = `600 24px -apple-system, Inter, sans-serif`
+      ctx.textAlign = 'left'
+      ctx.fillText('GRUPOS MUSCULARES', PAD, y)
+      y += 36
 
-    // Footer text
+      let chipX = PAD
+      const CHIP_H = 48
+
+      muscles.forEach(([muscle], i) => {
+        const color = PALETTE[i % PALETTE.length]
+        const label = muscle.charAt(0).toUpperCase() + muscle.slice(1)
+        ctx.font = `500 23px -apple-system, Inter, sans-serif`
+        const chipW = ctx.measureText(label).width + 40
+
+        if (chipX + chipW > W - PAD) { chipX = PAD; y += CHIP_H + 12 }
+
+        ctx.fillStyle = color + '22'
+        ctx.beginPath(); ctx.roundRect(chipX, y, chipW, CHIP_H, CHIP_H / 2); ctx.fill()
+        ctx.strokeStyle = color + '60'; ctx.lineWidth = 1.5
+        ctx.beginPath(); ctx.roundRect(chipX, y, chipW, CHIP_H, CHIP_H / 2); ctx.stroke()
+        ctx.fillStyle = color; ctx.textAlign = 'center'
+        ctx.fillText(label, chipX + chipW / 2, y + 31)
+
+        chipX += chipW + 12
+      })
+      y += CHIP_H + 36
+    }
+
+    // ── Footer ─────────────────────────────────────────────────────────
+    y += 12
+    ctx.strokeStyle = C.border; ctx.lineWidth = 1.5
+    ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke()
+    y += 36
     ctx.fillStyle = C.subtle
-    ctx.font = `400 ${30}px -apple-system, Inter, sans-serif`
+    ctx.font = `400 26px -apple-system, Inter, sans-serif`
     ctx.textAlign = 'center'
-    ctx.fillText('💪 Gerado pelo Training App', W / 2, y + 36)
+    ctx.fillText('💪 Gerado pelo Training App', W / 2, y + 32)
 
     return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
   }

@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useAuthStore, useHistoricoStore } from '../stores'
 import { useHistorico } from '../hooks/useHistorico'
 import { usePlanos } from '../hooks/usePlanos'
 import { useTreinoAtivoStore } from '../stores'
 import { formatarTempo } from '../lib/notifications'
 import { useIniciarTreino } from '../hooks/useIniciarTreino'
-import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus, Zap } from 'lucide-react'
+import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus, Zap, RefreshCw } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -52,8 +53,9 @@ function PlanoCard({ plano }: { plano: { id: string; nome: string; cor?: string 
 function HomePage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { planosAtivos, loading } = usePlanos()
-  const { sessoes } = useHistorico()
+  const { planosAtivos, loading, sincronizar: sincronizarPlanos } = usePlanos()
+  const { sessoes, sincronizar: sincronizarSessoes } = useHistorico()
+  const [sincronizando, setSincronizando] = useState(false)
   const treinoAtivo = useTreinoAtivoStore((s) => s.iniciado)
   const sessaoAtiva = useTreinoAtivoStore((s) => s.sessao)
   const exercicioAtualIndex = useTreinoAtivoStore((s) => s.exercicioAtualIndex)
@@ -91,11 +93,25 @@ function HomePage() {
   return (
     <div className="page-container pt-6">
       {/* Header */}
-      <div className="mb-6 animate-fade-up">
-        <p className="text-[var(--color-text-muted)] text-sm">{saudacao},</p>
-        <h1 className="text-2xl font-bold text-[var(--color-text)] mt-0.5">
-          {nome} 👋
-        </h1>
+      <div className="mb-6 animate-fade-up flex items-start justify-between">
+        <div>
+          <p className="text-[var(--color-text-muted)] text-sm">{saudacao},</p>
+          <h1 className="text-2xl font-bold text-[var(--color-text)] mt-0.5">
+            {nome} 👋
+          </h1>
+        </div>
+        <button
+          onClick={async () => {
+            setSincronizando(true)
+            await Promise.all([sincronizarPlanos(), sincronizarSessoes()])
+            setSincronizando(false)
+          }}
+          disabled={sincronizando}
+          className="mt-1 w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted hover:bg-surface-2 transition-colors disabled:opacity-50"
+          title="Sincronizar com Firebase"
+        >
+          <RefreshCw size={16} className={sincronizando ? 'animate-spin' : ''} />
+        </button>
       </div>
 
       {/* Treino ativo banner */}
