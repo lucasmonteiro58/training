@@ -39,6 +39,7 @@ import {
   FileText,
   Trophy,
 } from 'lucide-react'
+import { Confetti } from '../../components/ui/Confetti'
 
 export const Route = createFileRoute('/treino-ativo/$planoId')({
   component: TreinoAtivoPage,
@@ -114,6 +115,8 @@ function TreinoAtivoPage() {
   const [showNotas, setShowNotas] = useState(false)
   const [notasTemp, setNotasTemp] = useState('')
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [showPrCelebration, setShowPrCelebration] = useState(false)
 
   // ─── Cronômetro de série (para exercícios por tempo) ──────────────────────
   const [timerSerie, setTimerSerie] = useState<{ sIdx: number; restando: number } | null>(null)
@@ -258,6 +261,13 @@ function TreinoAtivoPage() {
     })
   }, [])
 
+  // ─── Haptic feedback nos últimos 5s do descanso ────────────────────────────
+  useEffect(() => {
+    if (cronometroDescansoAtivo && cronometroDescansoSegundos > 0 && cronometroDescansoSegundos <= 5) {
+      navigator.vibrate?.(cronometroDescansoSegundos === 1 ? [150, 50, 150] : [80])
+    }
+  }, [cronometroDescansoSegundos, cronometroDescansoAtivo])
+
   const exercicioAtual = sessao?.exercicios[exercicioAtualIndex]
   const planoExercicio = plano?.exercicios.find(ex => ex.exercicioId === exercicioAtual?.exercicioId)
   const totalExercicios = sessao?.exercicios.length ?? 0
@@ -284,6 +294,11 @@ function TreinoAtivoPage() {
       if (prCheck) {
         const prLabels = { peso: 'Peso', volume: 'Volume', '1rm': '1RM' }
         toast.success(`🏆 Novo Recorde de ${prLabels[prCheck.tipo]}! ${prCheck.tipo === 'peso' ? `${prCheck.valor} kg` : prCheck.tipo === '1rm' ? `${prCheck.valor} kg` : `${Math.round(prCheck.valor)} kg`}`, { duration: 4000 })
+        // Celebration animation
+        setShowPrCelebration(true)
+        setShowConfetti(true)
+        navigator.vibrate?.([100, 50, 100, 50, 200])
+        setTimeout(() => { setShowPrCelebration(false); setShowConfetti(false) }, 3000)
       }
 
       // Prepara audio context em evento de interação (necessário p/ iOS)
@@ -423,7 +438,9 @@ function TreinoAtivoPage() {
     if (sessaoFinalizada) {
       await salvarSessaoCompleta(sessaoFinalizada)
       setShowConfirmFinalizar(false)
+      setShowConfetti(true)
       setRelatorio(sessaoFinalizada)
+      navigator.vibrate?.([100, 50, 100, 50, 200])
     } else {
       navigate({ to: '/historico' })
     }
@@ -700,12 +717,13 @@ function TreinoAtivoPage() {
   if (relatorio) {
     return (
       <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--color-bg)] overflow-y-auto">
+        <Confetti active={showConfetti} />
         {/* Header */}
         <div className="flex flex-col items-center pt-10 pb-6 px-6 text-center">
-          <div className="w-20 h-20 rounded-3xl bg-[rgba(34,197,94,0.15)] flex items-center justify-center mb-4">
+          <div className="w-20 h-20 rounded-3xl bg-[rgba(34,197,94,0.15)] flex items-center justify-center mb-4 animate-trophy-bounce">
             <Trophy size={36} className="text-[var(--color-success)]" />
           </div>
-          <h1 className="text-2xl font-bold text-text">Treino Concluído!</h1>
+          <h1 className="text-2xl font-bold text-text animate-celebration-pulse">Treino Concluído!</h1>
           <p className="text-text-muted text-sm mt-1">{relatorio.planoNome}</p>
           <p className="text-text-subtle text-xs mt-0.5 capitalize">
             {new Date(relatorio.iniciadoEm).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -787,6 +805,16 @@ function TreinoAtivoPage() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
+      <Confetti active={showConfetti} />
+      {/* PR Celebration Overlay */}
+      {showPrCelebration && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center pointer-events-none">
+          <div className="animate-celebration-pulse text-center">
+            <span className="text-7xl block mb-2">🏆</span>
+            <span className="text-xl font-black text-[var(--color-accent)]">NOVO PR!</span>
+          </div>
+        </div>
+      )}
       {/* ─── Header fixo ───────────────────────────────────────────── */}
       <div className="px-4 pt-4 pb-2 flex flex-col gap-4">
         {/* Top bar */}

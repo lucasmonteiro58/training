@@ -7,6 +7,7 @@ import { subscribeToProgressoTreino } from '../lib/firestore/sync'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
 import { Toaster, toast } from 'sonner'
 import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
+import { usePendingSyncCount } from '../lib/syncQueue'
 
 import appCss from '../styles.css?url'
 
@@ -119,6 +120,7 @@ function RootComponent() {
 
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] relative overflow-x-hidden">
+      <SyncIndicator />
       <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top,0)]">
         <div className="pt-4 py-2">
           <Outlet />
@@ -136,6 +138,22 @@ function RootComponent() {
       <PWAInstallPrompt />
       <FloatingWorkoutButton />
       <BottomNav />
+    </div>
+  )
+}
+
+// ============================================================
+// Sync Indicator
+// ============================================================
+function SyncIndicator() {
+  const pending = usePendingSyncCount()
+  if (pending === 0) return null
+  return (
+    <div className="fixed top-[max(env(safe-area-inset-top,0px),8px)] left-1/2 -translate-x-1/2 z-[100] flex items-center gap-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 rounded-full shadow-lg animate-scale-in">
+      <span className="animate-spin inline-block w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full" />
+      <span className="text-[11px] font-medium text-[var(--color-text-muted)]">
+        {pending} {pending === 1 ? 'sincronizando' : 'sincronizando'}
+      </span>
     </div>
   )
 }

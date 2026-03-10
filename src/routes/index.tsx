@@ -8,6 +8,7 @@ import { formatarTempo } from '../lib/notifications'
 import { useIniciarTreino } from '../hooks/useIniciarTreino'
 import { calcularStreaks } from '../lib/streaks'
 import { getConfigUsuario, salvarConfigUsuario } from '../lib/firestore/sync'
+import { CORES_GRUPO } from '../types'
 import { Dumbbell, Flame, Clock, TrendingUp, ChevronRight, Play, Plus, Zap, RefreshCw, Trophy, Target } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -344,6 +345,49 @@ function HomePage() {
           })}
         </div>
       </div>
+
+      {/* Frequência por Grupo Muscular */}
+      {!carregando && sessoes.length > 0 && (() => {
+        const hoje = Date.now()
+        const grupoMap: Record<string, number> = {}
+        sessoes.forEach(s => {
+          if (!s.finalizadoEm) return
+          s.exercicios.forEach(ex => {
+            const g = ex.grupoMuscular
+            if (!g || g === 'Outro' || g === 'Corpo Inteiro' || g === 'Cardio') return
+            const last = grupoMap[g]
+            if (!last || s.finalizadoEm! > last) grupoMap[g] = s.finalizadoEm!
+          })
+        })
+        const alertas = Object.entries(grupoMap)
+          .map(([grupo, ultimo]) => ({
+            grupo,
+            dias: Math.floor((hoje - ultimo) / 86400000),
+            cor: CORES_GRUPO[grupo] ?? '#6366f1',
+          }))
+          .filter(a => a.dias >= 7)
+          .sort((a, b) => b.dias - a.dias)
+          .slice(0, 4)
+
+        if (alertas.length === 0) return null
+
+        return (
+          <div className="card p-4 mb-6 animate-fade-up" style={{ animationDelay: '112ms' }}>
+            <p className="text-xs text-[var(--color-text-muted)] font-medium mb-3">GRUPOS MUSCULARES</p>
+            <div className="flex flex-col gap-2">
+              {alertas.map(a => (
+                <div key={a.grupo} className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: a.cor }} />
+                  <span className="text-sm text-[var(--color-text)] font-medium flex-1">{a.grupo}</span>
+                  <span className={`text-xs font-semibold ${a.dias >= 14 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]'}`}>
+                    {a.dias === 1 ? '1 dia' : `${a.dias} dias`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Próximo Treino */}
       {!treinoAtivo && proximoPlano && (

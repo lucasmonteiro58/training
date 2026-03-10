@@ -27,26 +27,32 @@ function stripUndefined<T>(obj: T): T {
 import { db } from '../firebase'
 import { salvarPlano, salvarSessao, salvarExercicioPersonalizado, salvarMedida } from '../db/dexie'
 import type { PlanoDeTreino, SessaoDeTreino, Exercicio, MedidaCorporal } from '../../types'
+import { incrementSync, decrementSync } from '../syncQueue'
 
 // ============================
 // Planos
 // ============================
 export async function syncPlanoParaFirestore(plano: PlanoDeTreino): Promise<void> {
+  incrementSync()
   try {
     const ref = doc(db, 'planos', plano.id)
     await setDoc(ref, stripUndefined({ ...plano, syncedAt: Date.now() }))
-    // Atualiza local com syncedAt
     await salvarPlano({ ...plano, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar plano:', err)
+  } finally {
+    decrementSync()
   }
 }
 
 export async function deletarPlanoFirestore(id: string): Promise<void> {
+  incrementSync()
   try {
     await deleteDoc(doc(db, 'planos', id))
   } catch (err) {
     console.error('Erro ao deletar plano do Firestore:', err)
+  } finally {
+    decrementSync()
   }
 }
 
@@ -87,20 +93,26 @@ export function subscribeToPlanos(
 // Sessões
 // ============================
 export async function syncSessaoParaFirestore(sessao: SessaoDeTreino): Promise<void> {
+  incrementSync()
   try {
     const ref = doc(db, 'sessoes', sessao.id)
     await setDoc(ref, stripUndefined({ ...sessao, syncedAt: Date.now() }))
     await salvarSessao({ ...sessao, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar sessão:', err)
+  } finally {
+    decrementSync()
   }
 }
 
 export async function deletarSessaoFirestore(id: string): Promise<void> {
+  incrementSync()
   try {
     await deleteDoc(doc(db, 'sessoes', id))
   } catch (err) {
     console.error('Erro ao deletar sessão do Firestore:', err)
+  } finally {
+    decrementSync()
   }
 }
 
@@ -254,6 +266,7 @@ export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoD
 // Exercícios Personalizados
 // ============================
 export async function syncExercicioParaFirestore(exercicio: Exercicio): Promise<void> {
+  incrementSync()
   try {
     const ref = doc(db, 'exercicios', exercicio.id)
     await setDoc(ref, {
@@ -263,6 +276,8 @@ export async function syncExercicioParaFirestore(exercicio: Exercicio): Promise<
     await salvarExercicioPersonalizado({ ...exercicio, syncedAt: Date.now() } as any)
   } catch (err) {
     console.error('Erro ao sincronizar exercicios:', err)
+  } finally {
+    decrementSync()
   }
 }
 
@@ -298,19 +313,25 @@ export function subscribeToExercicios(
 // Medidas Corporais
 // ============================
 export async function syncMedidaParaFirestore(medida: MedidaCorporal): Promise<void> {
+  incrementSync()
   try {
     const ref = doc(db, 'medidas', medida.id)
     await setDoc(ref, stripUndefined({ ...medida, syncedAt: Date.now() }))
   } catch (err) {
     console.error('Erro ao sincronizar medida:', err)
+  } finally {
+    decrementSync()
   }
 }
 
 export async function deletarMedidaFirestore(id: string): Promise<void> {
+  incrementSync()
   try {
     await deleteDoc(doc(db, 'medidas', id))
   } catch (err) {
     console.error('Erro ao deletar medida do Firestore:', err)
+  } finally {
+    decrementSync()
   }
 }
 
