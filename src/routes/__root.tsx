@@ -127,8 +127,8 @@ function RootComponent() {
       <Toaster
         position="bottom-center"
         richColors
-        offset={120}
         visibleToasts={1}
+        className="toast-above-nav"
         toastOptions={{
           style: { zIndex: 9999 }
         }}

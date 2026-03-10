@@ -25,8 +25,8 @@ function stripUndefined<T>(obj: T): T {
   return obj
 }
 import { db } from '../firebase'
-import { salvarPlano, salvarSessao, salvarExercicioPersonalizado } from '../db/dexie'
-import type { PlanoDeTreino, SessaoDeTreino, Exercicio } from '../../types'
+import { salvarPlano, salvarSessao, salvarExercicioPersonalizado, salvarMedida } from '../db/dexie'
+import type { PlanoDeTreino, SessaoDeTreino, Exercicio, MedidaCorporal } from '../../types'
 
 // ============================
 // Planos
@@ -288,6 +288,59 @@ export function subscribeToExercicios(
     },
     (err) => {
       console.error('Erro no subscribe de Exercícios:', err)
+    }
+  )
+
+  return unsubscribe
+}
+
+// ============================
+// Medidas Corporais
+// ============================
+export async function syncMedidaParaFirestore(medida: MedidaCorporal): Promise<void> {
+  try {
+    const ref = doc(db, 'medidas', medida.id)
+    await setDoc(ref, stripUndefined({ ...medida, syncedAt: Date.now() }))
+  } catch (err) {
+    console.error('Erro ao sincronizar medida:', err)
+  }
+}
+
+export async function deletarMedidaFirestore(id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'medidas', id))
+  } catch (err) {
+    console.error('Erro ao deletar medida do Firestore:', err)
+  }
+}
+
+export function subscribeToMedidas(
+  userId: string,
+  callback: (medidas: MedidaCorporal[]) => void
+): () => void {
+  const q = query(
+    collection(db, 'medidas'),
+    where('userId', '==', userId),
+    orderBy('data', 'desc')
+  )
+
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const medidas: MedidaCorporal[] = []
+      snapshot.forEach((d) => {
+        const data = d.data() as MedidaCorporal
+        medidas.push(data)
+        salvarMedida(data)
+      })
+      callback(medidas)
+    },
+    (err) => {
+      if (err.code === 'permission-denied') {
+        console.warn('Acesso negado ao Firestore (Medidas).')
+      } else {
+        console.error('Erro no subscribe de Medidas:', err)
+      }
     }
   )
 

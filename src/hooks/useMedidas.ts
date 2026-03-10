@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthStore } from '../stores'
 import { getMedidas, salvarMedida, deletarMedida } from '../lib/db/dexie'
+import { syncMedidaParaFirestore, deletarMedidaFirestore, subscribeToMedidas } from '../lib/firestore/sync'
 import type { MedidaCorporal } from '../types'
 
 export function useMedidas() {
@@ -8,31 +9,40 @@ export function useMedidas() {
   const [medidas, setMedidas] = useState<MedidaCorporal[]>([])
   const [loading, setLoading] = useState(true)
 
-  const carregar = useCallback(async () => {
-    if (!user) return
-    const data = await getMedidas(user.uid)
-    setMedidas(data)
-    setLoading(false)
-  }, [user])
-
   useEffect(() => {
-    carregar()
-  }, [carregar])
+    if (!user) return
+
+    // Load local first
+    getMedidas(user.uid).then((local) => {
+      setMedidas(local)
+      setLoading(false)
+    })
+
+    // Subscribe to Firestore for real-time sync
+    const unsub = subscribeToMedidas(user.uid, (remote) => {
+      setMedidas(remote)
+      setLoading(false)
+    })
+
+    return unsub
+  }, [user])
 
   const adicionar = useCallback(
     async (medida: MedidaCorporal) => {
       await salvarMedida(medida)
-      await carregar()
+      setMedidas(prev => [medida, ...prev].sort((a, b) => b.data - a.data))
+      syncMedidaParaFirestore(medida) // background
     },
-    [carregar]
+    []
   )
 
   const remover = useCallback(
     async (id: string) => {
       await deletarMedida(id)
-      await carregar()
+      setMedidas(prev => prev.filter(m => m.id !== id))
+      deletarMedidaFirestore(id) // background
     },
-    [carregar]
+    []
   )
 
   return { medidas, loading, adicionar, remover }

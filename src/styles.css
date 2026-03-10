@@ -260,6 +260,13 @@ body {
   padding-top: 6px;
 }
 
+/* Toast acima da bottom nav com safe-area iOS */
+.toast-above-nav {
+  --offset: calc(96px + env(safe-area-inset-bottom, 10px)) !important;
+  bottom: var(--offset) !important;
+  z-index: 9999 !important;
+}
+
 /* ============================================================
    Grad Accent
    ============================================================ */
