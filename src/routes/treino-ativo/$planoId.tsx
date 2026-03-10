@@ -842,7 +842,7 @@ function TreinoAtivoPage() {
         {exercicioAtualIndex < totalExercicios - 1 && (
           <button
             onClick={proximoExercicio}
-            className="mt-4 w-full btn-secondary flex items-center justify-center gap-2"
+            className="mt-4 w-full btn-secondary flex items-center justify-center gap-2 mb-[100px]"
           >
             <SkipForward size={16} />
             Próximo: {sessao.exercicios[exercicioAtualIndex + 1]?.exercicioNome}
