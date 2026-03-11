@@ -14,13 +14,21 @@ export interface ResultadoCsv {
   erros: string[]
 }
 
-export const CSV_TEMPLATE = `plano,nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos,instrucoes,notas
-Treino A,Supino Reto,Peito,4,10;10;8;8,80;80;70;70,90,Deite no banco|Desça a barra devagar,Focar na contração
-Treino A,Rosca Direta,Bíceps,3,12,20,60,Mantenha a postura,Sem roubar
-Treino B,Agachamento Livre,Quadríceps,4,8,100,120,Pés na largura dos ombros|Desça até 90 graus,Manter o core firme`
+export const CSV_TEMPLATE = `id,plano,nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos,instrucoes,notas
+,Treino A,Supino Reto,Peito,4,10;10;8;8,80;80;70;70,90,Deite no banco|Desça a barra devagar,Focar na contração
+Barbell_Curl,Treino A,Rosca Direta,Bíceps,3,12,20,60,,Sem roubar
+,Treino B,Agachamento Livre,Quadríceps,4,8,100,120,Pés na largura dos ombros|Desça até 90 graus,Manter o core firme`
 
-export function parsearCsv(conteudo: string): ResultadoCsv {
+export function parsearCsv(conteudo: string, exerciciosDb: Exercicio[] = []): ResultadoCsv {
   const resultado: ResultadoCsv = { planos: [], erros: [] }
+
+  // Criar mapas para busca rápida por id e por nome (normalizado)
+  const dbPorId = new Map<string, Exercicio>()
+  const dbPorNome = new Map<string, Exercicio>()
+  for (const ex of exerciciosDb) {
+    dbPorId.set(ex.id.toLowerCase(), ex)
+    dbPorNome.set(ex.nome.toLowerCase().trim(), ex)
+  }
 
   const { data, errors } = Papa.parse<LinhaCsvTreino>(conteudo, {
     header: true,
@@ -68,13 +76,26 @@ export function parsearCsv(conteudo: string): ResultadoCsv {
     const grupoEn = linha.grupo_muscular?.trim() ?? ''
     const grupoPt = GRUPOS_EN_PT[grupoEn.toLowerCase()] ?? (grupoEn || 'Outro')
 
-    const exercicio: Exercicio = {
-      id: `csv-${uuidv4()}`,
-      nome: linha.nome_exercicio.trim(),
-      grupoMuscular: grupoPt,
-      instrucoes: instrucoesArr,
-      personalizado: true,
+    // Tentar encontrar exercício existente no banco de dados por ID ou nome exato
+    const csvId = linha.id?.trim()
+    let exercicioDb: Exercicio | undefined
+
+    if (csvId) {
+      exercicioDb = dbPorId.get(csvId.toLowerCase())
     }
+    if (!exercicioDb) {
+      exercicioDb = dbPorNome.get(linha.nome_exercicio.trim().toLowerCase())
+    }
+
+    const exercicio: Exercicio = exercicioDb
+      ? { ...exercicioDb } // usar exercício do banco com todas as informações (imagens, instruções, etc.)
+      : {
+          id: `csv-${uuidv4()}`,
+          nome: linha.nome_exercicio.trim(),
+          grupoMuscular: grupoPt,
+          instrucoes: instrucoesArr,
+          personalizado: true,
+        }
 
     const planoNome = (linha as any).plano?.trim() || 'Meu Treino'
     if (!planosMap.has(planoNome)) {

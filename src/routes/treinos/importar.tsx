@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { parsearCsv, downloadTemplateCsv } from '../../lib/csvImport'
 import type { PlanoImportado } from '../../lib/csvImport'
 import { usePlanos } from '../../hooks/usePlanos'
@@ -9,9 +9,11 @@ import {
 } from 'lucide-react'
 import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../types'
 import { GRUPOS_MUSCULARES } from '../../types'
+import type { Exercicio } from '../../types'
 import { useAuthStore } from '../../stores'
 import { salvarExercicioPersonalizado } from '../../lib/db/dexie'
 import { syncExercicioParaFirestore } from '../../lib/firestore/sync'
+import { carregarExercicios } from '../../lib/exercises/freeExerciseDb'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/treinos/importar')({
@@ -461,12 +463,18 @@ function ImportarCsvPage() {
   const [salvando, setSalvando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [expandedExs, setExpandedExs] = useState<Set<string>>(new Set())
+  const [exerciciosDb, setExerciciosDb] = useState<Exercicio[]>([])
+
+  // Carregar banco de exercícios ao montar
+  useEffect(() => {
+    carregarExercicios().then(setExerciciosDb)
+  }, [])
 
   const handleFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       const texto = e.target?.result as string
-      const resultado = parsearCsv(texto)
+      const resultado = parsearCsv(texto, exerciciosDb)
       setPlanos(resultado.planos.map(p => ({ ...p, collapsed: false })))
       setErros(resultado.erros)
       setExpandedExs(new Set())
@@ -503,6 +511,10 @@ function ImportarCsvPage() {
       for (const planoData of validos) {
         const exerciciosComUser = await Promise.all(
           planoData.exercicios.map(async (ex) => {
+            if (ex.exercicio.personalizado === false) {
+              // Exercício já existe no banco de dados, não criar novo
+              return ex
+            }
             const exFinal = { ...ex.exercicio, userId: user.uid }
             await salvarExercicioPersonalizado(exFinal)
             syncExercicioParaFirestore(exFinal)
@@ -560,6 +572,8 @@ function ImportarCsvPage() {
               <div className="flex-1 pr-3">
                 <h2 className="text-sm font-bold text-[var(--color-text)]">Formato do CSV</h2>
                 <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                  Use a coluna <strong>id</strong> para vincular ao banco de exercícios.
+                  Se o nome for exatamente igual, o exercício também será reconhecido automaticamente.
                   Use a coluna <strong>plano</strong> para criar múltiplos planos de uma só vez.
                   Separe reps/pesos com ponto e vírgula (;) e instruções com pipe (|).
                 </p>
@@ -573,7 +587,7 @@ function ImportarCsvPage() {
               </button>
             </div>
             <pre className="text-[10px] text-[var(--color-text-muted)] bg-[var(--color-surface-2)] p-3 rounded-xl overflow-x-auto font-mono">
-              {`plano,nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,...`}
+              {`id,plano,nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,...`}
             </pre>
           </div>
 

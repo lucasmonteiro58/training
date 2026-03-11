@@ -119,6 +119,7 @@ export interface TreinoAtivoState {
 
 // CSV Import
 export interface LinhaCsvTreino {
+  id?: string // ID do exercício no banco de dados (opcional — se presente, busca o exercício existente)
   plano?: string // Nome do plano (coluna opcional — agrupa exercícios em planos separados)
   nome_exercicio: string
   grupo_muscular: string
