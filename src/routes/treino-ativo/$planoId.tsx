@@ -1050,7 +1050,7 @@ function TreinoAtivoPage() {
 
             {/* Repetir valor — aparece logo abaixo da série editada */}
             {applyAll && applyAll.sIdx === sIdx && (
-              <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-2.5 mx-1 mb-1">
+              <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-3 ml-[44px] mr-[52px] mb-2 mt-1">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-text-muted">
                     Repetir{' '}
