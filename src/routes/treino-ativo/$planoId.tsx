@@ -64,7 +64,7 @@ function TreinoAtivoPage() {
     proximoExercicio, exercicioAnterior, atualizarSerie,
     marcarSerieCompletada, desfazerUltimaSerie,
     iniciarDescanso, pararDescanso, tickGeral, tickDescanso,
-    atualizarNotas,
+    atualizarNotas, limparLocal,
   } = store
 
   const timerRef = useRef<number | null>(null)
@@ -108,6 +108,7 @@ function TreinoAtivoPage() {
 
   const [finalizando, setFinalizando] = useState(false)
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
+  const [showConfirmCancelar, setShowConfirmCancelar] = useState(false)
   const [relatorio, setRelatorio] = useState<SessaoDeTreino | null>(null)
   const [copiado, setCopiado] = useState(false)
   const [gerandoImagem, setGerandoImagem] = useState(false)
@@ -970,6 +971,8 @@ function TreinoAtivoPage() {
               {/* Peso */}
               <input
                 type="number"
+                step="any"
+                lang="en"
                 className="set-input"
                 value={serie.peso === 0 ? '' : serie.peso}
                 placeholder="0"
@@ -1116,7 +1119,48 @@ function TreinoAtivoPage() {
             Próximo: {sessao.exercicios[exercicioAtualIndex + 1]?.exercicioNome}
           </button>
         )}
+
+        {/* Cancelar treino */}
+        <button
+          onClick={() => setShowConfirmCancelar(true)}
+          className="mt-6 mb-24 text-xs text-text-muted/50 underline underline-offset-2 mx-auto block"
+        >
+          Cancelar treino
+        </button>
       </div>
+
+      {/* ─── Modal de Confirmação Cancelar ─────────────────────────── */}
+      {showConfirmCancelar && (
+        <div className="modal-overlay" onClick={() => setShowConfirmCancelar(false)}>
+          <div className="modal-content text-center" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-3xl bg-[rgba(239,68,68,0.12)] flex items-center justify-center mx-auto mb-4">
+              <XCircle size={32} className="text-red-500" />
+            </div>
+            <h2 className="text-xl font-bold text-text mb-2">Cancelar Treino?</h2>
+            <p className="text-text-muted text-sm mb-6">
+              Todo o progresso desta sessão será perdido e não será salvo no histórico.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  cancelarNotificacaoDescanso()
+                  limparLocal()
+                  navigate({ to: '/treinos' })
+                }}
+                className="btn-danger w-full py-4 text-base"
+              >
+                Sim, Cancelar Treino
+              </button>
+              <button
+                onClick={() => setShowConfirmCancelar(false)}
+                className="btn-ghost w-full py-3"
+              >
+                Continuar Treinando
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Modal de Informações ───────────────────────────────────── */}
       {showInfo && (
@@ -1213,6 +1257,39 @@ function TreinoAtivoPage() {
                 className="btn-primary flex-1"
               >
                 Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modal de Confirmação Cancelar ─────────────────────────── */}
+      {showConfirmCancelar && (
+        <div className="modal-overlay" onClick={() => setShowConfirmCancelar(false)}>
+          <div className="modal-content text-center" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-3xl bg-[rgba(239,68,68,0.12)] flex items-center justify-center mx-auto mb-4">
+              <XCircle size={32} className="text-red-500" />
+            </div>
+            <h2 className="text-xl font-bold text-text mb-2">Cancelar Treino?</h2>
+            <p className="text-text-muted text-sm mb-6">
+              Todo o progresso desta sessão será perdido e não será salvo no histórico.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  cancelarNotificacaoDescanso()
+                  limparLocal()
+                  navigate({ to: '/treinos' })
+                }}
+                className="btn-danger w-full py-4 text-base"
+              >
+                Sim, Cancelar Treino
+              </button>
+              <button
+                onClick={() => setShowConfirmCancelar(false)}
+                className="btn-ghost w-full py-3"
+              >
+                Continuar Treinando
               </button>
             </div>
           </div>
