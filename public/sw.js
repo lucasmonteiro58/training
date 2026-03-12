@@ -1,7 +1,7 @@
 // Service Worker para Training
 // Responsável por: cache offline, notificações de treino, alerta de fim de descanso
 
-const CACHE_NAME = 'training-v3'
+const CACHE_NAME = 'training-v4'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -12,7 +12,25 @@ let restEndTimer = null
 // Instalar SW — precache shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await cache.addAll(STATIC_ASSETS)
+      // Proativamente cacheia assets linkados no HTML da raiz
+      try {
+        const res = await fetch('/')
+        if (res.ok) {
+          const html = await res.text()
+          const assetUrls = []
+          // Extrai links de CSS e JS do HTML
+          const linkMatches = html.matchAll(/(?:href|src)=["'](\/(assets\/[^"']+|[^"']+\.(js|css)))/g)
+          for (const m of linkMatches) {
+            assetUrls.push(m[1])
+          }
+          if (assetUrls.length > 0) {
+            await cache.addAll([...new Set(assetUrls)])
+          }
+        }
+      } catch { /* offline install — assets will be cached on first use */ }
+    })
   )
   self.skipWaiting()
 })
@@ -26,6 +44,29 @@ self.addEventListener('activate', (event) => {
   )
   self.clients.claim()
 })
+
+// Cacheia assets linkados em uma resposta HTML
+async function cacheLinkedAssets(response) {
+  try {
+    const html = await response.text()
+    const cache = await caches.open(CACHE_NAME)
+    const assetUrls = []
+    const linkMatches = html.matchAll(/(?:href|src)=["'](\/(assets\/[^"']+|[^"']+\.(js|css)))/g)
+    for (const m of linkMatches) {
+      assetUrls.push(m[1])
+    }
+    // Cache assets que ainda não existem
+    for (const url of [...new Set(assetUrls)]) {
+      const existing = await cache.match(url)
+      if (!existing) {
+        try {
+          const assetRes = await fetch(url)
+          if (assetRes.ok) await cache.put(url, assetRes)
+        } catch { /* ignore individual failures */ }
+      }
+    }
+  } catch { /* ignore */ }
+}
 
 // Estratégia de cache
 self.addEventListener('fetch', (event) => {
@@ -56,8 +97,34 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Navegação (HTML) → Network First, fallback to cache
+  // Navegação (HTML) → Network First, fallback completo
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone()
+            const clone2 = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+            // Proativamente cacheia assets linkados nessa página
+            cacheLinkedAssets(clone2)
+          }
+          return response
+        })
+        .catch(async () => {
+          // Offline: tenta cache exato da rota, senão serve a raiz (SPA fallback)
+          const cached = await caches.match(request)
+          if (cached) return cached
+          const root = await caches.match('/')
+          if (root) return root
+          return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })
+        })
+    )
+    return
+  }
+
+  // TanStack Router data requests (__data, .json) → Network First
+  if (url.pathname.includes('__data') || url.pathname.endsWith('.json')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -67,7 +134,10 @@ self.addEventListener('fetch', (event) => {
           }
           return response
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+        .catch(() => caches.match(request).then((c) => c || new Response('{}', {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })))
     )
     return
   }
