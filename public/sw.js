@@ -1,10 +1,26 @@
 // Service Worker para Training
 // Responsável por: cache offline, notificações de treino, alerta de fim de descanso
 
-const CACHE_NAME = 'training-v4'
+const CACHE_NAME = 'training-v5'
+const EXTERNAL_CACHE = 'training-external-v1'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+]
+
+// Domínios externos que devem ser cacheados (imagens, fontes)
+const CACHEABLE_ORIGINS = [
+  'raw.githubusercontent.com',
+  'media.giphy.com',
+  'media0.giphy.com',
+  'media1.giphy.com',
+  'media2.giphy.com',
+  'media3.giphy.com',
+  'media4.giphy.com',
+  'i.giphy.com',
+  'lh3.googleusercontent.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
 ]
 
 let restEndTimer = null
@@ -37,9 +53,10 @@ self.addEventListener('install', (event) => {
 
 // Ativar SW — limpar caches antigos
 self.addEventListener('activate', (event) => {
+  const keepCaches = [CACHE_NAME, EXTERNAL_CACHE]
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => !keepCaches.includes(k)).map((k) => caches.delete(k)))
     )
   )
   self.clients.claim()
@@ -73,9 +90,30 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Ignorar requisições não-GET e de outros domínios
+  // Ignorar requisições não-GET
   if (request.method !== 'GET') return
-  if (url.origin !== self.location.origin) return
+
+  // Imagens e fontes externas → Cache First (cache separado)
+  if (url.origin !== self.location.origin) {
+    if (CACHEABLE_ORIGINS.includes(url.hostname)) {
+      event.respondWith(
+        caches.open(EXTERNAL_CACHE).then(async (cache) => {
+          const cached = await cache.match(request)
+          if (cached) return cached
+          try {
+            const response = await fetch(request)
+            if (response.ok) {
+              cache.put(request, response.clone())
+            }
+            return response
+          } catch {
+            return new Response('', { status: 408 })
+          }
+        })
+      )
+    }
+    return
+  }
 
   // Assets estáticos (JS, CSS, imagens, fontes) → Cache First
   if (
