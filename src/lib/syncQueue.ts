@@ -87,3 +87,39 @@ if (typeof window !== 'undefined') {
     setTimeout(() => processQueue(), 3000)
   }
 }
+
+// ─── Hooks para UI ───────────────────────────────────────────────────────────
+
+export function useOnlineStatus(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener('online', cb)
+      window.addEventListener('offline', cb)
+      return () => {
+        window.removeEventListener('online', cb)
+        window.removeEventListener('offline', cb)
+      }
+    },
+    () => navigator.onLine,
+    () => true, // SSR: assume online
+  )
+}
+
+export function useQueuedWriteCount(): number {
+  const [count, setCount] = useState(0)
+  const online = useOnlineStatus()
+
+  useEffect(() => {
+    let mounted = true
+    const refresh = () => {
+      syncQueueTable.count().then((n) => { if (mounted) setCount(n) })
+    }
+    refresh()
+    // Re-check when online status changes or on interval while offline
+    const interval = !online ? setInterval(refresh, 5000) : undefined
+    if (online) refresh()
+    return () => { mounted = false; if (interval) clearInterval(interval) }
+  }, [online])
+
+  return count
+}
