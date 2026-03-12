@@ -117,6 +117,7 @@ function TreinoAtivoPage() {
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPrCelebration, setShowPrCelebration] = useState(false)
+  const prExibidoRef = useRef<Map<string, number>>(new Map())
 
   // ─── Cronômetro de série (para exercícios por tempo) ──────────────────────
   const [timerSerie, setTimerSerie] = useState<{ sIdx: number; restando: number } | null>(null)
@@ -284,21 +285,23 @@ function TreinoAtivoPage() {
       // Salvar pesos no plano ao completar série
       setTimeout(() => salvarPesosNoPlano(), 0)
 
-      // PR detection
+      // PR detection — só mostra se o peso for maior que o já celebrado nesta sessão
       const serieAtual = exercicioAtual.series[serieIdx]
-      const prCheck = detectarNovoPR(
-        { ...serieAtual, completada: true },
-        exercicioAtual.exercicioId,
-        recordes,
-      )
-      if (prCheck) {
-        const prLabels = { peso: 'Peso', volume: 'Volume', '1rm': '1RM' }
-        toast.success(`🏆 Novo Recorde de ${prLabels[prCheck.tipo]}! ${prCheck.tipo === 'peso' ? `${prCheck.valor} kg` : prCheck.tipo === '1rm' ? `${prCheck.valor} kg` : `${Math.round(prCheck.valor)} kg`}`, { duration: 4000 })
-        // Celebration animation
-        setShowPrCelebration(true)
-        setShowConfetti(true)
-        navigator.vibrate?.([100, 50, 100, 50, 200])
-        setTimeout(() => { setShowPrCelebration(false); setShowConfetti(false) }, 3000)
+      const exId = exercicioAtual.exercicioId
+      const pesoCelebrado = prExibidoRef.current.get(exId) ?? 0
+      if (serieAtual.peso > pesoCelebrado) {
+        const prCheck = detectarNovoPR(
+          { ...serieAtual, completada: true },
+          exId,
+          recordes,
+        )
+        if (prCheck && prCheck.tipo === 'peso') {
+          prExibidoRef.current.set(exId, serieAtual.peso)
+          setShowPrCelebration(true)
+          setShowConfetti(true)
+          navigator.vibrate?.([100, 50, 100, 50, 200])
+          setTimeout(() => { setShowPrCelebration(false); setShowConfetti(false) }, 3000)
+        }
       }
 
       // Prepara audio context em evento de interação (necessário p/ iOS)
@@ -323,16 +326,6 @@ function TreinoAtivoPage() {
 
       if (todasExercicioCompletas && isInGroup && nextInGroup) {
         // Move to next exercise in group without rest
-        toast(`Série ${serieIdx + 1} completada ✓ → Próximo do ${AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label ?? 'grupo'}`, {
-          action: {
-            label: 'Desfazer',
-            onClick: () => {
-              desfazerUltimaSerie()
-              cancelarNotificacaoDescanso()
-            },
-          },
-          duration: 3000,
-        })
         setTimeout(() => {
           // Navigate to next exercise in group
           const target = nextInGroup.idx
@@ -343,16 +336,6 @@ function TreinoAtivoPage() {
       } else if (todasExercicioCompletas && isInGroup && !nextInGroup) {
         // Last in group: rest then loop back to first in group or move on
         iniciarDescanso(exercicioAtual.descansoSegundos)
-        toast(`${AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label ?? 'Grupo'} completo! Descanse.`, {
-          action: {
-            label: 'Desfazer',
-            onClick: () => {
-              desfazerUltimaSerie()
-              cancelarNotificacaoDescanso()
-            },
-          },
-          duration: 5000,
-        })
         // Check if all series in entire group are done
         const allGroupDone = groupExercises.every(({ idx }) =>
           sessao.exercicios[idx].series.every((s, i) =>
@@ -391,17 +374,6 @@ function TreinoAtivoPage() {
       } else {
         // Normal (non-group) behavior
         iniciarDescanso(exercicioAtual.descansoSegundos)
-
-        toast(`Série ${serieIdx + 1} completada ✓`, {
-          action: {
-            label: 'Desfazer',
-            onClick: () => {
-              desfazerUltimaSerie()
-              cancelarNotificacaoDescanso()
-            },
-          },
-          duration: 5000,
-        })
 
         const isLastExercicio = exercicioAtualIndex === sessao.exercicios.length - 1
         if (todasExercicioCompletas) {
