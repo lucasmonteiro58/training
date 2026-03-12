@@ -1,5 +1,7 @@
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, useEffect, useState } from 'react'
+import { localDB } from './db/dexie'
 
+// ─── Pending visual counter ──────────────────────────────────────────────────
 let pendingCount = 0
 let listeners: Set<() => void> = new Set()
 
@@ -22,4 +24,66 @@ export function usePendingSyncCount(): number {
     (cb) => { listeners.add(cb); return () => listeners.delete(cb) },
     () => pendingCount,
   )
+}
+
+// ─── Offline Write Queue (Dexie-backed) ──────────────────────────────────────
+
+interface QueuedWrite {
+  id?: number
+  createdAt: number
+  collection: string
+  docId: string
+  operation: 'set' | 'delete'
+  data?: Record<string, unknown>
+}
+
+const syncQueueTable = localDB.table<QueuedWrite>('syncQueue')
+
+export async function enqueueWrite(
+  collectionName: string,
+  docId: string,
+  operation: 'set' | 'delete',
+  data?: Record<string, unknown>,
+): Promise<void> {
+  await syncQueueTable.add({
+    createdAt: Date.now(),
+    collection: collectionName,
+    docId,
+    operation,
+    data,
+  })
+}
+
+export async function processQueue(): Promise<void> {
+  if (!navigator.onLine) return
+
+  const { doc, setDoc, deleteDoc } = await import('firebase/firestore')
+  const { db } = await import('./firebase')
+
+  const items = await syncQueueTable.orderBy('createdAt').toArray()
+  for (const item of items) {
+    try {
+      const ref = doc(db, item.collection, item.docId)
+      if (item.operation === 'set' && item.data) {
+        await setDoc(ref, item.data)
+      } else if (item.operation === 'delete') {
+        await deleteDoc(ref)
+      }
+      await syncQueueTable.delete(item.id!)
+    } catch (err) {
+      console.warn('Sync queue: falha ao processar item, tentará novamente:', err)
+      break // Stop processing on failure, retry later
+    }
+  }
+}
+
+// Process queue when coming back online
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    processQueue()
+  })
+  // Process any leftover items on startup
+  if (navigator.onLine) {
+    setTimeout(() => processQueue(), 3000)
+  }
 }

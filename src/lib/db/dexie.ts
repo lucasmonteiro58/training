@@ -23,6 +23,14 @@ class TrainingDB extends Dexie {
       exerciciosCache: 'id, grupoMuscular, nome',
       medidas: 'id, userId, data',
     })
+    this.version(3).stores({
+      planos: 'id, userId, updatedAt, syncedAt',
+      sessoes: 'id, userId, planoId, iniciadoEm, finalizadoEm, syncedAt',
+      exerciciosPersonalizados: 'id, userId, grupoMuscular',
+      exerciciosCache: 'id, grupoMuscular, nome',
+      medidas: 'id, userId, data',
+      syncQueue: '++id, createdAt',
+    })
   }
 }
 

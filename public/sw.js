@@ -1,17 +1,90 @@
 // Service Worker para Training
-// Responsável por: notificações de treino, alerta de fim de descanso
+// Responsável por: cache offline, notificações de treino, alerta de fim de descanso
 
-const CACHE_NAME = 'training-v2'
+const CACHE_NAME = 'training-v3'
+const STATIC_ASSETS = [
+  '/',
+  '/manifest.json',
+]
 
 let restEndTimer = null
 
-// Instalar SW
+// Instalar SW — precache shell
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+  )
   self.skipWaiting()
 })
 
+// Ativar SW — limpar caches antigos
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  )
+  self.clients.claim()
+})
+
+// Estratégia de cache
+self.addEventListener('fetch', (event) => {
+  const { request } = event
+  const url = new URL(request.url)
+
+  // Ignorar requisições não-GET e de outros domínios
+  if (request.method !== 'GET') return
+  if (url.origin !== self.location.origin) return
+
+  // Assets estáticos (JS, CSS, imagens, fontes) → Cache First
+  if (
+    url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|ico|woff2?|ttf|webp)$/) ||
+    url.pathname.startsWith('/assets/')
+  ) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+          }
+          return response
+        })
+      }).catch(() => caches.match(request))
+    )
+    return
+  }
+
+  // Navegação (HTML) → Network First, fallback to cache
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+          }
+          return response
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+    )
+    return
+  }
+
+  // Outros requests → Stale While Revalidate
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const fetchPromise = fetch(request).then((response) => {
+        if (response.ok) {
+          const clone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+        }
+        return response
+      }).catch(() => cached)
+      return cached || fetchPromise
+    })
+  )
 })
 
 // Recebe mensagens do app principal

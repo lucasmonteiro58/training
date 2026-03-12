@@ -27,7 +27,26 @@ function stripUndefined<T>(obj: T): T {
 import { db } from '../firebase'
 import { salvarPlano, salvarSessao, salvarExercicioPersonalizado, salvarMedida } from '../db/dexie'
 import type { PlanoDeTreino, SessaoDeTreino, Exercicio, MedidaCorporal } from '../../types'
-import { incrementSync, decrementSync } from '../syncQueue'
+import { incrementSync, decrementSync, enqueueWrite } from '../syncQueue'
+
+// Helper: tenta escrita online, senão enfileira
+async function writeOrQueue(
+  collectionName: string,
+  docId: string,
+  operation: 'set' | 'delete',
+  data?: Record<string, unknown>,
+): Promise<void> {
+  if (!navigator.onLine) {
+    await enqueueWrite(collectionName, docId, operation, data)
+    return
+  }
+  if (operation === 'set' && data) {
+    const ref = doc(db, collectionName, docId)
+    await setDoc(ref, data)
+  } else if (operation === 'delete') {
+    await deleteDoc(doc(db, collectionName, docId))
+  }
+}
 
 // ============================
 // Planos
@@ -35,11 +54,12 @@ import { incrementSync, decrementSync } from '../syncQueue'
 export async function syncPlanoParaFirestore(plano: PlanoDeTreino): Promise<void> {
   incrementSync()
   try {
-    const ref = doc(db, 'planos', plano.id)
-    await setDoc(ref, stripUndefined({ ...plano, syncedAt: Date.now() }))
+    const data = stripUndefined({ ...plano, syncedAt: Date.now() })
+    await writeOrQueue('planos', plano.id, 'set', data as Record<string, unknown>)
     await salvarPlano({ ...plano, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar plano:', err)
+    await enqueueWrite('planos', plano.id, 'set', stripUndefined({ ...plano, syncedAt: Date.now() }) as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -48,9 +68,10 @@ export async function syncPlanoParaFirestore(plano: PlanoDeTreino): Promise<void
 export async function deletarPlanoFirestore(id: string): Promise<void> {
   incrementSync()
   try {
-    await deleteDoc(doc(db, 'planos', id))
+    await writeOrQueue('planos', id, 'delete')
   } catch (err) {
     console.error('Erro ao deletar plano do Firestore:', err)
+    await enqueueWrite('planos', id, 'delete')
   } finally {
     decrementSync()
   }
@@ -95,11 +116,12 @@ export function subscribeToPlanos(
 export async function syncSessaoParaFirestore(sessao: SessaoDeTreino): Promise<void> {
   incrementSync()
   try {
-    const ref = doc(db, 'sessoes', sessao.id)
-    await setDoc(ref, stripUndefined({ ...sessao, syncedAt: Date.now() }))
+    const data = stripUndefined({ ...sessao, syncedAt: Date.now() })
+    await writeOrQueue('sessoes', sessao.id, 'set', data as Record<string, unknown>)
     await salvarSessao({ ...sessao, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar sessão:', err)
+    await enqueueWrite('sessoes', sessao.id, 'set', stripUndefined({ ...sessao, syncedAt: Date.now() }) as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -108,9 +130,10 @@ export async function syncSessaoParaFirestore(sessao: SessaoDeTreino): Promise<v
 export async function deletarSessaoFirestore(id: string): Promise<void> {
   incrementSync()
   try {
-    await deleteDoc(doc(db, 'sessoes', id))
+    await writeOrQueue('sessoes', id, 'delete')
   } catch (err) {
     console.error('Erro ao deletar sessão do Firestore:', err)
+    await enqueueWrite('sessoes', id, 'delete')
   } finally {
     decrementSync()
   }
@@ -268,14 +291,12 @@ export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoD
 export async function syncExercicioParaFirestore(exercicio: Exercicio): Promise<void> {
   incrementSync()
   try {
-    const ref = doc(db, 'exercicios', exercicio.id)
-    await setDoc(ref, {
-      ...exercicio,
-      syncedAt: Date.now(),
-    })
+    const data = { ...exercicio, syncedAt: Date.now() }
+    await writeOrQueue('exercicios', exercicio.id, 'set', data as Record<string, unknown>)
     await salvarExercicioPersonalizado({ ...exercicio, syncedAt: Date.now() } as any)
   } catch (err) {
     console.error('Erro ao sincronizar exercicios:', err)
+    await enqueueWrite('exercicios', exercicio.id, 'set', { ...exercicio, syncedAt: Date.now() } as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -315,10 +336,11 @@ export function subscribeToExercicios(
 export async function syncMedidaParaFirestore(medida: MedidaCorporal): Promise<void> {
   incrementSync()
   try {
-    const ref = doc(db, 'medidas', medida.id)
-    await setDoc(ref, stripUndefined({ ...medida, syncedAt: Date.now() }))
+    const data = stripUndefined({ ...medida, syncedAt: Date.now() })
+    await writeOrQueue('medidas', medida.id, 'set', data as Record<string, unknown>)
   } catch (err) {
     console.error('Erro ao sincronizar medida:', err)
+    await enqueueWrite('medidas', medida.id, 'set', stripUndefined({ ...medida, syncedAt: Date.now() }) as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -327,9 +349,10 @@ export async function syncMedidaParaFirestore(medida: MedidaCorporal): Promise<v
 export async function deletarMedidaFirestore(id: string): Promise<void> {
   incrementSync()
   try {
-    await deleteDoc(doc(db, 'medidas', id))
+    await writeOrQueue('medidas', id, 'delete')
   } catch (err) {
     console.error('Erro ao deletar medida do Firestore:', err)
+    await enqueueWrite('medidas', id, 'delete')
   } finally {
     decrementSync()
   }
