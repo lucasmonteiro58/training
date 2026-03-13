@@ -89,16 +89,16 @@ Objetivo: migrar o modulo completo de exercicios com busca, filtro, favoritos e 
 
 - [x] Criar tela equivalente a `/exercicios`.
 - [x] Implementar busca por nome.
-- [ ] Implementar filtro por grupo muscular.
-- [ ] Implementar filtro por favoritos.
+- [x] Implementar filtro por grupo muscular.
+- [x] Implementar filtro por favoritos.
 - [ ] Implementar lista/grid performatica com virtualizacao ou estrategia equivalente.
 - [ ] Implementar estado vazio e loading skeleton.
 
 ### Detalhe e favoritos
 
-- [ ] Abrir detalhe do exercicio com nome, grupo, equipamento, GIF e instrucoes.
-- [ ] Salvar favorito localmente.
-- [ ] Refletir favoritos em exercicios base e personalizados.
+- [x] Abrir detalhe do exercicio com nome, grupo, equipamento, GIF e instrucoes.
+- [x] Salvar favorito localmente.
+- [x] Refletir favoritos em exercicios base e personalizados.
 
 ### Criacao de exercicio customizado
 
@@ -147,8 +147,8 @@ Objetivo: migrar toda a gestao de fichas e o fluxo de importacao assistida.
 - [x] Configurar cor do plano.
 - [x] Adicionar exercicios pelo picker.
 - [x] Configurar series, peso, repeticoes e descanso.
-- [ ] Configurar notas por exercicio.
-- [ ] Reordenar exercicios.
+- [x] Configurar notas por exercicio.
+- [x] Reordenar exercicios.
 - [ ] Bloquear saida com alteracoes nao salvas.
 
 ### Edicao de plano

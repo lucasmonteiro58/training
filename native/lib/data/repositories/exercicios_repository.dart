@@ -76,6 +76,16 @@ class ExerciciosRepository {
     });
   }
 
+  Future<void> toggleFavorito(int id) async {
+    final isar = await _isar;
+    final ex = await isar.exercicios.get(id);
+    if (ex == null) return;
+    ex.favorito = !ex.favorito;
+    await isar.writeTxn(() async {
+      await isar.exercicios.put(ex);
+    });
+  }
+
   /// Sincroniza o catálogo com a base remota e persiste em cache local.
   /// Em caso de falha (offline), não altera o cache (fallback offline).
   /// Retorna true se conseguiu baixar e salvar, false se usou apenas cache.

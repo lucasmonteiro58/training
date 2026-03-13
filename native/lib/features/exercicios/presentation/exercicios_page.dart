@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_design_constants.dart';
@@ -15,6 +16,8 @@ class ExerciciosPage extends ConsumerStatefulWidget {
 
 class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
   String _query = '';
+  String? _grupoSelecionado;
+  bool _soFavoritos = false;
   List<Exercicio>? _list;
   bool _loading = true;
 
@@ -91,7 +94,59 @@ class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
               onChanged: (v) => setState(() => _query = v),
             ),
           ),
-          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      label: const Text('Todos'),
+                      selected: _grupoSelecionado == null && !_soFavoritos,
+                      onSelected: (_) => setState(() {
+                        _grupoSelecionado = null;
+                        _soFavoritos = false;
+                      }),
+                      selectedColor: AppColors.accent.withValues(alpha: 0.3),
+                      checkmarkColor: AppColors.accent,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      label: const Text('Favoritos'),
+                      selected: _soFavoritos,
+                      onSelected: (_) => setState(() {
+                        _soFavoritos = !_soFavoritos;
+                        if (_soFavoritos) _grupoSelecionado = null;
+                      }),
+                      selectedColor: AppColors.accent.withValues(alpha: 0.3),
+                      checkmarkColor: AppColors.accent,
+                    ),
+                  ),
+                  ...coresGrupo.keys.map((grupo) {
+                    final sel = _grupoSelecionado == grupo;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: FilterChip(
+                        label: Text(grupo),
+                        selected: sel,
+                        onSelected: (_) => setState(() {
+                          _grupoSelecionado = sel ? null : grupo;
+                          if (_grupoSelecionado != null) _soFavoritos = false;
+                        }),
+                        selectedColor: (coresGrupo[grupo] ?? AppColors.accent).withValues(alpha: 0.3),
+                        checkmarkColor: coresGrupo[grupo],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
           Expanded(
             child: _loading
                 ? const Center(
@@ -108,20 +163,30 @@ class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
     var filtered = list;
     if (_query.trim().isNotEmpty) {
       final q = _query.trim().toLowerCase();
-      filtered = list
+      filtered = filtered
           .where((e) =>
               e.nome.toLowerCase().contains(q) ||
               (e.grupoMuscular?.toLowerCase().contains(q) ?? false))
           .toList();
+    }
+    if (_grupoSelecionado != null) {
+      filtered = filtered
+          .where((e) => e.grupoMuscular == _grupoSelecionado)
+          .toList();
+    }
+    if (_soFavoritos) {
+      filtered = filtered.where((e) => e.favorito).toList();
     }
     if (filtered.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            _query.isEmpty
+            _query.isEmpty && _grupoSelecionado == null && !_soFavoritos
                 ? 'Nenhum exercício no catálogo.\nArraste para baixo para atualizar.'
-                : 'Nenhum resultado para "$_query".',
+                : _soFavoritos
+                    ? 'Nenhum favorito.'
+                    : 'Nenhum resultado.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textMuted,
                 ),
@@ -142,6 +207,7 @@ class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
               ? coresGrupo[ex.grupoMuscular]
               : null;
           return ListTile(
+            onTap: () => context.push('/exercicios/${ex.id}'),
             leading: Container(
               width: 40,
               height: 40,
@@ -184,6 +250,20 @@ class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
                     ),
                   )
                 : null,
+            trailing: IconButton(
+              icon: Icon(
+                ex.favorito ? Icons.favorite : Icons.favorite_border,
+                color: ex.favorito ? AppColors.danger : AppColors.textMuted,
+                size: 22,
+              ),
+              onPressed: () async {
+                await ref.read(exerciciosRepositoryProvider).toggleFavorito(ex.id);
+                if (!mounted) return;
+                final repo = ref.read(exerciciosRepositoryProvider);
+                final updated = await repo.getAll();
+                setState(() => _list = updated);
+              },
+            ),
           );
         },
       ),

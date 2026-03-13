@@ -465,20 +465,37 @@ class _SecaoExercicios extends ConsumerWidget {
                 ),
               );
             }
-            return Column(
-              children: list.map((ent) => _ExercicioPlanoTile(
-                key: ValueKey(ent.id),
-                entity: ent,
-                onRemover: () async {
-                  await repo.removeExercicioDoPlano(ent.id);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Exercício removido')),
-                    );
-                  }
-                },
-                onEditar: () => _mostrarEdicaoExercicio(context, ref, ent),
-              )).toList(),
+            return ReorderableListView.builder(
+              buildDefaultDragHandles: false,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: list.length,
+              onReorder: (oldIndex, newIndex) {
+                if (oldIndex < newIndex) newIndex--;
+                final newList = List<ExercicioNoPlanoEntity>.from(list);
+                final item = newList.removeAt(oldIndex);
+                newList.insert(newIndex, item);
+                repo.reordenarExerciciosNoPlano(planoId, newList.map((e) => e.id).toList());
+              },
+              itemBuilder: (context, index) {
+                final ent = list[index];
+                return ReorderableDragStartListener(
+                  key: ValueKey(ent.id),
+                  index: index,
+                  child: _ExercicioPlanoTile(
+                    entity: ent,
+                    onRemover: () async {
+                      await repo.removeExercicioDoPlano(ent.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Exercício removido')),
+                        );
+                      }
+                    },
+                    onEditar: () => _mostrarEdicaoExercicio(context, ref, ent),
+                  ),
+                );
+              },
             );
           },
           loading: () => const Center(
@@ -509,6 +526,7 @@ class _SecaoExercicios extends ConsumerWidget {
     final descansoController = TextEditingController(
       text: ent.descansoSegundos.toString(),
     );
+    final notasController = TextEditingController(text: ent.notas ?? '');
 
     showDialog(
       context: context,
@@ -542,6 +560,12 @@ class _SecaoExercicios extends ConsumerWidget {
                 decoration: const InputDecoration(labelText: 'Descanso (seg)'),
                 keyboardType: TextInputType.number,
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: notasController,
+                decoration: const InputDecoration(labelText: 'Notas (opcional)'),
+                maxLines: 2,
+              ),
             ],
           ),
         ),
@@ -560,6 +584,7 @@ class _SecaoExercicios extends ConsumerWidget {
               ent.repeticoesMeta = rep;
               ent.pesoMeta = (peso != null && !peso.isNaN) ? peso : null;
               ent.descansoSegundos = descanso;
+              ent.notas = notasController.text.trim().isEmpty ? null : notasController.text.trim();
               await ref.read(exerciciosRepositoryProvider).updateExercicioNoPlano(ent);
               if (context.mounted) Navigator.of(context).pop();
             },
@@ -574,7 +599,6 @@ class _SecaoExercicios extends ConsumerWidget {
 
 class _ExercicioPlanoTile extends StatelessWidget {
   const _ExercicioPlanoTile({
-    super.key,
     required this.entity,
     required this.onRemover,
     required this.onEditar,
@@ -596,6 +620,8 @@ class _ExercicioPlanoTile extends StatelessWidget {
       ),
       child: Row(
         children: [
+          Icon(Icons.drag_handle, color: AppColors.textMuted, size: 20),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
