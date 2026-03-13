@@ -1,0 +1,242 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/constants/app_colors.dart';
+import '../../../data/models/plano_de_treino.dart';
+import '../../../data/repositories/treinos_repository.dart';
+
+class PlanoDetalhePage extends ConsumerStatefulWidget {
+  const PlanoDetalhePage({super.key, required this.planoId});
+
+  final int planoId;
+
+  @override
+  ConsumerState<PlanoDetalhePage> createState() => _PlanoDetalhePageState();
+}
+
+class _PlanoDetalhePageState extends ConsumerState<PlanoDetalhePage> {
+  PlanoDeTreino? _plano;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    final repo = ref.read(treinosRepositoryProvider);
+    final plano = await repo.getById(widget.planoId);
+    if (mounted) {
+      setState(() {
+        _plano = plano;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _excluir() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Excluir plano'),
+        content: Text(
+          'Excluir "${_plano?.nome}"? Esta ação não pode ser desfeita.',
+          style: const TextStyle(color: AppColors.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    await ref.read(treinosRepositoryProvider).excluir(widget.planoId);
+    if (mounted) {
+      context.pop();
+    }
+  }
+
+  Future<void> _duplicar() async {
+    await ref.read(treinosRepositoryProvider).duplicar(widget.planoId);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plano duplicado')),
+      );
+    }
+  }
+
+  Future<void> _arquivar() async {
+    await ref.read(treinosRepositoryProvider).arquivar(widget.planoId);
+    if (mounted) context.pop();
+  }
+
+  Future<void> _desarquivar() async {
+    await ref.read(treinosRepositoryProvider).desarquivar(widget.planoId);
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: AppColors.bg,
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        body: const Center(child: CircularProgressIndicator(color: AppColors.accent)),
+      );
+    }
+
+    if (_plano == null) {
+      return Scaffold(
+        backgroundColor: AppColors.bg,
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Plano não encontrado', style: TextStyle(color: AppColors.textMuted)),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => context.pop(),
+                child: const Text('Voltar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final plano = _plano!;
+    final cor = plano.cor != null ? Color(plano.cor!) : AppColors.accent;
+
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(plano.nome),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            color: AppColors.surface,
+            onSelected: (value) async {
+              switch (value) {
+                case 'duplicar':
+                  await _duplicar();
+                  break;
+                case 'arquivar':
+                  await _arquivar();
+                  break;
+                case 'desarquivar':
+                  await _desarquivar();
+                  break;
+                case 'excluir':
+                  await _excluir();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'duplicar', child: Text('Duplicar')),
+              PopupMenuItem(
+                value: plano.arquivado ? 'desarquivar' : 'arquivar',
+                child: Text(plano.arquivado ? 'Desarquivar' : 'Arquivar'),
+              ),
+              const PopupMenuItem(
+                value: 'excluir',
+                child: Text('Excluir', style: TextStyle(color: AppColors.danger)),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: cor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.fitness_center, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            plano.nome,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  color: AppColors.text,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          if (plano.descricao != null && plano.descricao!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                plano.descricao!,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: AppColors.textMuted,
+                                    ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Exercícios serão adicionados na Etapa 3 (picker de exercícios).',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                // TODO: navegar para treino ativo com este plano
+                context.go('/treino-ativo');
+              },
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: const Text('Iniciar treino'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

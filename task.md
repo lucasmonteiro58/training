@@ -39,7 +39,7 @@ Objetivo: fazer o app Flutter subir, navegar e persistir dados basicos desde a p
 ### Shell e navegacao
 
 - [x] Criar fluxo de autenticacao com tela de login.
-- [ ] Implementar login com Google.
+- [x] Implementar login com Google.
 - [x] Criar shell autenticado.
 - [x] Implementar bottom navigation com botao central destacado.
 - [x] Implementar rota inicial equivalente ao dashboard.
@@ -49,14 +49,14 @@ Objetivo: fazer o app Flutter subir, navegar e persistir dados basicos desde a p
 ### Dados e persistencia minima
 
 - [x] Criar models Flutter equivalentes a `Exercicio`, `PlanoDeTreino`, `SessaoDeTreino` e `MedidaCorporal`. (PlanoDeTreino feito; demais na Etapa 2+)
-- [ ] Criar models auxiliares para `SerieRegistrada`, `SeriePlano`, `ExercicioNoPlano` e `ExercicioNaSessao`.
+- [x] Criar models auxiliares para `SerieRegistrada`, `SeriePlano`, `ExercicioNoPlano` e `ExercicioNaSessao`.
 - [x] Criar colecoes Isar para planos.
 - [ ] Criar colecoes Isar para sessoes.
 - [ ] Criar colecoes Isar para exercicios personalizados.
 - [ ] Criar colecoes Isar para cache do catalogo.
 - [ ] Criar colecoes Isar para medidas.
 - [x] Criar camada repository local.
-- [ ] Persistir configuracoes simples em `SharedPreferences`.
+- [x] Persistir configuracoes simples em `SharedPreferences`.
 
 ### Vertical slice testavel
 
@@ -130,21 +130,21 @@ Objetivo: migrar toda a gestao de fichas e o fluxo de importacao assistida.
 
 ### Lista de planos
 
-- [ ] Criar tela `/treinos` equivalente.
-- [ ] Listar planos ativos.
-- [ ] Listar planos arquivados.
-- [ ] Arquivar plano.
-- [ ] Desarquivar plano.
-- [ ] Excluir plano.
-- [ ] Duplicar plano.
+- [x] Criar tela `/treinos` equivalente.
+- [x] Listar planos ativos.
+- [x] Listar planos arquivados.
+- [x] Arquivar plano.
+- [x] Desarquivar plano.
+- [x] Excluir plano.
+- [x] Duplicar plano.
 - [ ] Reordenar planos.
-- [ ] Exibir estados vazios e skeletons.
+- [x] Exibir estados vazios e skeletons.
 
 ### Criacao de plano
 
-- [ ] Criar tela equivalente a `/treinos/novo`.
-- [ ] Configurar nome e descricao.
-- [ ] Configurar cor do plano.
+- [x] Criar tela equivalente a `/treinos/novo`.
+- [x] Configurar nome e descricao.
+- [x] Configurar cor do plano.
 - [ ] Adicionar exercicios pelo picker.
 - [ ] Configurar series, peso, repeticoes e descanso.
 - [ ] Configurar notas por exercicio.
@@ -153,11 +153,11 @@ Objetivo: migrar toda a gestao de fichas e o fluxo de importacao assistida.
 
 ### Edicao de plano
 
-- [ ] Criar tela equivalente a `/treinos/$planoId`.
+- [x] Criar tela equivalente a `/treinos/$planoId`.
 - [ ] Permitir edicao do nome.
 - [ ] Permitir edicao completa dos exercicios.
 - [ ] Salvar e sincronizar alteracoes.
-- [ ] Implementar CTA para iniciar treino.
+- [x] Implementar CTA para iniciar treino.
 
 ### Tipos de serie e agrupamentos
 

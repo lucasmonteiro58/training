@@ -5,18 +5,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../app/providers.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/exercicios/presentation/exercicios_page.dart';
 import '../../features/historico/presentation/historico_page.dart';
 import '../../features/perfil/presentation/perfil_page.dart';
 import '../../features/treino_ativo/presentation/treino_ativo_placeholder_page.dart';
+import '../../features/treinos/presentation/novo_plano_page.dart';
+import '../../features/treinos/presentation/plano_detalhe_page.dart';
 import '../../features/treinos/presentation/treinos_page.dart';
 
 final appRouterProvider = Provider<GoRouter>(
   (ref) {
+    final authNotifier = ref.read(authNotifierProvider);
+
     return GoRouter(
       initialLocation: '/dashboard',
+      refreshListenable: authNotifier,
+      redirect: (context, state) {
+        final loggedIn = authNotifier.isLoggedIn;
+        final onLogin = state.matchedLocation == '/login';
+        if (!loggedIn && !onLogin) return '/login';
+        if (loggedIn && onLogin) return '/dashboard';
+        return null;
+      },
       routes: [
         GoRoute(
           path: '/login',
@@ -41,6 +54,25 @@ final appRouterProvider = Provider<GoRouter>(
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: TreinosPage(),
               ),
+              routes: [
+                GoRoute(
+                  path: 'novo',
+                  name: 'novo-plano',
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: NovoPlanoPage(),
+                  ),
+                ),
+                GoRoute(
+                  path: ':id',
+                  name: 'plano-detalhe',
+                  pageBuilder: (context, state) {
+                    final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+                    return NoTransitionPage(
+                      child: PlanoDetalhePage(planoId: id),
+                    );
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: '/exercicios',

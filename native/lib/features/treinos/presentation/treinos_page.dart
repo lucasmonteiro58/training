@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/plano_de_treino.dart';
@@ -12,12 +13,20 @@ final planosProvider = StreamProvider<List<PlanoDeTreino>>(
   },
 );
 
+final planosArquivadosProvider = StreamProvider<List<PlanoDeTreino>>(
+  (ref) {
+    final repo = ref.watch(treinosRepositoryProvider);
+    return repo.watchPlanosArquivados();
+  },
+);
+
 class TreinosPage extends ConsumerWidget {
   const TreinosPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final planosAsync = ref.watch(planosProvider);
+    final arquivadosAsync = ref.watch(planosArquivadosProvider);
     final repo = ref.watch(treinosRepositoryProvider);
 
     return Scaffold(
@@ -29,22 +38,52 @@ class TreinosPage extends ConsumerWidget {
       ),
       body: planosAsync.when(
         data: (planos) {
-          if (planos.isEmpty) {
-            return const _EmptyState();
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 8,
-              bottom: 80 + 16,
-            ),
-            itemCount: planos.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final plano = planos[index];
-              return _PlanoCard(plano: plano);
+          return arquivadosAsync.when(
+            data: (arquivados) {
+              if (planos.isEmpty && arquivados.isEmpty) {
+                return const _EmptyState();
+              }
+              return ListView(
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 8,
+                  bottom: 80 + 16,
+                ),
+                children: [
+                  ...planos.map((plano) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _PlanoCard(
+                          plano: plano,
+                          repo: repo,
+                        ),
+                      )),
+                  if (arquivados.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        'Arquivados',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: AppColors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                    ...arquivados.map((plano) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _PlanoCard(
+                            plano: plano,
+                            repo: repo,
+                            arquivado: true,
+                          ),
+                        )),
+                  ],
+                ],
+              );
             },
+            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.accent)),
+            error: (error, stackTrace) => const SizedBox.shrink(),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.accent)),
@@ -60,15 +99,7 @@ class TreinosPage extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final nome = await showDialog<String>(
-            context: context,
-            builder: (context) => const _NovoPlanoDialog(),
-          );
-          if (nome != null && nome.trim().isNotEmpty) {
-            await repo.criarPlanoSimples(nome: nome.trim());
-          }
-        },
+        onPressed: () => context.push('/treinos/novo'),
         backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -95,7 +126,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Crie um plano simples para testar a persistência local da Etapa 1.',
+              'Toque em + para criar um plano.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
@@ -107,9 +138,15 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _PlanoCard extends StatelessWidget {
-  const _PlanoCard({required this.plano});
+  const _PlanoCard({
+    required this.plano,
+    required this.repo,
+    this.arquivado = false,
+  });
 
   final PlanoDeTreino plano;
+  final TreinosRepository repo;
+  final bool arquivado;
 
   @override
   Widget build(BuildContext context) {
@@ -119,9 +156,7 @@ class _PlanoCard extends StatelessWidget {
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: () {
-          // TODO: navegar para detalhe do plano
-        },
+        onTap: () => context.push('/treinos/${plano.id}'),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -166,13 +201,72 @@ class _PlanoCard extends StatelessWidget {
                   ],
                 ),
               ),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: AppColors.textMuted, size: 20),
+                color: AppColors.surface,
+                onSelected: (value) async {
+                  switch (value) {
+                    case 'duplicar':
+                      await repo.duplicar(plano.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Plano duplicado')),
+                        );
+                      }
+                      break;
+                    case 'arquivar':
+                      await repo.arquivar(plano.id);
+                      break;
+                    case 'desarquivar':
+                      await repo.desarquivar(plano.id);
+                      break;
+                    case 'excluir':
+                      final ok = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: AppColors.surface,
+                          title: const Text('Excluir plano'),
+                          content: Text(
+                            'Excluir "${plano.nome}"?',
+                            style: const TextStyle(color: AppColors.textMuted),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+                              child: const Text('Excluir'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (ok == true) {
+                        await repo.excluir(plano.id);
+                        if (context.mounted) context.pop();
+                      }
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'duplicar', child: Text('Duplicar')),
+                  PopupMenuItem(
+                    value: arquivado ? 'desarquivar' : 'arquivar',
+                    child: Text(arquivado ? 'Desarquivar' : 'Arquivar'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'excluir',
+                    child: Text('Excluir', style: TextStyle(color: AppColors.danger)),
+                  ),
+                ],
+              ),
               Material(
                 color: AppColors.accent,
                 borderRadius: BorderRadius.circular(12),
                 child: InkWell(
-                  onTap: () {
-                    // TODO: iniciar treino
-                  },
+                  onTap: () => context.push('/treinos/${plano.id}'),
                   borderRadius: BorderRadius.circular(12),
                   child: const SizedBox(
                     width: 36,
@@ -186,57 +280,5 @@ class _PlanoCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _NovoPlanoDialog extends StatefulWidget {
-  const _NovoPlanoDialog();
-
-  @override
-  State<_NovoPlanoDialog> createState() => _NovoPlanoDialogState();
-}
-
-class _NovoPlanoDialogState extends State<_NovoPlanoDialog> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: Text('Novo plano', style: TextStyle(color: AppColors.text)),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        style: TextStyle(color: AppColors.text),
-        decoration: const InputDecoration(
-          labelText: 'Nome do plano',
-        ),
-        onSubmitted: (_) => _submit(),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
-        ),
-        FilledButton(
-          onPressed: _submit,
-          style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
-          child: const Text('Criar'),
-        ),
-      ],
-    );
-  }
-
-  void _submit() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    Navigator.of(context).pop(text);
   }
 }

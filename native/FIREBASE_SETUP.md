@@ -2,6 +2,27 @@
 
 O app usa Firebase (Auth + Firestore). O projeto já está preparado: plugins Android (Google Services) e bootstrap. Falta só gerar os arquivos do **seu** projeto Firebase.
 
+## Configuração Android via .env (recomendado — evita expor secrets no repo)
+
+O `google-services.json` **não** é commitado. As credenciais ficam em variáveis de ambiente:
+
+1. **Copie o exemplo e preencha** (no diretório `native/`):
+   ```bash
+   cd native
+   cp .env.example .env
+   ```
+   Edite `.env` com os valores do [Firebase Console](https://console.firebase.google.com/) → seu projeto → Configurações do projeto (ícone de engrenagem) → Geral → Seus apps → Android.
+
+2. **Gere o arquivo** `android/app/google-services.json`:
+   ```bash
+   chmod +x scripts/generate_google_services.sh
+   ./scripts/generate_google_services.sh
+   ```
+
+3. O arquivo gerado é local e está no `.gitignore`; o repositório continua sem expor API keys nem IDs.
+
+**Se você já tem um `google-services.json`:** use os campos dele para preencher o `.env` (project_number, project_id, mobilesdk_app_id, current_key, etc.) e depois rode o script para recriar o JSON. Para parar de versionar o arquivo no Git: `git rm --cached android/app/google-services.json` (dentro de `native/`).
+
 ## Adicionar o Firebase agora (resumo)
 
 1. **Login no Firebase**
@@ -23,12 +44,10 @@ O app usa Firebase (Auth + Firestore). O projeto já está preparado: plugins An
 
 3. O comando vai criar/atualizar:
    - `lib/firebase_options.dart` (substitui o placeholder)
-   - `android/app/google-services.json`
+   - `android/app/google-services.json` (ou use o fluxo via `.env` acima)
    - `ios/Runner/GoogleService-Info.plist` (se escolher iOS)
 
 Depois disso o app sobe com Firebase inicializado.
-
-**Nota:** O `android/app/google-services.json` que vem no repo é um placeholder (projeto fake) para o build Android passar. O `flutterfire configure` **substitui** esse arquivo pelo do seu projeto Firebase.
 
 ---
 

@@ -1,11 +1,46 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final auth = ref.read(authServiceProvider);
+      final user = await auth.signInWithGoogle();
+      if (user != null && mounted) {
+        context.go('/dashboard');
+      } else if (mounted) {
+        setState(() => _loading = false);
+      }
+    } catch (e, st) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.toString().replaceFirst(RegExp(r'^\[.*?\] '), '');
+        });
+      }
+      debugPrint('Login Google error: $e\n$st');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +144,19 @@ class LoginPage extends StatelessWidget {
                           '🔔 Notificações',
                         ].map((text) => _Pill(label: text)).toList(),
                       ),
-                      const SizedBox(height: 32),
+                      if (_error != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _error!,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.danger,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
                       // Botão Google (branco, igual ao web)
                       SizedBox(
                         width: double.infinity,
@@ -119,26 +166,30 @@ class LoginPage extends StatelessWidget {
                           elevation: 2,
                           shadowColor: Colors.black26,
                           child: InkWell(
-                            onTap: () {
-                              // TODO: login com Google
-                            },
+                            onTap: _loading ? null : _signInWithGoogle,
                             borderRadius: BorderRadius.circular(16),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _GoogleIcon(),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Entrar com Google',
-                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                          color: const Color(0xFF1F2937),
-                                          fontWeight: FontWeight.w600,
+                              child: _loading
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        _GoogleIcon(),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Entrar com Google',
+                                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                                color: const Color(0xFF1F2937),
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                         ),
-                                  ),
-                                ],
-                              ),
+                                      ],
+                                    ),
                             ),
                           ),
                         ),
