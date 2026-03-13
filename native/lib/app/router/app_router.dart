@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +27,8 @@ final appRouterProvider = Provider<GoRouter>(
       redirect: (context, state) {
         final loggedIn = authNotifier.isLoggedIn;
         final onLogin = state.matchedLocation == '/login';
+        // No Chrome (web) permite usar o app sem login para testar.
+        if (kIsWeb) return null;
         if (!loggedIn && !onLogin) return '/login';
         if (loggedIn && onLogin) return '/dashboard';
         return null;

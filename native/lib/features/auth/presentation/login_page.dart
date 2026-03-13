@@ -1,11 +1,13 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/firebase_availability.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -19,6 +21,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? _error;
 
   Future<void> _signInWithGoogle() async {
+    if (!firebaseAvailable) {
+      if (kIsWeb && mounted) context.go('/dashboard');
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
@@ -32,13 +38,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         setState(() => _loading = false);
       }
     } catch (e, st) {
+      // Usar apenas mensagem evita FirebaseException no interop JS (web).
+      final message = e.toString().replaceFirst(RegExp(r'^\[.*?\] '), '');
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = e.toString().replaceFirst(RegExp(r'^\[.*?\] '), '');
+          _error = message;
         });
       }
-      debugPrint('Login Google error: $e\n$st');
+      debugPrint('Login Google error: $message\n$st');
     }
   }
 
@@ -182,7 +190,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                         _GoogleIcon(),
                                         const SizedBox(width: 12),
                                         Text(
-                                          'Entrar com Google',
+                                          kIsWeb && !firebaseAvailable
+                                              ? 'Continuar sem login'
+                                              : 'Entrar com Google',
                                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                                 color: const Color(0xFF1F2937),
                                                 fontWeight: FontWeight.w600,
@@ -194,6 +204,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ),
                         ),
                       ),
+                      if (kIsWeb && !firebaseAvailable)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'No Chrome você pode usar o app sem conta.',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textMuted,
+                                  fontSize: 12,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       const SizedBox(height: 12),
                       Text(
                         'Seus treinos ficam seguros e sincronizados 🔒',

@@ -2,8 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/prefs_service.dart';
-import '../features/auth/data/auth_notifier.dart';
-import '../features/auth/data/auth_service.dart';
+// Na web usa stubs sem Firebase para evitar FirebaseException no interop JS.
+import '../features/auth/data/auth_notifier_stub.dart' if (dart.library.io) '../features/auth/data/auth_notifier.dart';
+import '../features/auth/data/auth_service_stub.dart' if (dart.library.io) '../features/auth/data/auth_service.dart';
 
 final prefsProvider = FutureProvider<SharedPreferences>(
   (_) => SharedPreferences.getInstance(),
