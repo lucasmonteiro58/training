@@ -80,10 +80,10 @@ Objetivo: migrar o modulo completo de exercicios com busca, filtro, favoritos e 
 
 ### Base de dados de exercicios
 
-- [ ] Implementar cliente para baixar a base remota de exercicios.
-- [ ] Mapear grupos EN -> PT-BR.
-- [ ] Persistir catalogo em cache local.
-- [ ] Implementar fallback offline usando cache.
+- [x] Implementar cliente para baixar a base remota de exercicios.
+- [x] Mapear grupos EN -> PT-BR.
+- [x] Persistir catalogo em cache local.
+- [x] Implementar fallback offline usando cache.
 
 ### Tela de catalogo
 

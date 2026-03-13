@@ -4,6 +4,7 @@ import 'package:isar/isar.dart';
 import '../local/isar/isar_provider.dart';
 import '../models/exercicio.dart';
 import '../models/exercicio_no_plano_entity.dart';
+import '../remote/exercicios_remote_client.dart';
 
 final exerciciosRepositoryProvider = Provider<ExerciciosRepository>(
   (ref) => ExerciciosRepository(ref),
@@ -75,11 +76,43 @@ class ExerciciosRepository {
     });
   }
 
-  /// Garante que existam exercícios iniciais no catálogo (para o picker não ficar vazio).
+  /// Sincroniza o catálogo com a base remota e persiste em cache local.
+  /// Em caso de falha (offline), não altera o cache (fallback offline).
+  /// Retorna true se conseguiu baixar e salvar, false se usou apenas cache.
+  Future<bool> syncFromRemote() async {
+    final remotos = await fetchExerciciosRemotos();
+    if (remotos.isEmpty) return false;
+    final isar = await _isar;
+    await isar.writeTxn(() async {
+      for (final ex in remotos) {
+        if (ex.externalId == null) continue;
+        final existente = await isar.exercicios
+            .filter()
+            .externalIdEqualTo(ex.externalId!)
+            .findFirst();
+        if (existente != null) {
+          existente.nome = ex.nome;
+          existente.grupoMuscular = ex.grupoMuscular;
+          existente.equipamento = ex.equipamento;
+          existente.instrucoes = ex.instrucoes;
+          existente.imageUrl = ex.imageUrl;
+          await isar.exercicios.put(existente);
+        } else {
+          await isar.exercicios.put(ex);
+        }
+      }
+    });
+    return true;
+  }
+
+  /// Garante que existam exercícios no catálogo (seed local se vazio após sync).
   Future<void> seedSeVazio() async {
     final isar = await _isar;
     final count = await isar.exercicios.count();
     if (count > 0) return;
+    await syncFromRemote();
+    final countAfter = await isar.exercicios.count();
+    if (countAfter > 0) return;
     await isar.writeTxn(() async {
       for (final nome in [
         'Supino reto',

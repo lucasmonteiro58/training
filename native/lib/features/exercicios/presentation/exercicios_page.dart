@@ -15,11 +15,44 @@ class ExerciciosPage extends ConsumerStatefulWidget {
 
 class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
   String _query = '';
+  List<Exercicio>? _list;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    ref.read(exerciciosRepositoryProvider).seedSeVazio();
+    _carregarCatalogo();
+  }
+
+  Future<void> _carregarCatalogo() async {
+    final repo = ref.read(exerciciosRepositoryProvider);
+    await repo.seedSeVazio();
+    if (!mounted) return;
+    final list = await repo.getAll();
+    if (!mounted) return;
+    setState(() {
+      _list = list;
+      _loading = false;
+    });
+  }
+
+  Future<void> _atualizarCatalogo() async {
+    final repo = ref.read(exerciciosRepositoryProvider);
+    final ok = await repo.syncFromRemote();
+    if (!mounted) return;
+    final list = await repo.getAll();
+    if (!mounted) return;
+    setState(() => _list = list);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? 'Catálogo atualizado.'
+              : 'Offline: exibindo catálogo em cache.',
+        ),
+        backgroundColor: ok ? AppColors.surface : AppColors.surface2,
+      ),
+    );
   }
 
   @override
@@ -29,7 +62,14 @@ class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Exercícios'),
+        title: const Text('Catálogo'),
+        actions: [
+          IconButton(
+            onPressed: _loading ? null : () async { await _atualizarCatalogo(); },
+            icon: const Icon(Icons.sync_rounded),
+            tooltip: 'Atualizar catálogo',
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -53,75 +93,99 @@ class _ExerciciosPageState extends ConsumerState<ExerciciosPage> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: FutureBuilder<List<Exercicio>>(
-              key: ValueKey(_query),
-              future: ref.read(exerciciosRepositoryProvider).search(_query),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting &&
-                    !snapshot.hasData) {
-                  return const Center(
+            child: _loading
+                ? const Center(
                     child: CircularProgressIndicator(color: AppColors.accent),
-                  );
-                }
-                final list = snapshot.data ?? [];
-                if (list.isEmpty) {
-                  return Center(
-                    child: Text(
-                      _query.isEmpty
-                          ? 'Nenhum exercício no catálogo.'
-                          : 'Nenhum resultado para "$_query".',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textMuted,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-                  itemCount: list.length,
-                  itemBuilder: (context, index) {
-                    final ex = list[index];
-                    final cor = ex.grupoMuscular != null
-                        ? coresGrupo[ex.grupoMuscular]
-                        : null;
-                    return ListTile(
-                      leading: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: (cor ?? AppColors.accent).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
+                  )
+                : _buildList(_list ?? []),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildList(List<Exercicio> list) {
+    var filtered = list;
+    if (_query.trim().isNotEmpty) {
+      final q = _query.trim().toLowerCase();
+      filtered = list
+          .where((e) =>
+              e.nome.toLowerCase().contains(q) ||
+              (e.grupoMuscular?.toLowerCase().contains(q) ?? false))
+          .toList();
+    }
+    if (filtered.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            _query.isEmpty
+                ? 'Nenhum exercício no catálogo.\nArraste para baixo para atualizar.'
+                : 'Nenhum resultado para "$_query".',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textMuted,
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _atualizarCatalogo,
+      color: AppColors.accent,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+        itemCount: filtered.length,
+        itemBuilder: (context, index) {
+          final ex = filtered[index];
+          final cor = ex.grupoMuscular != null
+              ? coresGrupo[ex.grupoMuscular]
+              : null;
+          return ListTile(
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: (cor ?? AppColors.accent).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ex.imageUrl != null && ex.imageUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        ex.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
                           Icons.fitness_center,
                           color: cor ?? AppColors.accent,
                           size: 20,
                         ),
                       ),
-                      title: Text(
-                        ex.nome,
-                        style: const TextStyle(
-                          color: AppColors.text,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: ex.grupoMuscular != null
-                          ? Text(
-                              ex.grupoMuscular!,
-                              style: TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12,
-                              ),
-                            )
-                          : null,
-                    );
-                  },
-                );
-              },
+                    )
+                  : Icon(
+                      Icons.fitness_center,
+                      color: cor ?? AppColors.accent,
+                      size: 20,
+                    ),
             ),
-          ),
-        ],
+            title: Text(
+              ex.nome,
+              style: const TextStyle(
+                color: AppColors.text,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            subtitle: ex.grupoMuscular != null
+                ? Text(
+                    ex.grupoMuscular!,
+                    style: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  )
+                : null,
+          );
+        },
       ),
     );
   }

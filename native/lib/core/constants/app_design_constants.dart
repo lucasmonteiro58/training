@@ -1,5 +1,32 @@
 import 'package:flutter/material.dart';
 
+/// Mapeamento grupos musculares EN → PT-BR (paridade com web GRUPOS_EN_PT).
+const Map<String, String> gruposEnPt = {
+  'chest': 'Peito',
+  'back': 'Costas',
+  'shoulders': 'Ombros',
+  'biceps': 'Bíceps',
+  'triceps': 'Tríceps',
+  'forearms': 'Antebraço',
+  'abs': 'Abdômen',
+  'abdominals': 'Abdômen',
+  'core': 'Abdômen',
+  'quads': 'Quadríceps',
+  'quadriceps': 'Quadríceps',
+  'hamstrings': 'Posterior de Coxa',
+  'glutes': 'Glúteos',
+  'calves': 'Panturrilha',
+  'traps': 'Trapézio',
+  'trapezius': 'Trapézio',
+  'cardio': 'Cardio',
+  'full body': 'Corpo Inteiro',
+  'lats': 'Costas',
+  'lower back': 'Costas',
+  'upper back': 'Costas',
+  'neck': 'Trapézio',
+  'legs': 'Quadríceps',
+};
+
 /// Cores por grupo muscular (paridade com web CORES_GRUPO).
 const Map<String, Color> coresGrupo = {
   'Peito': Color(0xFFEF4444),
