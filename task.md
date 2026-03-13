@@ -52,8 +52,8 @@ Objetivo: fazer o app Flutter subir, navegar e persistir dados basicos desde a p
 - [x] Criar models auxiliares para `SerieRegistrada`, `SeriePlano`, `ExercicioNoPlano` e `ExercicioNaSessao`.
 - [x] Criar colecoes Isar para planos.
 - [ ] Criar colecoes Isar para sessoes.
-- [ ] Criar colecoes Isar para exercicios personalizados.
-- [ ] Criar colecoes Isar para cache do catalogo.
+- [x] Criar colecoes Isar para exercicios personalizados.
+- [x] Criar colecoes Isar para cache do catalogo.
 - [ ] Criar colecoes Isar para medidas.
 - [x] Criar camada repository local.
 - [x] Persistir configuracoes simples em `SharedPreferences`.
@@ -87,8 +87,8 @@ Objetivo: migrar o modulo completo de exercicios com busca, filtro, favoritos e 
 
 ### Tela de catalogo
 
-- [ ] Criar tela equivalente a `/exercicios`.
-- [ ] Implementar busca por nome.
+- [x] Criar tela equivalente a `/exercicios`.
+- [x] Implementar busca por nome.
 - [ ] Implementar filtro por grupo muscular.
 - [ ] Implementar filtro por favoritos.
 - [ ] Implementar lista/grid performatica com virtualizacao ou estrategia equivalente.
@@ -113,7 +113,7 @@ Objetivo: migrar o modulo completo de exercicios com busca, filtro, favoritos e 
 
 ### Componentes relacionados
 
-- [ ] Implementar `ExercicioPicker` reutilizavel para planos.
+- [x] Implementar `ExercicioPicker` reutilizavel para planos.
 - [ ] Implementar calculadora 1RM.
 
 ### Validacao da etapa 2
@@ -145,8 +145,8 @@ Objetivo: migrar toda a gestao de fichas e o fluxo de importacao assistida.
 - [x] Criar tela equivalente a `/treinos/novo`.
 - [x] Configurar nome e descricao.
 - [x] Configurar cor do plano.
-- [ ] Adicionar exercicios pelo picker.
-- [ ] Configurar series, peso, repeticoes e descanso.
+- [x] Adicionar exercicios pelo picker.
+- [x] Configurar series, peso, repeticoes e descanso.
 - [ ] Configurar notas por exercicio.
 - [ ] Reordenar exercicios.
 - [ ] Bloquear saida com alteracoes nao salvas.
@@ -155,7 +155,7 @@ Objetivo: migrar toda a gestao de fichas e o fluxo de importacao assistida.
 
 - [x] Criar tela equivalente a `/treinos/$planoId`.
 - [x] Permitir edicao do nome.
-- [ ] Permitir edicao completa dos exercicios.
+- [x] Permitir edicao completa dos exercicios.
 - [ ] Salvar e sincronizar alteracoes.
 - [x] Implementar CTA para iniciar treino.
 
