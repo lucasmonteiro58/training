@@ -43,42 +43,71 @@ class TreinosPage extends ConsumerWidget {
               if (planos.isEmpty && arquivados.isEmpty) {
                 return const _EmptyState();
               }
-              return ListView(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 8,
-                  bottom: 80 + 16,
-                ),
-                children: [
-                  ...planos.map((plano) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _PlanoCard(
-                          plano: plano,
-                          repo: repo,
-                        ),
-                      )),
-                  if (arquivados.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        'Arquivados',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: AppColors.textMuted,
-                              fontWeight: FontWeight.w600,
+              return CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 8,
+                      bottom: 80 + 16,
+                    ),
+                    sliver: SliverReorderableList(
+                      itemCount: planos.length,
+                      onReorder: (oldIndex, newIndex) {
+                        if (oldIndex < newIndex) newIndex--;
+                        final ids = List<int>.from(planos.map((p) => p.id));
+                        final id = ids.removeAt(oldIndex);
+                        ids.insert(newIndex, id);
+                        repo.reordenar(ids);
+                      },
+                      itemBuilder: (context, index) {
+                        final plano = planos[index];
+                        return ReorderableDragStartListener(
+                          key: ValueKey(plano.id),
+                          index: index,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _PlanoCard(
+                              plano: plano,
+                              repo: repo,
+                              showDragHandle: true,
                             ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  if (arquivados.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              'Arquivados',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    color: AppColors.textMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                          ...arquivados.map(
+                            (plano) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _PlanoCard(
+                                plano: plano,
+                                repo: repo,
+                                arquivado: true,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ]),
                       ),
                     ),
-                    ...arquivados.map((plano) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _PlanoCard(
-                            plano: plano,
-                            repo: repo,
-                            arquivado: true,
-                          ),
-                        )),
-                  ],
                 ],
               );
             },
@@ -142,11 +171,13 @@ class _PlanoCard extends StatelessWidget {
     required this.plano,
     required this.repo,
     this.arquivado = false,
+    this.showDragHandle = false,
   });
 
   final PlanoDeTreino plano;
   final TreinosRepository repo;
   final bool arquivado;
+  final bool showDragHandle;
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +197,11 @@ class _PlanoCard extends StatelessWidget {
           ),
           child: Row(
             children: [
+              if (showDragHandle)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Icon(Icons.drag_handle, color: AppColors.textMuted, size: 20),
+                ),
               Container(
                 width: 40,
                 height: 40,

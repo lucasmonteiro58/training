@@ -137,7 +137,7 @@ Objetivo: migrar toda a gestao de fichas e o fluxo de importacao assistida.
 - [x] Desarquivar plano.
 - [x] Excluir plano.
 - [x] Duplicar plano.
-- [ ] Reordenar planos.
+- [x] Reordenar planos.
 - [x] Exibir estados vazios e skeletons.
 
 ### Criacao de plano
@@ -154,7 +154,7 @@ Objetivo: migrar toda a gestao de fichas e o fluxo de importacao assistida.
 ### Edicao de plano
 
 - [x] Criar tela equivalente a `/treinos/$planoId`.
-- [ ] Permitir edicao do nome.
+- [x] Permitir edicao do nome.
 - [ ] Permitir edicao completa dos exercicios.
 - [ ] Salvar e sincronizar alteracoes.
 - [x] Implementar CTA para iniciar treino.

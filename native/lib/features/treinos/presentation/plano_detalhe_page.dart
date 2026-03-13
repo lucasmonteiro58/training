@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_design_constants.dart';
 import '../../../data/models/plano_de_treino.dart';
 import '../../../data/repositories/treinos_repository.dart';
 
@@ -18,11 +19,54 @@ class PlanoDetalhePage extends ConsumerStatefulWidget {
 class _PlanoDetalhePageState extends ConsumerState<PlanoDetalhePage> {
   PlanoDeTreino? _plano;
   bool _loading = true;
+  bool _editando = false;
+  final _nomeController = TextEditingController();
+  final _descricaoController = TextEditingController();
+  int? _corSelecionada;
 
   @override
   void initState() {
     super.initState();
     _carregar();
+  }
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _descricaoController.dispose();
+    super.dispose();
+  }
+
+  void _iniciarEdicao() {
+    if (_plano == null) return;
+    _nomeController.text = _plano!.nome;
+    _descricaoController.text = _plano!.descricao ?? '';
+    _corSelecionada = _plano!.cor;
+    setState(() => _editando = true);
+  }
+
+  void _cancelarEdicao() {
+    setState(() => _editando = false);
+  }
+
+  Future<void> _salvarEdicao() async {
+    final nome = _nomeController.text.trim();
+    if (nome.isEmpty) return;
+    await ref.read(treinosRepositoryProvider).atualizar(
+          widget.planoId,
+          nome: nome,
+          descricao: _descricaoController.text.trim().isEmpty
+              ? null
+              : _descricaoController.text.trim(),
+          cor: _corSelecionada,
+        );
+    if (mounted) {
+      setState(() => _editando = false);
+      _carregar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plano atualizado')),
+      );
+    }
   }
 
   Future<void> _carregar() async {
@@ -125,6 +169,17 @@ class _PlanoDetalhePageState extends ConsumerState<PlanoDetalhePage> {
         elevation: 0,
         title: Text(plano.nome),
         actions: [
+          if (_editando)
+            TextButton(
+              onPressed: _cancelarEdicao,
+              child: Text('Cancelar', style: TextStyle(color: AppColors.textMuted)),
+            )
+          else
+            IconButton(
+              onPressed: _iniciarEdicao,
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Editar',
+            ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             color: AppColors.surface,
@@ -168,49 +223,58 @@ class _PlanoDetalhePageState extends ConsumerState<PlanoDetalhePage> {
               border: Border.all(color: AppColors.border),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: cor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.fitness_center, color: Colors.white, size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            child: _editando
+                ? _FormEdicao(
+                    nomeController: _nomeController,
+                    descricaoController: _descricaoController,
+                    corSelecionada: _corSelecionada,
+                    onCorChanged: (v) => setState(() => _corSelecionada = v),
+                    onSalvar: _salvarEdicao,
+                    onCancelar: _cancelarEdicao,
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            plano.nome,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: AppColors.text,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                          if (plano.descricao != null && plano.descricao!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                plano.descricao!,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.textMuted,
-                                    ),
-                              ),
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: cor,
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            child: const Icon(Icons.fitness_center, color: Colors.white, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  plano.nome,
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        color: AppColors.text,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                                if (plano.descricao != null && plano.descricao!.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      plano.descricao!,
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                            color: AppColors.textMuted,
+                                          ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                    ],
+                  ),
           ),
           const SizedBox(height: 24),
           Text(
@@ -237,6 +301,101 @@ class _PlanoDetalhePageState extends ConsumerState<PlanoDetalhePage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _FormEdicao extends StatelessWidget {
+  const _FormEdicao({
+    required this.nomeController,
+    required this.descricaoController,
+    required this.corSelecionada,
+    required this.onCorChanged,
+    required this.onSalvar,
+    required this.onCancelar,
+  });
+
+  final TextEditingController nomeController;
+  final TextEditingController descricaoController;
+  final int? corSelecionada;
+  final ValueChanged<int?> onCorChanged;
+  final VoidCallback onSalvar;
+  final VoidCallback onCancelar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          controller: nomeController,
+          decoration: const InputDecoration(labelText: 'Nome'),
+          validator: (v) => (v == null || v.trim().isEmpty) ? 'Obrigatório' : null,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: descricaoController,
+          decoration: const InputDecoration(labelText: 'Descrição (opcional)'),
+          maxLines: 2,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Cor',
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.textMuted),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            GestureDetector(
+              onTap: () => onCorChanged(null),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.surface2,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: corSelecionada == null ? AppColors.accent : AppColors.border,
+                    width: corSelecionada == null ? 2 : 1,
+                  ),
+                ),
+              ),
+            ),
+            ...coresPlano.map((c) => GestureDetector(
+                  onTap: () => onCorChanged(c.toARGB32()),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: c,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: corSelecionada == c.toARGB32() ? AppColors.accent : AppColors.border,
+                        width: corSelecionada == c.toARGB32() ? 2 : 1,
+                      ),
+                    ),
+                  ),
+                )),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(onPressed: onCancelar, child: const Text('Cancelar')),
+            const SizedBox(width: 8),
+            FilledButton(
+              onPressed: () {
+                if (nomeController.text.trim().isNotEmpty) onSalvar();
+              },
+              style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
+              child: const Text('Salvar'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -17,20 +17,51 @@ class TreinosRepository {
 
   Stream<List<PlanoDeTreino>> watchPlanos() async* {
     final isar = await _isar;
-    yield* isar.planoDeTreinos
+    await for (final list in isar.planoDeTreinos
         .filter()
         .arquivadoEqualTo(false)
-        .sortByCriadoEmDesc()
-        .watch(fireImmediately: true);
+        .sortByOrdem()
+        .watch(fireImmediately: true)) {
+      final sorted = List<PlanoDeTreino>.from(list)
+        ..sort((a, b) {
+          final o = a.ordem.compareTo(b.ordem);
+          if (o != 0) return o;
+          return b.criadoEm.compareTo(a.criadoEm);
+        });
+      yield sorted;
+    }
   }
 
   Stream<List<PlanoDeTreino>> watchPlanosArquivados() async* {
     final isar = await _isar;
-    yield* isar.planoDeTreinos
+    await for (final list in isar.planoDeTreinos
         .filter()
         .arquivadoEqualTo(true)
-        .sortByCriadoEmDesc()
-        .watch(fireImmediately: true);
+        .sortByOrdem()
+        .watch(fireImmediately: true)) {
+      final sorted = List<PlanoDeTreino>.from(list)
+        ..sort((a, b) {
+          final o = a.ordem.compareTo(b.ordem);
+          if (o != 0) return o;
+          return b.criadoEm.compareTo(a.criadoEm);
+        });
+      yield sorted;
+    }
+  }
+
+  /// Atualiza a ordem dos planos ativos. [idsEmOrdem] é a lista de id na nova ordem.
+  Future<void> reordenar(List<int> idsEmOrdem) async {
+    final isar = await _isar;
+    await isar.writeTxn(() async {
+      for (var i = 0; i < idsEmOrdem.length; i++) {
+        final plano = await isar.planoDeTreinos.get(idsEmOrdem[i]);
+        if (plano != null) {
+          plano.ordem = i;
+          plano.atualizadoEm = DateTime.now();
+          await isar.planoDeTreinos.put(plano);
+        }
+      }
+    });
   }
 
   Future<PlanoDeTreino?> getById(int id) async {
@@ -50,7 +81,8 @@ class TreinosRepository {
       ..cor = cor
       ..criadoEm = DateTime.now()
       ..atualizadoEm = DateTime.now()
-      ..arquivado = false;
+      ..arquivado = false
+      ..ordem = 0;
 
     await isar.writeTxn(() async {
       await isar.planoDeTreinos.put(plano);
@@ -116,7 +148,8 @@ class TreinosRepository {
       ..cor = original.cor
       ..criadoEm = DateTime.now()
       ..atualizadoEm = DateTime.now()
-      ..arquivado = false;
+      ..arquivado = false
+      ..ordem = original.ordem;
 
     await isar.writeTxn(() async {
       await isar.planoDeTreinos.put(copia);

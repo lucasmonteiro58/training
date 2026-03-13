@@ -18,5 +18,8 @@ class PlanoDeTreino {
   DateTime? atualizadoEm;
 
   bool arquivado = false;
+
+  /// Ordem na lista (menor = primeiro). Usado para reordenar.
+  int ordem = 0;
 }
 

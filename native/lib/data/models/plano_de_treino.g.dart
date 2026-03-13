@@ -13,9 +13,9 @@ extension GetPlanoDeTreinoCollection on Isar {
   IsarCollection<PlanoDeTreino> get planoDeTreinos => this.collection();
 }
 
+// ID reduzido para caber em JS safe integer (web).
 const PlanoDeTreinoSchema = CollectionSchema(
   name: r'PlanoDeTreino',
-  // Valor ajustado para ser seguro em JavaScript (necessario para web).
   id: 1,
   properties: {
     r'arquivado': PropertySchema(
@@ -47,6 +47,11 @@ const PlanoDeTreinoSchema = CollectionSchema(
       id: 5,
       name: r'nome',
       type: IsarType.string,
+    ),
+    r'ordem': PropertySchema(
+      id: 6,
+      name: r'ordem',
+      type: IsarType.long,
     )
   },
   estimateSize: _planoDeTreinoEstimateSize,
@@ -91,6 +96,7 @@ void _planoDeTreinoSerialize(
   writer.writeDateTime(offsets[3], object.criadoEm);
   writer.writeString(offsets[4], object.descricao);
   writer.writeString(offsets[5], object.nome);
+  writer.writeLong(offsets[6], object.ordem);
 }
 
 PlanoDeTreino _planoDeTreinoDeserialize(
@@ -107,6 +113,7 @@ PlanoDeTreino _planoDeTreinoDeserialize(
   object.descricao = reader.readStringOrNull(offsets[4]);
   object.id = id;
   object.nome = reader.readString(offsets[5]);
+  object.ordem = reader.readLong(offsets[6]);
   return object;
 }
 
@@ -129,6 +136,8 @@ P _planoDeTreinoDeserializeProp<P>(
       return (reader.readStringOrNull(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -784,6 +793,62 @@ extension PlanoDeTreinoQueryFilter
       ));
     });
   }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterFilterCondition>
+      ordemEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ordem',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterFilterCondition>
+      ordemGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ordem',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterFilterCondition>
+      ordemLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ordem',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterFilterCondition>
+      ordemBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ordem',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension PlanoDeTreinoQueryObject
@@ -868,6 +933,18 @@ extension PlanoDeTreinoQuerySortBy
   QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterSortBy> sortByNomeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nome', Sort.desc);
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterSortBy> sortByOrdem() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordem', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterSortBy> sortByOrdemDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordem', Sort.desc);
     });
   }
 }
@@ -962,6 +1039,18 @@ extension PlanoDeTreinoQuerySortThenBy
       return query.addSortBy(r'nome', Sort.desc);
     });
   }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterSortBy> thenByOrdem() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordem', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QAfterSortBy> thenByOrdemDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ordem', Sort.desc);
+    });
+  }
 }
 
 extension PlanoDeTreinoQueryWhereDistinct
@@ -1002,6 +1091,12 @@ extension PlanoDeTreinoQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nome', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, PlanoDeTreino, QDistinct> distinctByOrdem() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ordem');
     });
   }
 }
@@ -1048,6 +1143,12 @@ extension PlanoDeTreinoQueryProperty
   QueryBuilder<PlanoDeTreino, String, QQueryOperations> nomeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nome');
+    });
+  }
+
+  QueryBuilder<PlanoDeTreino, int, QQueryOperations> ordemProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ordem');
     });
   }
 }
