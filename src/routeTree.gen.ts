@@ -10,206 +10,206 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TreinosIndexRouteImport } from './routes/treinos/index'
-import { Route as TreinoAtivoIndexRouteImport } from './routes/treino-ativo/index'
-import { Route as PerfilIndexRouteImport } from './routes/perfil/index'
-import { Route as HistoricoIndexRouteImport } from './routes/historico/index'
-import { Route as ExerciciosIndexRouteImport } from './routes/exercicios/index'
-import { Route as TreinosNovoRouteImport } from './routes/treinos/novo'
-import { Route as TreinosImportarRouteImport } from './routes/treinos/importar'
-import { Route as TreinosPlanoIdRouteImport } from './routes/treinos/$planoId'
-import { Route as TreinoAtivoPlanoIdRouteImport } from './routes/treino-ativo/$planoId'
-import { Route as PerfilMedidasRouteImport } from './routes/perfil/medidas'
-import { Route as PerfilEvolucaoRouteImport } from './routes/perfil/evolucao'
-import { Route as PerfilDiasOpcionaisRouteImport } from './routes/perfil/dias-opcionais'
-import { Route as HistoricoSessaoIdRouteImport } from './routes/historico/$sessaoId'
+import { Route as WorkoutsIndexRouteImport } from './routes/workouts/index'
+import { Route as ProfileIndexRouteImport } from './routes/profile/index'
+import { Route as HistoryIndexRouteImport } from './routes/history/index'
+import { Route as ExercisesIndexRouteImport } from './routes/exercises/index'
+import { Route as ActiveWorkoutIndexRouteImport } from './routes/active-workout/index'
+import { Route as WorkoutsNewRouteImport } from './routes/workouts/new'
+import { Route as WorkoutsImportRouteImport } from './routes/workouts/import'
+import { Route as WorkoutsPlanIdRouteImport } from './routes/workouts/$planId'
+import { Route as ProfileProgressRouteImport } from './routes/profile/progress'
+import { Route as ProfileOptionalDaysRouteImport } from './routes/profile/optional-days'
+import { Route as ProfileMeasurementsRouteImport } from './routes/profile/measurements'
+import { Route as HistorySessionIdRouteImport } from './routes/history/$sessionId'
+import { Route as ActiveWorkoutPlanIdRouteImport } from './routes/active-workout/$planId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TreinosIndexRoute = TreinosIndexRouteImport.update({
-  id: '/treinos/',
-  path: '/treinos/',
+const WorkoutsIndexRoute = WorkoutsIndexRouteImport.update({
+  id: '/workouts/',
+  path: '/workouts/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TreinoAtivoIndexRoute = TreinoAtivoIndexRouteImport.update({
-  id: '/treino-ativo/',
-  path: '/treino-ativo/',
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilIndexRoute = PerfilIndexRouteImport.update({
-  id: '/perfil/',
-  path: '/perfil/',
+const HistoryIndexRoute = HistoryIndexRouteImport.update({
+  id: '/history/',
+  path: '/history/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HistoricoIndexRoute = HistoricoIndexRouteImport.update({
-  id: '/historico/',
-  path: '/historico/',
+const ExercisesIndexRoute = ExercisesIndexRouteImport.update({
+  id: '/exercises/',
+  path: '/exercises/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExerciciosIndexRoute = ExerciciosIndexRouteImport.update({
-  id: '/exercicios/',
-  path: '/exercicios/',
+const ActiveWorkoutIndexRoute = ActiveWorkoutIndexRouteImport.update({
+  id: '/active-workout/',
+  path: '/active-workout/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TreinosNovoRoute = TreinosNovoRouteImport.update({
-  id: '/treinos/novo',
-  path: '/treinos/novo',
+const WorkoutsNewRoute = WorkoutsNewRouteImport.update({
+  id: '/workouts/new',
+  path: '/workouts/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TreinosImportarRoute = TreinosImportarRouteImport.update({
-  id: '/treinos/importar',
-  path: '/treinos/importar',
+const WorkoutsImportRoute = WorkoutsImportRouteImport.update({
+  id: '/workouts/import',
+  path: '/workouts/import',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TreinosPlanoIdRoute = TreinosPlanoIdRouteImport.update({
-  id: '/treinos/$planoId',
-  path: '/treinos/$planoId',
+const WorkoutsPlanIdRoute = WorkoutsPlanIdRouteImport.update({
+  id: '/workouts/$planId',
+  path: '/workouts/$planId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TreinoAtivoPlanoIdRoute = TreinoAtivoPlanoIdRouteImport.update({
-  id: '/treino-ativo/$planoId',
-  path: '/treino-ativo/$planoId',
+const ProfileProgressRoute = ProfileProgressRouteImport.update({
+  id: '/profile/progress',
+  path: '/profile/progress',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilMedidasRoute = PerfilMedidasRouteImport.update({
-  id: '/perfil/medidas',
-  path: '/perfil/medidas',
+const ProfileOptionalDaysRoute = ProfileOptionalDaysRouteImport.update({
+  id: '/profile/optional-days',
+  path: '/profile/optional-days',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilEvolucaoRoute = PerfilEvolucaoRouteImport.update({
-  id: '/perfil/evolucao',
-  path: '/perfil/evolucao',
+const ProfileMeasurementsRoute = ProfileMeasurementsRouteImport.update({
+  id: '/profile/measurements',
+  path: '/profile/measurements',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilDiasOpcionaisRoute = PerfilDiasOpcionaisRouteImport.update({
-  id: '/perfil/dias-opcionais',
-  path: '/perfil/dias-opcionais',
+const HistorySessionIdRoute = HistorySessionIdRouteImport.update({
+  id: '/history/$sessionId',
+  path: '/history/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HistoricoSessaoIdRoute = HistoricoSessaoIdRouteImport.update({
-  id: '/historico/$sessaoId',
-  path: '/historico/$sessaoId',
+const ActiveWorkoutPlanIdRoute = ActiveWorkoutPlanIdRouteImport.update({
+  id: '/active-workout/$planId',
+  path: '/active-workout/$planId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
-  '/perfil/dias-opcionais': typeof PerfilDiasOpcionaisRoute
-  '/perfil/evolucao': typeof PerfilEvolucaoRoute
-  '/perfil/medidas': typeof PerfilMedidasRoute
-  '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
-  '/treinos/$planoId': typeof TreinosPlanoIdRoute
-  '/treinos/importar': typeof TreinosImportarRoute
-  '/treinos/novo': typeof TreinosNovoRoute
-  '/exercicios/': typeof ExerciciosIndexRoute
-  '/historico/': typeof HistoricoIndexRoute
-  '/perfil/': typeof PerfilIndexRoute
-  '/treino-ativo/': typeof TreinoAtivoIndexRoute
-  '/treinos/': typeof TreinosIndexRoute
+  '/active-workout/$planId': typeof ActiveWorkoutPlanIdRoute
+  '/history/$sessionId': typeof HistorySessionIdRoute
+  '/profile/measurements': typeof ProfileMeasurementsRoute
+  '/profile/optional-days': typeof ProfileOptionalDaysRoute
+  '/profile/progress': typeof ProfileProgressRoute
+  '/workouts/$planId': typeof WorkoutsPlanIdRoute
+  '/workouts/import': typeof WorkoutsImportRoute
+  '/workouts/new': typeof WorkoutsNewRoute
+  '/active-workout/': typeof ActiveWorkoutIndexRoute
+  '/exercises/': typeof ExercisesIndexRoute
+  '/history/': typeof HistoryIndexRoute
+  '/profile/': typeof ProfileIndexRoute
+  '/workouts/': typeof WorkoutsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
-  '/perfil/dias-opcionais': typeof PerfilDiasOpcionaisRoute
-  '/perfil/evolucao': typeof PerfilEvolucaoRoute
-  '/perfil/medidas': typeof PerfilMedidasRoute
-  '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
-  '/treinos/$planoId': typeof TreinosPlanoIdRoute
-  '/treinos/importar': typeof TreinosImportarRoute
-  '/treinos/novo': typeof TreinosNovoRoute
-  '/exercicios': typeof ExerciciosIndexRoute
-  '/historico': typeof HistoricoIndexRoute
-  '/perfil': typeof PerfilIndexRoute
-  '/treino-ativo': typeof TreinoAtivoIndexRoute
-  '/treinos': typeof TreinosIndexRoute
+  '/active-workout/$planId': typeof ActiveWorkoutPlanIdRoute
+  '/history/$sessionId': typeof HistorySessionIdRoute
+  '/profile/measurements': typeof ProfileMeasurementsRoute
+  '/profile/optional-days': typeof ProfileOptionalDaysRoute
+  '/profile/progress': typeof ProfileProgressRoute
+  '/workouts/$planId': typeof WorkoutsPlanIdRoute
+  '/workouts/import': typeof WorkoutsImportRoute
+  '/workouts/new': typeof WorkoutsNewRoute
+  '/active-workout': typeof ActiveWorkoutIndexRoute
+  '/exercises': typeof ExercisesIndexRoute
+  '/history': typeof HistoryIndexRoute
+  '/profile': typeof ProfileIndexRoute
+  '/workouts': typeof WorkoutsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
-  '/perfil/dias-opcionais': typeof PerfilDiasOpcionaisRoute
-  '/perfil/evolucao': typeof PerfilEvolucaoRoute
-  '/perfil/medidas': typeof PerfilMedidasRoute
-  '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
-  '/treinos/$planoId': typeof TreinosPlanoIdRoute
-  '/treinos/importar': typeof TreinosImportarRoute
-  '/treinos/novo': typeof TreinosNovoRoute
-  '/exercicios/': typeof ExerciciosIndexRoute
-  '/historico/': typeof HistoricoIndexRoute
-  '/perfil/': typeof PerfilIndexRoute
-  '/treino-ativo/': typeof TreinoAtivoIndexRoute
-  '/treinos/': typeof TreinosIndexRoute
+  '/active-workout/$planId': typeof ActiveWorkoutPlanIdRoute
+  '/history/$sessionId': typeof HistorySessionIdRoute
+  '/profile/measurements': typeof ProfileMeasurementsRoute
+  '/profile/optional-days': typeof ProfileOptionalDaysRoute
+  '/profile/progress': typeof ProfileProgressRoute
+  '/workouts/$planId': typeof WorkoutsPlanIdRoute
+  '/workouts/import': typeof WorkoutsImportRoute
+  '/workouts/new': typeof WorkoutsNewRoute
+  '/active-workout/': typeof ActiveWorkoutIndexRoute
+  '/exercises/': typeof ExercisesIndexRoute
+  '/history/': typeof HistoryIndexRoute
+  '/profile/': typeof ProfileIndexRoute
+  '/workouts/': typeof WorkoutsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/historico/$sessaoId'
-    | '/perfil/dias-opcionais'
-    | '/perfil/evolucao'
-    | '/perfil/medidas'
-    | '/treino-ativo/$planoId'
-    | '/treinos/$planoId'
-    | '/treinos/importar'
-    | '/treinos/novo'
-    | '/exercicios/'
-    | '/historico/'
-    | '/perfil/'
-    | '/treino-ativo/'
-    | '/treinos/'
+    | '/active-workout/$planId'
+    | '/history/$sessionId'
+    | '/profile/measurements'
+    | '/profile/optional-days'
+    | '/profile/progress'
+    | '/workouts/$planId'
+    | '/workouts/import'
+    | '/workouts/new'
+    | '/active-workout/'
+    | '/exercises/'
+    | '/history/'
+    | '/profile/'
+    | '/workouts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/historico/$sessaoId'
-    | '/perfil/dias-opcionais'
-    | '/perfil/evolucao'
-    | '/perfil/medidas'
-    | '/treino-ativo/$planoId'
-    | '/treinos/$planoId'
-    | '/treinos/importar'
-    | '/treinos/novo'
-    | '/exercicios'
-    | '/historico'
-    | '/perfil'
-    | '/treino-ativo'
-    | '/treinos'
+    | '/active-workout/$planId'
+    | '/history/$sessionId'
+    | '/profile/measurements'
+    | '/profile/optional-days'
+    | '/profile/progress'
+    | '/workouts/$planId'
+    | '/workouts/import'
+    | '/workouts/new'
+    | '/active-workout'
+    | '/exercises'
+    | '/history'
+    | '/profile'
+    | '/workouts'
   id:
     | '__root__'
     | '/'
-    | '/historico/$sessaoId'
-    | '/perfil/dias-opcionais'
-    | '/perfil/evolucao'
-    | '/perfil/medidas'
-    | '/treino-ativo/$planoId'
-    | '/treinos/$planoId'
-    | '/treinos/importar'
-    | '/treinos/novo'
-    | '/exercicios/'
-    | '/historico/'
-    | '/perfil/'
-    | '/treino-ativo/'
-    | '/treinos/'
+    | '/active-workout/$planId'
+    | '/history/$sessionId'
+    | '/profile/measurements'
+    | '/profile/optional-days'
+    | '/profile/progress'
+    | '/workouts/$planId'
+    | '/workouts/import'
+    | '/workouts/new'
+    | '/active-workout/'
+    | '/exercises/'
+    | '/history/'
+    | '/profile/'
+    | '/workouts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  HistoricoSessaoIdRoute: typeof HistoricoSessaoIdRoute
-  PerfilDiasOpcionaisRoute: typeof PerfilDiasOpcionaisRoute
-  PerfilEvolucaoRoute: typeof PerfilEvolucaoRoute
-  PerfilMedidasRoute: typeof PerfilMedidasRoute
-  TreinoAtivoPlanoIdRoute: typeof TreinoAtivoPlanoIdRoute
-  TreinosPlanoIdRoute: typeof TreinosPlanoIdRoute
-  TreinosImportarRoute: typeof TreinosImportarRoute
-  TreinosNovoRoute: typeof TreinosNovoRoute
-  ExerciciosIndexRoute: typeof ExerciciosIndexRoute
-  HistoricoIndexRoute: typeof HistoricoIndexRoute
-  PerfilIndexRoute: typeof PerfilIndexRoute
-  TreinoAtivoIndexRoute: typeof TreinoAtivoIndexRoute
-  TreinosIndexRoute: typeof TreinosIndexRoute
+  ActiveWorkoutPlanIdRoute: typeof ActiveWorkoutPlanIdRoute
+  HistorySessionIdRoute: typeof HistorySessionIdRoute
+  ProfileMeasurementsRoute: typeof ProfileMeasurementsRoute
+  ProfileOptionalDaysRoute: typeof ProfileOptionalDaysRoute
+  ProfileProgressRoute: typeof ProfileProgressRoute
+  WorkoutsPlanIdRoute: typeof WorkoutsPlanIdRoute
+  WorkoutsImportRoute: typeof WorkoutsImportRoute
+  WorkoutsNewRoute: typeof WorkoutsNewRoute
+  ActiveWorkoutIndexRoute: typeof ActiveWorkoutIndexRoute
+  ExercisesIndexRoute: typeof ExercisesIndexRoute
+  HistoryIndexRoute: typeof HistoryIndexRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
+  WorkoutsIndexRoute: typeof WorkoutsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,95 +221,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/treinos/': {
-      id: '/treinos/'
-      path: '/treinos'
-      fullPath: '/treinos/'
-      preLoaderRoute: typeof TreinosIndexRouteImport
+    '/workouts/': {
+      id: '/workouts/'
+      path: '/workouts'
+      fullPath: '/workouts/'
+      preLoaderRoute: typeof WorkoutsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/treino-ativo/': {
-      id: '/treino-ativo/'
-      path: '/treino-ativo'
-      fullPath: '/treino-ativo/'
-      preLoaderRoute: typeof TreinoAtivoIndexRouteImport
+    '/profile/': {
+      id: '/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof ProfileIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil/': {
-      id: '/perfil/'
-      path: '/perfil'
-      fullPath: '/perfil/'
-      preLoaderRoute: typeof PerfilIndexRouteImport
+    '/history/': {
+      id: '/history/'
+      path: '/history'
+      fullPath: '/history/'
+      preLoaderRoute: typeof HistoryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/historico/': {
-      id: '/historico/'
-      path: '/historico'
-      fullPath: '/historico/'
-      preLoaderRoute: typeof HistoricoIndexRouteImport
+    '/exercises/': {
+      id: '/exercises/'
+      path: '/exercises'
+      fullPath: '/exercises/'
+      preLoaderRoute: typeof ExercisesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/exercicios/': {
-      id: '/exercicios/'
-      path: '/exercicios'
-      fullPath: '/exercicios/'
-      preLoaderRoute: typeof ExerciciosIndexRouteImport
+    '/active-workout/': {
+      id: '/active-workout/'
+      path: '/active-workout'
+      fullPath: '/active-workout/'
+      preLoaderRoute: typeof ActiveWorkoutIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/treinos/novo': {
-      id: '/treinos/novo'
-      path: '/treinos/novo'
-      fullPath: '/treinos/novo'
-      preLoaderRoute: typeof TreinosNovoRouteImport
+    '/workouts/new': {
+      id: '/workouts/new'
+      path: '/workouts/new'
+      fullPath: '/workouts/new'
+      preLoaderRoute: typeof WorkoutsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/treinos/importar': {
-      id: '/treinos/importar'
-      path: '/treinos/importar'
-      fullPath: '/treinos/importar'
-      preLoaderRoute: typeof TreinosImportarRouteImport
+    '/workouts/import': {
+      id: '/workouts/import'
+      path: '/workouts/import'
+      fullPath: '/workouts/import'
+      preLoaderRoute: typeof WorkoutsImportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/treinos/$planoId': {
-      id: '/treinos/$planoId'
-      path: '/treinos/$planoId'
-      fullPath: '/treinos/$planoId'
-      preLoaderRoute: typeof TreinosPlanoIdRouteImport
+    '/workouts/$planId': {
+      id: '/workouts/$planId'
+      path: '/workouts/$planId'
+      fullPath: '/workouts/$planId'
+      preLoaderRoute: typeof WorkoutsPlanIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/treino-ativo/$planoId': {
-      id: '/treino-ativo/$planoId'
-      path: '/treino-ativo/$planoId'
-      fullPath: '/treino-ativo/$planoId'
-      preLoaderRoute: typeof TreinoAtivoPlanoIdRouteImport
+    '/profile/progress': {
+      id: '/profile/progress'
+      path: '/profile/progress'
+      fullPath: '/profile/progress'
+      preLoaderRoute: typeof ProfileProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil/medidas': {
-      id: '/perfil/medidas'
-      path: '/perfil/medidas'
-      fullPath: '/perfil/medidas'
-      preLoaderRoute: typeof PerfilMedidasRouteImport
+    '/profile/optional-days': {
+      id: '/profile/optional-days'
+      path: '/profile/optional-days'
+      fullPath: '/profile/optional-days'
+      preLoaderRoute: typeof ProfileOptionalDaysRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil/evolucao': {
-      id: '/perfil/evolucao'
-      path: '/perfil/evolucao'
-      fullPath: '/perfil/evolucao'
-      preLoaderRoute: typeof PerfilEvolucaoRouteImport
+    '/profile/measurements': {
+      id: '/profile/measurements'
+      path: '/profile/measurements'
+      fullPath: '/profile/measurements'
+      preLoaderRoute: typeof ProfileMeasurementsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil/dias-opcionais': {
-      id: '/perfil/dias-opcionais'
-      path: '/perfil/dias-opcionais'
-      fullPath: '/perfil/dias-opcionais'
-      preLoaderRoute: typeof PerfilDiasOpcionaisRouteImport
+    '/history/$sessionId': {
+      id: '/history/$sessionId'
+      path: '/history/$sessionId'
+      fullPath: '/history/$sessionId'
+      preLoaderRoute: typeof HistorySessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/historico/$sessaoId': {
-      id: '/historico/$sessaoId'
-      path: '/historico/$sessaoId'
-      fullPath: '/historico/$sessaoId'
-      preLoaderRoute: typeof HistoricoSessaoIdRouteImport
+    '/active-workout/$planId': {
+      id: '/active-workout/$planId'
+      path: '/active-workout/$planId'
+      fullPath: '/active-workout/$planId'
+      preLoaderRoute: typeof ActiveWorkoutPlanIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -317,19 +317,19 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  HistoricoSessaoIdRoute: HistoricoSessaoIdRoute,
-  PerfilDiasOpcionaisRoute: PerfilDiasOpcionaisRoute,
-  PerfilEvolucaoRoute: PerfilEvolucaoRoute,
-  PerfilMedidasRoute: PerfilMedidasRoute,
-  TreinoAtivoPlanoIdRoute: TreinoAtivoPlanoIdRoute,
-  TreinosPlanoIdRoute: TreinosPlanoIdRoute,
-  TreinosImportarRoute: TreinosImportarRoute,
-  TreinosNovoRoute: TreinosNovoRoute,
-  ExerciciosIndexRoute: ExerciciosIndexRoute,
-  HistoricoIndexRoute: HistoricoIndexRoute,
-  PerfilIndexRoute: PerfilIndexRoute,
-  TreinoAtivoIndexRoute: TreinoAtivoIndexRoute,
-  TreinosIndexRoute: TreinosIndexRoute,
+  ActiveWorkoutPlanIdRoute: ActiveWorkoutPlanIdRoute,
+  HistorySessionIdRoute: HistorySessionIdRoute,
+  ProfileMeasurementsRoute: ProfileMeasurementsRoute,
+  ProfileOptionalDaysRoute: ProfileOptionalDaysRoute,
+  ProfileProgressRoute: ProfileProgressRoute,
+  WorkoutsPlanIdRoute: WorkoutsPlanIdRoute,
+  WorkoutsImportRoute: WorkoutsImportRoute,
+  WorkoutsNewRoute: WorkoutsNewRoute,
+  ActiveWorkoutIndexRoute: ActiveWorkoutIndexRoute,
+  ExercisesIndexRoute: ExercisesIndexRoute,
+  HistoryIndexRoute: HistoryIndexRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
+  WorkoutsIndexRoute: WorkoutsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

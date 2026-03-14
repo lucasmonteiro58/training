@@ -36,7 +36,7 @@ export function UltimosTreinosSection({ sessoes, carregando }: UltimosTreinosSec
     <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-bold text-text">Últimos Treinos</h2>
-        <Link to="/historico" className="text-accent text-sm font-medium" style={{ textDecoration: 'none' }}>
+        <Link to="/history" className="text-accent text-sm font-medium" style={{ textDecoration: 'none' }}>
           Histórico
         </Link>
       </div>
@@ -44,8 +44,8 @@ export function UltimosTreinosSection({ sessoes, carregando }: UltimosTreinosSec
         {sessoes.map(sessao => (
           <Link
             key={sessao.id}
-            to="/historico/$sessaoId"
-            params={{ sessaoId: sessao.id }}
+            to="/history/$sessionId"
+            params={{ sessionId: sessao.id }}
             style={{ textDecoration: 'none' }}
           >
             <div className="card p-4 flex items-center justify-between">

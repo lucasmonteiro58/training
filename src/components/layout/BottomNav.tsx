@@ -3,10 +3,10 @@ import { Home, Dumbbell, Zap, BookOpen, User } from 'lucide-react'
 
 const navItems = [
   { to: '/', label: 'Início', icon: Home, exact: true },
-  { to: '/treinos', label: 'Treinos', icon: Dumbbell, exact: false },
-  { to: '/treino-ativo', label: 'Treinar', icon: Zap, exact: false },
-  { to: '/exercicios', label: 'Exercícios', icon: BookOpen, exact: false },
-  { to: '/perfil', label: 'Perfil', icon: User, exact: false },
+  { to: '/workouts', label: 'Treinos', icon: Dumbbell, exact: false },
+  { to: '/active-workout', label: 'Treinar', icon: Zap, exact: false },
+  { to: '/exercises', label: 'Exercícios', icon: BookOpen, exact: false },
+  { to: '/profile', label: 'Perfil', icon: User, exact: false },
 ]
 
 export function BottomNav() {
@@ -17,7 +17,7 @@ export function BottomNav() {
       <div className="flex items-center justify-around py-2 max-w-[480px] mx-auto">
         {navItems.map((item) => {
           const isActive = matchRoute({ to: item.to, fuzzy: !item.exact })
-          const isTreinar = item.to === '/treino-ativo'
+          const isTreinar = item.to === '/active-workout'
 
           return (
             <Link

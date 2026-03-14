@@ -19,8 +19,8 @@ export function TreinoAtivoBanner({
 }: TreinoAtivoBannerProps) {
   return (
     <Link
-      to="/treino-ativo/$planoId"
-      params={{ planoId }}
+      to="/active-workout/$planId"
+      params={{ planId }}
       className="block mb-4 animate-fade-up"
       style={{ textDecoration: 'none' }}
     >

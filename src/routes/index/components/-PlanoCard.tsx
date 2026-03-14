@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Dumbbell, Play } from 'lucide-react'
-import { useStartWorkout } from '../../../hooks/useIniciarTreino'
+import { useStartWorkout } from '../../../hooks/useStartWorkout'
 
 interface PlanoCardProps {
   plano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] }
@@ -11,7 +11,7 @@ export function PlanoCard({ plano }: PlanoCardProps) {
 
   return (
     <>
-      <Link to="/treinos/$planoId" params={{ planoId: plano.id }} style={{ textDecoration: 'none' }}>
+      <Link to="/workouts/$planId" params={{ planId: plano.id }} style={{ textDecoration: 'none' }}>
         <div className="card p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div

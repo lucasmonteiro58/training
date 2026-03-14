@@ -13,7 +13,7 @@ export function MeusPlanosSection({ planos, carregando }: MeusPlanosSectionProps
     <div className="mb-6 animate-fade-up" style={{ animationDelay: '150ms' }}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-bold text-text">Meus Planos</h2>
-        <Link to="/treinos" className="text-accent text-sm font-medium" style={{ textDecoration: 'none' }}>
+        <Link to="/workouts" className="text-accent text-sm font-medium" style={{ textDecoration: 'none' }}>
           Ver todos
         </Link>
       </div>
@@ -25,7 +25,7 @@ export function MeusPlanosSection({ planos, carregando }: MeusPlanosSectionProps
           ))}
         </div>
       ) : planos.length === 0 ? (
-        <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
+        <Link to="/workouts/new" style={{ textDecoration: 'none' }}>
           <div className="card p-6 border-dashed border-border-strong flex flex-col items-center gap-3 text-center">
             <div className="w-12 h-12 rounded-2xl bg-accent-subtle flex items-center justify-center">
               <Plus size={24} className="text-accent" />

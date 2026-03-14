@@ -1,5 +1,5 @@
 import { Zap, Play } from 'lucide-react'
-import { useStartWorkout } from '../../../hooks/useIniciarTreino'
+import { useStartWorkout } from '../../../hooks/useStartWorkout'
 
 interface ProximoTreinoSectionProps {
   proximoPlano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] }

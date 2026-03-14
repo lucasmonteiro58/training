@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useHistoryStore } from '../../../stores'
-import { useHistory } from '../../../hooks/useHistorico'
+import { useHistory } from '../../../hooks/useHistory'
 import { useActiveWorkoutStore } from '../../../stores'
 
 export function AutoEncerradoBanner() {
@@ -17,8 +17,8 @@ export function AutoEncerradoBanner() {
     restaurarDeAutoEncerrado(sessaoAutoEncerrada)
     setSessaoAutoEncerrada(null)
     navigate({
-      to: '/treino-ativo/$planoId',
-      params: { planoId: sessaoAutoEncerrada.sessao.planoId },
+      to: '/active-workout/$planId',
+      params: { planId: sessaoAutoEncerrada.sessao.planoId },
     })
   }
 

@@ -7,7 +7,7 @@ import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButto
 import { Toaster } from 'sonner'
 import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
 import { useAuth as useAuthHook } from '../hooks/useAuth'
-import { useWorkoutProgressSync } from '../hooks/useProgressoTreinoSync'
+import { useWorkoutProgressSync } from '../hooks/useWorkoutProgressSync'
 import appCss from '../styles.css?url'
 import { AuthLoadingScreen } from './__root/components/-AuthLoadingScreen'
 import { AutoEncerradoBanner } from './__root/components/-AutoEncerradoBanner'

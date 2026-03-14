@@ -21,7 +21,7 @@ export function FloatingWorkoutButton() {
   }, [iniciado, pausado, tickGeral])
 
   // Não mostrar se não houver treino ou se estiver na tela de treino ativo
-  if (!iniciado || !sessao || location.pathname.startsWith('/treino-ativo')) {
+  if (!iniciado || !sessao || location.pathname.startsWith('/active-workout')) {
     return null
   }
 
@@ -29,8 +29,8 @@ export function FloatingWorkoutButton() {
 
   return (
     <Link
-      to="/treino-ativo/$planoId"
-      params={{ planoId: sessao.planoId }}
+      to="/active-workout/$planId"
+      params={{ planId: sessao.planoId }}
       className="fixed right-4 z-[60] animate-fade-up"
       style={{
         bottom: `calc(90px + env(safe-area-inset-bottom, 0px))`,

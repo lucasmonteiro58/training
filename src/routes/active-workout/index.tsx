@@ -1,0 +1,51 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { useActiveWorkoutStore } from '../../stores'
+import { Link } from '@tanstack/react-router'
+import { Play, Dumbbell } from 'lucide-react'
+
+export const Route = createFileRoute('/active-workout/')({
+  component: TreinoAtivoIndexPage,
+})
+
+function TreinoAtivoIndexPage() {
+  const { iniciado, sessao } = useActiveWorkoutStore()
+
+  if (iniciado && sessao) {
+    return (
+      <div className="page-container pt-6">
+        <div className="flex flex-col items-center gap-6 mt-8 animate-fade-up">
+          <div className="w-20 h-20 rounded-3xl bg-accent-subtle flex items-center justify-center animate-pulse-glow">
+            <Dumbbell size={36} className="text-accent" />
+          </div>
+          <div className="text-center">
+            <p className="text-text-muted text-sm">Treino em andamento</p>
+            <h2 className="text-xl font-bold text-text mt-1">{sessao.planoNome}</h2>
+          </div>
+          <Link to="/active-workout/$planId" params={{ planId: sessao.planoId }} style={{ textDecoration: 'none' }}>
+            <button className="btn-primary flex items-center gap-2">
+              <Play size={18} />
+              Continuar Treino
+            </button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="page-container pt-6">
+      <h1 className="text-2xl font-bold text-text mb-6 animate-fade-up">Treinar</h1>
+      <div className="flex flex-col items-center gap-4 mt-12 animate-scale-in">
+        <div className="w-20 h-20 rounded-3xl bg-surface-2 flex items-center justify-center">
+          <Dumbbell size={36} className="text-text-subtle" />
+        </div>
+        <p className="text-text-muted text-center text-sm">
+          Escolha um plano para iniciar seu treino
+        </p>
+        <Link to="/workouts" style={{ textDecoration: 'none' }}>
+          <button className="btn-primary">Ver Meus Planos</button>
+        </Link>
+      </div>
+    </div>
+  )
+}
