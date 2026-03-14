@@ -40,7 +40,7 @@ function MedidasPage() {
     }
     CAMPOS_MEDIDA.forEach(c => {
       const v = parseFloat(form[c.key] || '')
-      if (v > 0) (medida as Record<string, unknown>)[c.key] = v
+      if (v > 0) (medida as unknown as Record<string, unknown>)[c.key] = v
     })
     if (form.notas?.trim()) medida.notas = form.notas.trim()
 
@@ -54,11 +54,11 @@ function MedidasPage() {
     const campo = CAMPOS_MEDIDA.find(c => c.key === campoGrafico)
     if (!campo) return []
     return [...medidas]
-      .filter(m => (m as Record<string, unknown>)[campoGrafico] != null)
+      .filter(m => (m as unknown as Record<string, unknown>)[campoGrafico] != null)
       .sort((a, b) => a.data - b.data)
       .map(m => ({
         data: new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        valor: (m as Record<string, unknown>)[campoGrafico] as number,
+        valor: (m as unknown as Record<string, unknown>)[campoGrafico] as number,
       }))
   }, [medidas, campoGrafico])
 

@@ -2,10 +2,9 @@ import { createFileRoute, useNavigate, useBlocker } from '@tanstack/react-router
 import { useState, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
-import { useAuthStore } from '../../stores'
-import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown, XCircle, RefreshCw, Link2, Unlink } from 'lucide-react'
+import { Plus, Link2 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { ExercicioNoPlano, SeriePlano, TipoSerie, TipoAgrupamento } from '../../types'
+import type { ExercicioNoPlano, TipoAgrupamento } from '../../types'
 import { CORES_PLANO, AGRUPAMENTO_CONFIG } from '../../types'
 import { ExercicioPicker } from '../../components/common/ExercicioPicker'
 import {
@@ -19,14 +18,12 @@ import {
   type DragEndEvent,
   type DragOverEvent,
 } from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { NovoPlanoHeader } from './components/-NovoPlanoHeader'
+import { PlanDetailsCard } from './components/-PlanDetailsCard'
+import { ExercicioNoPlanoCard } from './components/-ExercicioNoPlanoCard'
+import { CancelarCriacaoModal } from './components/-CancelarCriacaoModal'
+import { GroupTypeModal } from './components/-GroupTypeModal'
 
 export const Route = createFileRoute('/treinos/novo')({
   component: NovoPlanoPage,
@@ -34,8 +31,6 @@ export const Route = createFileRoute('/treinos/novo')({
 
 function NovoPlanoPage() {
   const navigate = useNavigate()
-  const id = uuidv4()
-  const user = useAuthStore((s) => s.user)
   const { criarPlano, atualizarPlano } = usePlanos()
   const [nome, setNome] = useState('')
   const [descricao, setDescricao] = useState('')
@@ -47,22 +42,26 @@ function NovoPlanoPage() {
   const [showGroupMenu, setShowGroupMenu] = useState(false)
   const salvouRef = useRef(false)
 
-  const isDirty = nome.trim() !== '' || descricao.trim() !== '' || exercicios.length > 0 || corSelecionada !== CORES_PLANO[0]
+  const isDirty =
+    nome.trim() !== '' ||
+    descricao.trim() !== '' ||
+    exercicios.length > 0 ||
+    corSelecionada !== CORES_PLANO[0]
 
   const criarAgrupamento = (tipo: TipoAgrupamento) => {
     if (selecionados.size < 2) return
     const agrupamentoId = uuidv4()
-    setExercicios(prev => prev.map(ex =>
-      selecionados.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex
-    ))
+    setExercicios(prev =>
+      prev.map(ex => (selecionados.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex))
+    )
     setSelecionados(new Set())
     setShowGroupMenu(false)
   }
 
   const removerDoAgrupamento = (exId: string) => {
-    setExercicios(prev => prev.map(ex =>
-      ex.id === exId ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined } : ex
-    ))
+    setExercicios(prev =>
+      prev.map(ex => (ex.id === exId ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined } : ex))
+    )
   }
 
   const toggleSelecionado = (id: string) => {
@@ -82,44 +81,31 @@ function NovoPlanoPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   const adicionarExercicio = (ex: ExercicioNoPlano) => {
-    // Inicializar com 3 séries padrão
     const seriesPadrao = Array(3).fill({ peso: 0, repeticoes: 10 })
-    setExercicios((prev) => [
-      ...prev,
-      { ...ex, seriesDetalhadas: seriesPadrao, ordem: prev.length },
-    ])
+    setExercicios(prev => [...prev, { ...ex, seriesDetalhadas: seriesPadrao, ordem: prev.length }])
   }
 
   const removerExercicio = (id: string) => {
-    setExercicios((prev) => prev.filter((e) => e.id !== id))
+    setExercicios(prev => prev.filter(e => e.id !== id))
   }
 
   const atualizarExercicio = (id: string, campo: Partial<ExercicioNoPlano>) => {
-    setExercicios((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, ...campo } : e))
-    )
+    setExercicios(prev => prev.map(e => (e.id === id ? { ...e, ...campo } : e)))
   }
 
-  const handleDragEnd = (_event: DragEndEvent) => {
-    // reorder already happened in onDragOver
-  }
+  const handleDragEnd = (_event: DragEndEvent) => {}
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
-      setExercicios((items) => {
-        const oldIndex = items.findIndex((i) => i.id === active.id)
-        const newIndex = items.findIndex((i) => i.id === over.id)
-        return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({
-          ...ex,
-          ordem: idx,
-        }))
+      setExercicios(items => {
+        const oldIndex = items.findIndex(i => i.id === active.id)
+        const newIndex = items.findIndex(i => i.id === over.id)
+        return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({ ...ex, ordem: idx }))
       })
     }
   }
@@ -140,86 +126,38 @@ function NovoPlanoPage() {
     }
   }
 
+  const handleBack = () => {
+    if (isDirty) blockerProceed?.()
+    else navigate({ to: '/treinos' })
+  }
+
   return (
     <>
       <div className="page-container pt-4">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => isDirty ? blockerProceed?.() : navigate({ to: '/treinos' })}
-            className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted hover:text-text transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <h1 className="text-xl font-bold text-text">Novo Plano</h1>
-          <div className="ml-auto">
-            <button
-              onClick={salvar}
-              disabled={!nome.trim() || saving}
-              className="btn-primary py-2.5 px-5 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Salvando...' : 'Salvar'}
-            </button>
-          </div>
-        </div>
+        <NovoPlanoHeader
+          onBack={handleBack}
+          onSave={salvar}
+          saving={saving}
+          saveDisabled={!nome.trim()}
+        />
 
-        {/* Plan Details */}
-        <div className="card p-4 mb-4 animate-fade-up">
-          <div className="flex flex-col gap-3">
-            <div>
-              <label className="text-xs text-text-muted font-medium mb-1.5 block">
-                NOME DO PLANO *
-              </label>
-              <input
-                className="input"
-                placeholder="Ex: Treino A – Peito e Tríceps"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                maxLength={60}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-text-muted font-medium mb-1.5 block">
-                DESCRIÇÃO (opcional)
-              </label>
-              <textarea
-                className="input resize-none"
-                placeholder="Ex: Foco em hipertrofia..."
-                rows={2}
-                value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
-              />
-            </div>
+        <PlanDetailsCard
+          nome={nome}
+          onNomeChange={setNome}
+          descricao={descricao}
+          onDescricaoChange={setDescricao}
+          corSelecionada={corSelecionada}
+          onCorChange={setCorSelecionada}
+        />
 
-            {/* Color */}
-            <div>
-              <label className="text-xs text-text-muted font-medium mb-1.5 block">
-                COR
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {CORES_PLANO.map((cor) => (
-                  <button
-                    key={cor}
-                    className={`w-8 h-8 rounded-full transition-transform ${corSelecionada === cor ? 'scale-105 ring-2 ring-offset-2 ring-offset-surface ring-white' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
-                    style={{ background: cor }}
-                    onClick={() => setCorSelecionada(cor)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Exercícios */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-text">
-              EXERCÍCIOS ({exercicios.length})
-            </h2>
+            <h2 className="text-sm font-bold text-text">EXERCÍCIOS ({exercicios.length})</h2>
             {exercicios.length >= 2 && (
               <div className="flex items-center gap-2">
                 {selecionados.size >= 2 && (
                   <button
+                    type="button"
                     onClick={() => setShowGroupMenu(true)}
                     className="flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 px-2.5 py-1 rounded-lg"
                   >
@@ -229,6 +167,7 @@ function NovoPlanoPage() {
                 )}
                 {selecionados.size > 0 && (
                   <button
+                    type="button"
                     onClick={() => setSelecionados(new Set())}
                     className="text-xs text-text-muted"
                   >
@@ -245,23 +184,26 @@ function NovoPlanoPage() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={exercicios.map((ex) => ex.id)}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={exercicios.map(ex => ex.id)} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-2">
                 {(() => {
                   const rendered = new Set<string>()
-                  return exercicios.map((ex, idx) => {
-                    // Group container for agrupamento
+                  return exercicios.map(ex => {
                     if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
                       rendered.add(ex.agrupamentoId)
                       const groupExs = exercicios.filter(e => e.agrupamentoId === ex.agrupamentoId)
                       const config = AGRUPAMENTO_CONFIG[ex.tipoAgrupamento ?? 'superset']
                       return (
-                        <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
+                        <div
+                          key={`group-${ex.agrupamentoId}`}
+                          className="rounded-2xl border-l-4 pl-1"
+                          style={{ borderColor: config.cor }}
+                        >
                           <div className="flex items-center justify-between px-2 py-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.cor }}>
+                            <span
+                              className="text-[10px] font-bold uppercase tracking-wider"
+                              style={{ color: config.cor }}
+                            >
                               {config.label} ({groupExs.length})
                             </span>
                           </div>
@@ -270,7 +212,7 @@ function NovoPlanoPage() {
                               <ExercicioNoPlanoCard
                                 key={gex.id}
                                 exercicio={gex}
-                                onUpdate={(campo) => atualizarExercicio(gex.id, campo)}
+                                onUpdate={campo => atualizarExercicio(gex.id, campo)}
                                 onRemove={() => removerExercicio(gex.id)}
                                 isSelected={selecionados.has(gex.id)}
                                 onToggleSelect={() => toggleSelecionado(gex.id)}
@@ -287,7 +229,7 @@ function NovoPlanoPage() {
                       <ExercicioNoPlanoCard
                         key={ex.id}
                         exercicio={ex}
-                        onUpdate={(campo) => atualizarExercicio(ex.id, campo)}
+                        onUpdate={campo => atualizarExercicio(ex.id, campo)}
                         onRemove={() => removerExercicio(ex.id)}
                         isSelected={selecionados.has(ex.id)}
                         onToggleSelect={() => toggleSelecionado(ex.id)}
@@ -301,6 +243,7 @@ function NovoPlanoPage() {
           </DndContext>
 
           <button
+            type="button"
             onClick={() => setShowPicker(true)}
             className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-border-strong text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-accent  hover:text-accent transition-colors"
           >
@@ -311,36 +254,12 @@ function NovoPlanoPage() {
       </div>
 
       {blockerStatus === 'blocked' && (
-        <div className="modal-overlay" onClick={blockerReset}>
-          <div className="modal-content text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="w-16 h-16 rounded-3xl bg-danger/10 flex items-center justify-center mx-auto mb-4">
-              <XCircle size={32} className="text-danger" />
-            </div>
-            <h2 className="text-xl font-bold text-text mb-2">Cancelar criação?</h2>
-            <p className="text-text-muted text-sm mb-6">
-              As alterações feitas serão perdidas e o plano não será salvo.
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={blockerProceed}
-                className="btn-danger w-full py-4 text-base"
-              >
-                Sim, Descartar
-              </button>
-              <button
-                onClick={blockerReset}
-                className="btn-ghost w-full py-3"
-              >
-                Continuar Editando
-              </button>
-            </div>
-          </div>
-        </div>
+        <CancelarCriacaoModal onConfirm={() => blockerProceed?.()} onCancel={blockerReset} />
       )}
 
       {showPicker && (
         <ExercicioPicker
-          onSelect={(ex) => {
+          onSelect={ex => {
             adicionarExercicio({
               id: uuidv4(),
               exercicioId: ex.id,
@@ -357,314 +276,9 @@ function NovoPlanoPage() {
         />
       )}
 
-      {/* Group type selector modal */}
       {showGroupMenu && (
-        <div className="modal-overlay" onClick={() => setShowGroupMenu(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-text mb-4">Tipo de Agrupamento</h2>
-            <div className="flex flex-col gap-2">
-              {(Object.entries(AGRUPAMENTO_CONFIG) as [TipoAgrupamento, typeof AGRUPAMENTO_CONFIG[string]][]).map(([tipo, config]) => (
-                <button
-                  key={tipo}
-                  onClick={() => criarAgrupamento(tipo)}
-                  className="flex items-center gap-3 p-4 rounded-xl transition-colors hover:bg-surface-2"
-                  style={{ background: config.corBg }}
-                >
-                  <Link2 size={18} style={{ color: config.cor }} />
-                  <div className="text-left">
-                    <p className="font-semibold text-text text-sm">{config.label}</p>
-                    <p className="text-xs text-text-muted mt-0.5">
-                      {tipo === 'superset' && 'Executa exercícios alternados sem descanso'}
-                      {tipo === 'dropset' && 'Reduz peso progressivamente sem pausa'}
-                      {tipo === 'giantset' && 'Circuito de 3+ exercícios sem descanso'}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <GroupTypeModal onSelect={criarAgrupamento} onClose={() => setShowGroupMenu(false)} />
       )}
     </>
-  )
-}
-
-function ExercicioNoPlanoCard({
-  exercicio,
-  onUpdate,
-  onRemove,
-  isSelected,
-  onToggleSelect,
-  showSelect,
-  onRemoveFromGroup,
-}: {
-  exercicio: ExercicioNoPlano
-  onUpdate: (campo: Partial<ExercicioNoPlano>) => void
-  onRemove: () => void
-  isSelected?: boolean
-  onToggleSelect?: () => void
-  showSelect?: boolean
-  onRemoveFromGroup?: () => void
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
-    useSortable({ id: exercicio.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
-  }
-
-  const series = exercicio.seriesDetalhadas || []
-
-  const addSerie = () => {
-    const ultima = series[series.length - 1]
-    const nova = ultima ? { ...ultima } : { peso: 0, repeticoes: 10 }
-    const novasSeries = [...series, nova]
-    onUpdate({
-      series: novasSeries.length,
-      seriesDetalhadas: novasSeries,
-    })
-  }
-
-  const removeSerie = (idx: number) => {
-    const novasSeries = series.filter((_, i: number) => i !== idx)
-    onUpdate({
-      series: novasSeries.length,
-      seriesDetalhadas: novasSeries,
-    })
-  }
-
-  const updateSerie = (idx: number, campo: Partial<SeriePlano>) => {
-    const novasSeries = series.map((s: SeriePlano, i: number) =>
-      i === idx ? { ...s, ...campo } : s
-    )
-    onUpdate({ seriesDetalhadas: novasSeries })
-    if (series.length > 1) {
-      if ('peso' in campo && campo.peso !== undefined) {
-        setApplyAll({ field: 'peso', sIdx: idx, value: campo.peso as number })
-      } else if ('repeticoes' in campo && campo.repeticoes !== undefined) {
-        setApplyAll({ field: 'repeticoes', sIdx: idx, value: campo.repeticoes as number })
-      }
-    }
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`card p-3 transition-opacity ${isDragging ? 'opacity-50' : 'animate-scale-in'}`}
-    >
-      <div className="flex items-center gap-3">
-        <div ref={setActivatorNodeRef} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 touch-none select-none">
-          <GripVertical size={16} className="text-text-subtle shrink-0" />
-        </div>
-        {showSelect && !exercicio.agrupamentoId && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggleSelect?.() }}
-            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-              isSelected ? 'bg-accent border-accent  text-white' : 'border-border-strong'
-            }`}
-          >
-            {isSelected && <span className="text-xs">✓</span>}
-          </button>
-        )}
-        {exercicio.agrupamentoId && onRemoveFromGroup && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onRemoveFromGroup() }}
-            className="p-1 rounded-lg hover:bg-surface-2 text-text-subtle"
-            title="Remover do agrupamento"
-          >
-            <Unlink size={14} />
-          </button>
-        )}
-        {exercicio.exercicio.gifUrl ? (
-          <img
-            src={exercicio.exercicio.gifUrl}
-            alt={exercicio.exercicio.nome}
-            className="w-10 h-10 rounded-lg object-cover bg-surface-2"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center">
-            <span className="text-lg">💪</span>
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-text font-semibold text-sm truncate">
-            {exercicio.exercicio.nome}
-          </p>
-          <p className="text-text-muted text-xs">
-            {series.length} séries {series.length > 0 && `(Meta: ${series[0].repeticoes} reps)`}
-          </p>
-        </div>
-        <button onClick={() => setExpanded((e) => !e)} className="btn-ghost p-2">
-          <ChevronDown
-            size={16}
-            className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
-          />
-        </button>
-        <button onClick={onRemove} className="btn-ghost p-2 text-danger">
-          <Trash2 size={15} />
-        </button>
-      </div>
-
-      {expanded && (
-        <div className="mt-4 space-y-3">
-          {/* Header da tabela de séries */}
-          {(() => {
-            const tipo = exercicio.tipoSerie ?? 'reps'
-            const ciclo: TipoSerie[] = ['reps', 'tempo', 'falha']
-            const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
-            const labels: Record<TipoSerie, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
-            const nextLabels: Record<TipoSerie, string> = { reps: 'Min', tempo: 'Falha', falha: 'Reps' }
-            return (
-              <div className="grid grid-cols-[30px_1fr_1fr_40px] gap-2 px-2 text-[10px] font-bold uppercase tracking-wider">
-                <span className="text-center text-text-subtle">#</span>
-                <span className="text-center text-text-subtle">PESO (KG)</span>
-                <button
-                  onClick={() => {
-                    const updates: Partial<typeof exercicio> = { tipoSerie: proximo }
-                    if (proximo === 'tempo') {
-                      updates.seriesDetalhadas = series.map((s) => ({ ...s, repeticoes: 1 }))
-                    }
-                    onUpdate(updates)
-                    setApplyAll(null)
-                  }}
-                  title={`Mudar para: ${nextLabels[tipo]}`}
-                  className={`flex items-center justify-center gap-1 rounded-md border px-1.5 py-0.5 transition-colors ${
-                    tipo === 'reps'
-                      ? 'text-text-muted border-border hover:text-accent hover:border-accent /50'
-                      : 'text-accent border-accent /40 bg-accent/10'
-                  }`}
-                >
-                  {labels[tipo]}
-                  <RefreshCw size={8} className="opacity-60" />
-                </button>
-                <span></span>
-              </div>
-            )
-          })()}
-
-          <div className="flex flex-col gap-2">
-            {series.map((s, i) => {
-              const tipo = exercicio.tipoSerie ?? 'reps'
-              return (
-              <div key={i} className="grid grid-cols-[30px_1fr_1fr_40px] gap-2 items-center bg-surface-2/50 p-1 rounded-lg">
-                <span className="text-[11px] font-bold text-text-muted text-center">{i + 1}</span>
-                <input
-                  type="number"
-                  className="set-input h-9! py-0! text-sm!"
-                  value={s.peso === 0 ? '' : s.peso}
-                  onChange={(e) => updateSerie(i, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
-                  onFocus={(e) => e.target.select()}
-                  placeholder="0"
-                />
-                <input
-                  type="number"
-                  className="set-input h-9! py-0! text-sm!"
-                  value={tipo === 'tempo'
-                    ? (s.repeticoes === 0 ? '' : s.repeticoes)
-                    : (s.repeticoes === 0 ? '' : s.repeticoes)}
-                  onChange={(e) => updateSerie(i, { repeticoes: e.target.value === '' ? 0 : (tipo === 'tempo' ? parseFloat(e.target.value) : parseInt(e.target.value)) })}
-                  onFocus={(e) => e.target.select()}
-                  placeholder={tipo === 'falha' ? 'Falha' : tipo === 'tempo' ? '0.0' : '0'}
-                  step={tipo === 'tempo' ? '0.5' : '1'}
-                />
-                <button
-                  onClick={() => removeSerie(i)}
-                  className="btn-ghost p-1.5 text-text-subtle hover:text-danger"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-              )
-            })}
-          </div>
-
-          {applyAll && (
-            <div className="bg-accent/10 border border-accent /20 rounded-xl px-3 py-2.5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-text-muted">
-                  Repetir{' '}
-                  <strong className="text-text">
-                    {applyAll.field === 'peso'
-                      ? `${applyAll.value} kg`
-                      : applyAll.field === 'repeticoes' && (exercicio.tipoSerie ?? 'reps') === 'tempo'
-                        ? `${applyAll.value} min`
-                        : `${applyAll.value} reps`}
-                  </strong>{' '}em:
-                </p>
-                <button
-                  onClick={() => setApplyAll(null)}
-                  className="w-5 h-5 flex items-center justify-center rounded-full text-text-subtle hover:text-text hover:bg-surface-2 transition-colors text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex gap-1.5">
-                {applyAll.sIdx < series.length - 1 && (
-                  <button
-                    onClick={() => {
-                      const novasSeries = series.map((s: SeriePlano, i: number) =>
-                        i > applyAll.sIdx ? { ...s, [applyAll.field]: applyAll.value } : s
-                      )
-                      onUpdate({ seriesDetalhadas: novasSeries })
-                      setApplyAll(null)
-                    }}
-                    className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent /20"
-                  >
-                    ↓ Seguintes
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    const novasSeries = series.map((s: SeriePlano) => ({ ...s, [applyAll.field]: applyAll.value }))
-                    onUpdate({ seriesDetalhadas: novasSeries })
-                    setApplyAll(null)
-                  }}
-                  className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-accent"
-                >
-                  Todas
-                </button>
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={addSerie}
-            className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent hover:bg-accent/5 rounded-lg border border-dashed border-accent /20 transition-colors"
-          >
-            <Plus size={14} />
-            Adicionar Série
-          </button>
-
-          <div className="pt-2">
-             <label className="text-[10px] text-text-subtle font-bold uppercase block mb-1.5 pl-1">
-                OBSERVAÇÕES DO EXERCÍCIO
-              </label>
-              <textarea
-                className="input h-16 text-sm resize-none py-2"
-                placeholder="Dica: manter cotovelos fechados..."
-                value={exercicio.notas || ''}
-                onChange={(e) => onUpdate({ notas: e.target.value })}
-              />
-          </div>
-
-          <div className="pt-1">
-             <label className="text-[10px] text-text-subtle font-bold uppercase block mb-1.5 pl-1">
-                Descanso (segundos)
-              </label>
-              <input
-                type="number"
-                className="input h-10 text-sm"
-                value={exercicio.descansoSegundos}
-                onChange={(e) => onUpdate({ descansoSegundos: parseInt(e.target.value) || 0 })}
-              />
-          </div>
-        </div>
-      )}
-    </div>
   )
 }
