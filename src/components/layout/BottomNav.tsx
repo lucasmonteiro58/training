@@ -25,11 +25,11 @@ export function BottomNav() {
               to={item.to}
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ${
                 isTreinar
-                  ? `relative bg-[var(--color-accent)] text-white rounded-2xl px-5 py-3 -mt-4 shadow-lg ${
+                  ? `relative bg-accent text-white rounded-2xl px-5 py-3 -mt-4 shadow-lg ${
                       isActive ? 'scale-105 shadow-[0_0_20px_var(--color-accent-glow)]' : ''
                     } hover:bg-[var(--color-accent-hover)] active:scale-95`
                   : isActive
-                  ? 'text-[var(--color-accent)]'
+                  ? 'text-accent'
                   : 'text-text-muted hover:text-text'
               }`}
               style={{ textDecoration: 'none' }}

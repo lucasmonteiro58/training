@@ -60,7 +60,7 @@ function PlanoDetalheComponent() {
     return (
       <div className="page-container pt-6 text-center">
         <p className="text-text-muted">Plano não encontrado.</p>
-        <Link to="/treinos" className="text-[var(--color-accent)] text-sm mt-2 block">Voltar</Link>
+        <Link to="/treinos" className="text-accent text-sm mt-2 block">Voltar</Link>
       </div>
     )
   }
@@ -336,7 +336,7 @@ function PlanoDetalheComponent() {
 
           {editando && (
             <button onClick={() => setShowPicker(true)}
-              className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-[var(--color-border-strong)] text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors">
+              className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-[var(--color-border-strong)] text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-[var(--color-accent)] hover:text-accent transition-colors">
               <Plus size={18} /> Adicionar Exercício
             </button>
           )}

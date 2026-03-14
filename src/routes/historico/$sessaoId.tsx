@@ -35,7 +35,7 @@ function SessaoDetalhePage() {
     return (
       <div className="page-container pt-6 text-center">
         <p className="text-text-muted">Sessão não encontrada.</p>
-        <Link to="/historico" className="text-[var(--color-accent)] text-sm mt-2 block" style={{ textDecoration: 'none' }}>
+        <Link to="/historico" className="text-accent text-sm mt-2 block" style={{ textDecoration: 'none' }}>
           Voltar
         </Link>
       </div>
@@ -99,12 +99,19 @@ function SessaoDetalhePage() {
     setEditData({ ...editData, duracaoSegundos })
   }
 
+  const updateIniciadoEm = (iniciadoEm: number) => {
+    if (!editData) return
+    setEditData({ ...editData, iniciadoEm })
+  }
+
   return (
     <div className="page-container pt-4">
       <SessaoDetalheHeader
         planoNome={displaySessao.planoNome}
         dataStr={dataStr}
         editando={editando}
+        iniciadoEm={editando && editData ? editData.iniciadoEm : undefined}
+        onIniciadoEmChange={editando ? updateIniciadoEm : undefined}
         onVoltar={() => navigate({ to: '/historico' })}
         onIniciarEdicao={iniciarEdicao}
         onCancelarEdicao={() => {

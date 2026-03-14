@@ -38,7 +38,7 @@ function PlanoCard({ plano }: { plano: { id: string; nome: string; cor?: string 
             </div>
           </div>
           <button
-            className="w-9 h-9 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
+            className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -161,10 +161,10 @@ function HomePage() {
           className="flex items-center justify-center transition-all duration-150"
           style={{ height: pullDistance > 0 ? pullDistance : PULL_THRESHOLD, marginTop: -8 }}
         >
-          <div className={`w-8 h-8 flex items-center justify-center rounded-full bg-surface-2 border border-[var(--color-border)] ${isRefreshing ? '' : ''}`}>
+          <div className={`w-8 h-8 flex items-center justify-center rounded-full bg-surface-2 border border-border ${isRefreshing ? '' : ''}`}>
             <RefreshCw
               size={16}
-              className={`text-[var(--color-accent)] transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`}
+              className={`text-accent transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`}
               style={{ transform: isRefreshing ? undefined : `rotate(${Math.min(pullDistance / PULL_THRESHOLD, 1) * 360}deg)` }}
             />
           </div>
@@ -204,12 +204,12 @@ function HomePage() {
           <div className={`card p-4 border-2 transition-colors ${
             pausado
               ? 'border-[var(--color-text-subtle)] bg-surface-2'
-              : 'border-[var(--color-accent)] bg-[var(--color-accent-subtle)] animate-pulse-glow'
+              : 'border-[var(--color-accent)] bg-accent-subtle animate-pulse-glow'
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                  pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-[var(--color-accent)]'
+                  pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-accent'
                 }`}>
                   <Clock size={18} className="text-white" />
                 </div>
@@ -219,7 +219,7 @@ function HomePage() {
                       {pausado ? 'Treino Pausado' : 'Treino Ativo'}
                     </p>
                     <span className={`px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold tabular-nums transition-colors ${
-                      pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-[var(--color-accent)]'
+                      pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-accent'
                     }`}>
                       {formatarTempo(cronometroGeralSegundos)}
                     </span>
@@ -230,7 +230,7 @@ function HomePage() {
                 </div>
               </div>
               <div className={`flex items-center gap-2 font-semibold text-sm transition-colors ${
-                pausado ? 'text-text-muted' : 'text-[var(--color-accent)]'
+                pausado ? 'text-text-muted' : 'text-accent'
               }`}>
                 Continuar <ChevronRight size={16} />
               </div>
@@ -254,7 +254,7 @@ function HomePage() {
           <p className="text-[10px] text-text-muted mt-0.5">esta semana</p>
         </div>
         <div className="card p-3 text-center">
-          <TrendingUp size={18} className="text-[var(--color-accent)] mx-auto mb-1" />
+          <TrendingUp size={18} className="text-accent mx-auto mb-1" />
           <p className="text-xl font-bold text-text">
             {volumeTotal > 1000
               ? `${(volumeTotal / 1000).toFixed(1)}k`
@@ -304,7 +304,7 @@ function HomePage() {
               />
             </div>
             {streaks.treinosEstaSemana >= streaks.metaSemanal && (
-              <p className="text-[10px] text-[var(--color-success)] font-semibold mt-1.5 flex items-center gap-1">
+              <p className="text-[10px] text-success font-semibold mt-1.5 flex items-center gap-1">
                 <Trophy size={10} /> Meta batida!
               </p>
             )}
@@ -326,15 +326,15 @@ function HomePage() {
             const isHoje = diaDate.toDateString() === hoje.toDateString()
             return (
               <div key={idx} className="flex flex-col items-center gap-1.5">
-                <span className={`text-[10px] ${isHoje ? 'text-[var(--color-accent)] font-semibold' : 'text-text-subtle'}`}>
+                <span className={`text-[10px] ${isHoje ? 'text-accent font-semibold' : 'text-text-subtle'}`}>
                   {dia}
                 </span>
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
                     temTreino
-                      ? 'bg-[var(--color-accent)] text-white'
+                      ? 'bg-accent text-white'
                       : isHoje
-                      ? 'border-2 border-[var(--color-accent)] text-[var(--color-accent)]'
+                      ? 'border-2 border-[var(--color-accent)] text-accent'
                       : 'bg-surface-2 text-text-subtle'
                   }`}
                 >
@@ -374,7 +374,7 @@ function HomePage() {
                 </div>
               </div>
               <button
-                className="flex items-center gap-1.5 bg-[var(--color-accent)] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[var(--color-accent-hover)] active:scale-95 transition-all"
+                className="flex items-center gap-1.5 bg-accent text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[var(--color-accent-hover)] active:scale-95 transition-all"
                 onClick={() => handleIniciar(proximoPlano.id)}
               >
                 <Play size={14} className="ml-0.5" /> Iniciar
@@ -418,7 +418,7 @@ function HomePage() {
                 <div key={a.grupo} className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: a.cor }} />
                   <span className="text-sm text-text font-medium flex-1">{a.grupo}</span>
-                  <span className={`text-xs font-semibold ${a.dias >= 14 ? 'text-[var(--color-warning)]' : 'text-text-muted'}`}>
+                  <span className={`text-xs font-semibold ${a.dias >= 14 ? 'text-warning' : 'text-text-muted'}`}>
                     {a.dias === 1 ? '1 dia' : `${a.dias} dias`}
                   </span>
                 </div>
@@ -432,7 +432,7 @@ function HomePage() {
       <div className="mb-6 animate-fade-up" style={{ animationDelay: '150ms' }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-text">Meus Planos</h2>
-          <Link to="/treinos" className="text-[var(--color-accent)] text-sm font-medium" style={{ textDecoration: 'none' }}>
+          <Link to="/treinos" className="text-accent text-sm font-medium" style={{ textDecoration: 'none' }}>
             Ver todos
           </Link>
         </div>
@@ -446,8 +446,8 @@ function HomePage() {
         ) : planosAtivos.length === 0 ? (
           <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
             <div className="card p-6 border-dashed border-[var(--color-border-strong)] flex flex-col items-center gap-3 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
-                <Plus size={24} className="text-[var(--color-accent)]" />
+              <div className="w-12 h-12 rounded-2xl bg-accent-subtle flex items-center justify-center">
+                <Plus size={24} className="text-accent" />
               </div>
               <div>
                 <p className="text-text font-semibold text-sm">Crie seu primeiro plano</p>
@@ -480,7 +480,7 @@ function HomePage() {
         <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-bold text-text">Últimos Treinos</h2>
-            <Link to="/historico" className="text-[var(--color-accent)] text-sm font-medium" style={{ textDecoration: 'none' }}>
+            <Link to="/historico" className="text-accent text-sm font-medium" style={{ textDecoration: 'none' }}>
               Histórico
             </Link>
           </div>
@@ -530,7 +530,7 @@ function HomePage() {
                   onClick={() => setMetaInput(String(n))}
                   className={`w-11 h-11 rounded-xl font-bold text-lg transition-all ${
                     String(n) === metaInput
-                      ? 'bg-[var(--color-accent)] text-white scale-110'
+                      ? 'bg-accent text-white scale-110'
                       : 'bg-surface-2 text-text-muted'
                   }`}
                 >

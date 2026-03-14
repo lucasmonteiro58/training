@@ -27,7 +27,7 @@ export function useIniciarTreino() {
 
   const modal = pendingId ? (
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center"
+      className="fixed inset-0 z-200 flex items-end justify-center"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       onClick={cancelar}
     >

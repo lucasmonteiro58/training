@@ -21,7 +21,7 @@ export function SessaoStats({
   return (
     <div className="grid grid-cols-3 gap-2 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
       <div className="card p-3 text-center">
-        <Clock size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
+        <Clock size={16} className="text-accent mx-auto mb-1" />
         {editando && onDuracaoChange ? (
           <div className="flex flex-col gap-1">
             <input
@@ -45,12 +45,12 @@ export function SessaoStats({
         <p className="text-[10px] text-text-muted">Duração</p>
       </div>
       <div className="card p-3 text-center">
-        <Dumbbell size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
+        <Dumbbell size={16} className="text-accent mx-auto mb-1" />
         <p className="text-lg font-bold text-text">{numExercicios}</p>
         <p className="text-[10px] text-text-muted">Exercícios</p>
       </div>
       <div className="card p-3 text-center">
-        <TrendingUp size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
+        <TrendingUp size={16} className="text-accent mx-auto mb-1" />
         <p className="text-lg font-bold text-text">
           {volumeTotal != null ? Math.round(volumeTotal) : '–'}
         </p>

@@ -13,11 +13,11 @@ export function PerfilHeader({ photoURL, displayName, email }: PerfilHeaderProps
         <img
           src={photoURL}
           alt="Foto de perfil"
-          className="w-16 h-16 rounded-2xl object-cover border-2 border-[var(--color-border)]"
+          className="w-16 h-16 rounded-2xl object-cover border-2 border-border"
         />
       ) : (
-        <div className="w-16 h-16 rounded-2xl bg-[var(--color-accent-subtle)] flex items-center justify-center border-2 border-[var(--color-border)]">
-          <User size={28} className="text-[var(--color-accent)]" />
+        <div className="w-16 h-16 rounded-2xl bg-accent-subtle flex items-center justify-center border-2 border-border">
+          <User size={28} className="text-accent" />
         </div>
       )}
       <div>

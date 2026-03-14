@@ -24,7 +24,7 @@ export function ExportModal({ sessoes, planos, onClose, onExport }: ExportModalP
               onExport('Histórico exportado em CSV!')
             }}
             disabled={sessoes.length === 0}
-            className="flex items-center gap-3 p-4 rounded-xl bg-surface-2 hover:bg-[var(--color-surface-3)] transition-colors text-left disabled:opacity-40"
+            className="flex items-center gap-3 p-4 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors text-left disabled:opacity-40"
           >
             <Download size={18} className="text-emerald-400" />
             <div>
@@ -42,7 +42,7 @@ export function ExportModal({ sessoes, planos, onClose, onExport }: ExportModalP
               onExport('Histórico exportado em JSON!')
             }}
             disabled={sessoes.length === 0}
-            className="flex items-center gap-3 p-4 rounded-xl bg-surface-2 hover:bg-[var(--color-surface-3)] transition-colors text-left disabled:opacity-40"
+            className="flex items-center gap-3 p-4 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors text-left disabled:opacity-40"
           >
             <Download size={18} className="text-blue-400" />
             <div>
@@ -60,7 +60,7 @@ export function ExportModal({ sessoes, planos, onClose, onExport }: ExportModalP
               onExport('Planos exportados em JSON!')
             }}
             disabled={planos.length === 0}
-            className="flex items-center gap-3 p-4 rounded-xl bg-surface-2 hover:bg-[var(--color-surface-3)] transition-colors text-left disabled:opacity-40"
+            className="flex items-center gap-3 p-4 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors text-left disabled:opacity-40"
           >
             <Download size={18} className="text-purple-400" />
             <div>

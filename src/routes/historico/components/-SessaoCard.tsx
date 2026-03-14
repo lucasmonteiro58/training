@@ -58,12 +58,12 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
             onRetornar(sessao)
             navigate({ to: '/treino-ativo/$planoId', params: { planoId: sessao.planoId } })
           }}
-          className="flex-1 py-2 text-xs rounded-xl flex items-center justify-center gap-1 bg-[var(--color-accent)]/15 text-[var(--color-accent)] font-medium"
+          className="flex-1 py-2 text-xs rounded-xl flex items-center justify-center gap-1 bg-accent/15 text-accent font-medium"
         >
           <RotateCcw size={13} /> Retornar
         </button>
         <Link to="/historico/$sessaoId" params={{ sessaoId: sessao.id }} style={{ textDecoration: 'none' }} className="flex-1">
-          <button className="btn-ghost w-full py-2 text-xs border border-[var(--color-border)] rounded-xl flex items-center justify-center gap-1">
+          <button className="btn-ghost w-full py-2 text-xs border border-border rounded-xl flex items-center justify-center gap-1">
             Detalhes <ChevronRight size={13} />
           </button>
         </Link>

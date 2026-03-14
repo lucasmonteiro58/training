@@ -17,7 +17,7 @@ export function MedidasChart({ campoGrafico, dados, onCampoChange }: MedidasChar
         <select
           value={campoGrafico}
           onChange={e => onCampoChange(e.target.value)}
-          className="text-xs bg-surface-2 text-text border border-[var(--color-border)] rounded-lg px-2 py-1"
+          className="text-xs bg-surface-2 text-text border border-border rounded-lg px-2 py-1"
         >
           {CAMPOS_MEDIDA.map(c => (
             <option key={c.key} value={c.key}>

@@ -36,8 +36,8 @@ export function ConfiguracoesCard({
         className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2 rounded-xl transition-colors text-left"
         style={{ textDecoration: 'none' }}
       >
-        <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
-          <History size={18} className="text-[var(--color-accent)]" />
+        <div className="w-9 h-9 rounded-xl bg-accent-subtle flex items-center justify-center">
+          <History size={18} className="text-accent" />
         </div>
         <div className="flex-1">
           <p className="text-sm font-medium text-text">Histórico de Treinos</p>
@@ -137,8 +137,8 @@ export function ConfiguracoesCard({
       <div className="mx-4 h-px bg-[var(--color-border)]" />
 
       <div className="flex items-center gap-3 px-4 py-3.5">
-        <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center">
-          <Info size={18} className="text-[var(--color-accent)]" />
+        <div className="w-9 h-9 rounded-xl bg-accent-subtle flex items-center justify-center">
+          <Info size={18} className="text-accent" />
         </div>
         <div className="flex-1">
           <p className="text-sm font-medium text-text">Training</p>

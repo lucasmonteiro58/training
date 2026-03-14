@@ -14,8 +14,8 @@ function TreinoAtivoIndexPage() {
     return (
       <div className="page-container pt-6">
         <div className="flex flex-col items-center gap-6 mt-8 animate-fade-up">
-          <div className="w-20 h-20 rounded-3xl bg-[var(--color-accent-subtle)] flex items-center justify-center animate-pulse-glow">
-            <Dumbbell size={36} className="text-[var(--color-accent)]" />
+          <div className="w-20 h-20 rounded-3xl bg-accent-subtle flex items-center justify-center animate-pulse-glow">
+            <Dumbbell size={36} className="text-accent" />
           </div>
           <div className="text-center">
             <p className="text-text-muted text-sm">Treino em andamento</p>

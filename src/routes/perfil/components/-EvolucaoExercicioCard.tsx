@@ -89,7 +89,7 @@ export function EvolucaoExercicioCard({ nome, pontos }: EvolucaoExercicioCardPro
       </button>
 
       {expandido && pontos.length >= 2 && (
-        <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+        <div className="mt-4 pt-4 border-t border-border">
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={pontos} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.4} />

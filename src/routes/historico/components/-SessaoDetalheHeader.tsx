@@ -4,16 +4,29 @@ interface SessaoDetalheHeaderProps {
   planoNome: string
   dataStr: string
   editando: boolean
+  /** Timestamp (iniciadoEm) para edição da data; quando editando, permite alterar */
+  iniciadoEm?: number
+  onIniciadoEmChange?: (timestamp: number) => void
   onVoltar: () => void
   onIniciarEdicao: () => void
   onCancelarEdicao: () => void
   onSalvarEdicao: () => void
 }
 
+function toDateInputValue(timestamp: number): string {
+  const d = new Date(timestamp)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export function SessaoDetalheHeader({
   planoNome,
   dataStr,
   editando,
+  iniciadoEm,
+  onIniciadoEmChange,
   onVoltar,
   onIniciarEdicao,
   onCancelarEdicao,
@@ -29,7 +42,25 @@ export function SessaoDetalheHeader({
       </button>
       <div className="flex-1 min-w-0">
         <h1 className="text-xl font-bold text-text truncate">{planoNome}</h1>
-        <p className="text-xs text-text-muted capitalize mt-0.5">{dataStr}</p>
+        {editando && iniciadoEm != null && onIniciadoEmChange ? (
+          <label className="block mt-1">
+            <span className="text-xs text-text-muted block mb-1">Data do treino</span>
+            <input
+              type="date"
+              value={toDateInputValue(iniciadoEm)}
+              onChange={(e) => {
+                const v = e.target.value
+                if (!v) return
+                const [y, m, d] = v.split('-').map(Number)
+                const ts = new Date(y, m - 1, d).getTime()
+                onIniciadoEmChange(ts)
+              }}
+              className="text-xs bg-surface-2 text-text rounded-lg px-2 py-1.5 border border-border focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+          </label>
+        ) : (
+          <p className="text-xs text-text-muted capitalize mt-0.5">{dataStr}</p>
+        )}
       </div>
       {editando ? (
         <div className="flex gap-2">

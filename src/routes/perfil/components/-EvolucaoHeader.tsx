@@ -10,7 +10,7 @@ export function EvolucaoHeader({ onVoltar }: EvolucaoHeaderProps) {
       <button
         type="button"
         onClick={onVoltar}
-        className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted"
+        className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted"
       >
         <ChevronLeft size={20} />
       </button>

@@ -100,7 +100,7 @@ export function ExercicioSessaoCard({
                 title={s.completada ? 'Marcar como não concluída' : 'Marcar como concluída'}
               >
                 {s.completada ? (
-                  <CheckCircle2 size={15} className="text-[var(--color-success)]" />
+                  <CheckCircle2 size={15} className="text-success" />
                 ) : (
                   <Circle size={15} className="text-text-subtle" />
                 )}
@@ -108,7 +108,7 @@ export function ExercicioSessaoCard({
             ) : seriesPRs[sIdx] ? (
               <Trophy size={15} className="text-yellow-400" />
             ) : s.completada ? (
-              <CheckCircle2 size={15} className="text-[var(--color-success)]" />
+              <CheckCircle2 size={15} className="text-success" />
             ) : (
               <Circle size={15} className="text-text-subtle" />
             )}

@@ -124,7 +124,7 @@ function ExercicioEditCard({
     <div className="card overflow-hidden">
       {/* Row header */}
       <div className="flex items-center gap-2 p-3">
-        <span className="w-6 h-6 rounded-full bg-[var(--color-accent-subtle)] text-[var(--color-accent)] text-xs font-bold flex items-center justify-center flex-shrink-0">
+        <span className="w-6 h-6 rounded-full bg-accent-subtle text-accent text-xs font-bold flex items-center justify-center flex-shrink-0">
           {idx + 1}
         </span>
         <button className="flex-1 text-left min-w-0" onClick={onToggle}>
@@ -143,7 +143,7 @@ function ExercicioEditCard({
 
       {/* Expanded form */}
       {expanded && (
-        <div className="border-t border-[var(--color-border)] p-3 flex flex-col gap-3 bg-surface-2/40">
+        <div className="border-t border-border p-3 flex flex-col gap-3 bg-surface-2/40">
 
           {/* Nome */}
           <div>
@@ -548,7 +548,7 @@ function ImportarCsvPage() {
         </button>
         <h1 className="text-xl font-bold text-text">Importar CSV</h1>
         {planos && (
-          <span className="ml-auto text-xs font-medium px-2.5 py-1 rounded-full bg-[var(--color-accent-subtle)] text-[var(--color-accent)]">
+          <span className="ml-auto text-xs font-medium px-2.5 py-1 rounded-full bg-accent-subtle text-accent">
             {planos.length} plano{planos.length !== 1 ? 's' : ''}
           </span>
         )}
@@ -556,7 +556,7 @@ function ImportarCsvPage() {
 
       {sucesso ? (
         <div className="flex flex-col items-center gap-4 mt-16 animate-scale-in">
-          <CheckCircle size={48} className="text-[var(--color-success)]" />
+          <CheckCircle size={48} className="text-success" />
           <p className="text-text font-semibold text-lg">
             {planosValidos.length > 1
               ? `${planosValidos.length} planos criados com sucesso!`
@@ -668,7 +668,7 @@ function ImportarCsvPage() {
 
       {/* Sticky save button */}
       {planos && !sucesso && (
-        <div className="fixed left-0 right-0 p-4 bg-[var(--color-bg)]/90 backdrop-blur border-t border-[var(--color-border)] z-[60]" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed left-0 right-0 p-4 bg-bg/90 backdrop-blur border-t border-border z-[60]" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <button
             onClick={salvar}
             disabled={planosValidos.length === 0 || salvando}

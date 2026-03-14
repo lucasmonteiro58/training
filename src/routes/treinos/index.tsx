@@ -93,13 +93,13 @@ function PlanoSortableCard({
         {!reordenando && (
           <div className="flex items-center gap-1 flex-shrink-0">
             <button
-              className="w-10 h-10 rounded-xl bg-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
+              className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
               onClick={() => handleIniciar(plano.id)}
             >
               <Play size={14} className="text-white ml-0.5" />
             </button>
             <button
-              className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-subtle hover:text-[var(--color-accent)] hover:bg-[rgba(99,102,241,0.1)] transition-colors"
+              className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-subtle hover:text-accent hover:bg-[rgba(99,102,241,0.1)] transition-colors"
               onClick={() => onArchive(plano.id)}
               disabled={processando === plano.id}
               title="Arquivar"
@@ -117,7 +117,7 @@ function PlanoSortableCard({
             .map((grupo) => (
               <span
                 key={grupo}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-surface-2 text-text-muted border border-[var(--color-border)]"
+                className="text-[10px] px-2 py-0.5 rounded-full bg-surface-2 text-text-muted border border-border"
               >
                 {grupo}
               </span>
@@ -208,7 +208,7 @@ function TreinosPage() {
           {planosAtivos.length > 1 && (
             <button
               className={`btn-ghost flex items-center gap-1.5 text-sm ${
-                reordenando ? 'text-[var(--color-accent)] font-semibold' : ''
+                reordenando ? 'text-accent font-semibold' : ''
               }`}
               onClick={handleToggleReordenar}
             >
@@ -339,7 +339,7 @@ function TreinosPage() {
 
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button
-                            className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-[var(--color-accent)] transition-colors"
+                            className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-accent transition-colors"
                             onClick={() => handleRestore(plano.id)}
                             disabled={processando === plano.id}
                             title="Desarquivar"

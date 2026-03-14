@@ -435,13 +435,12 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         }),
 
       restaurarDeAutoEncerrado: (snapshot) => {
-        const duracaoMs = snapshot.cronometroGeralSegundos * 1000
         const sessaoAtiva = {
           ...snapshot.sessao,
           finalizadoEm: undefined,
           duracaoSegundos: undefined,
           autoEncerrado: undefined,
-          iniciadoEm: Date.now() - duracaoMs,
+          // Mantém a data original em que o treino foi criado/iniciado
         }
         set({
           sessao: sessaoAtiva,
@@ -466,13 +465,12 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
 
       restaurarDeHistorico: (sessao) => {
         const duracaoSegundos = sessao.duracaoSegundos ?? 0
-        const duracaoMs = duracaoSegundos * 1000
         const sessaoAtiva = {
           ...sessao,
           finalizadoEm: undefined,
           duracaoSegundos: undefined,
           autoEncerrado: undefined,
-          iniciadoEm: Date.now() - duracaoMs,
+          // Mantém a data original em que o treino foi criado/iniciado
         }
         set({
           sessao: sessaoAtiva,

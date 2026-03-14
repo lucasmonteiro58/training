@@ -133,7 +133,7 @@ function RootComponent() {
 
   if (loadingAuth) {
     return (
-      <div className="flex items-center justify-center min-h-dvh bg-[var(--color-bg)]">
+      <div className="flex items-center justify-center min-h-dvh bg-bg">
         <div className="flex flex-col items-center gap-4">
           <div className="flex items-center justify-center animate-pulse">
             <img src="/icon.png" alt="Logo" className="w-14 h-14 rounded-xl" />
@@ -149,7 +149,7 @@ function RootComponent() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] relative overflow-x-hidden">
+    <div className="flex flex-col min-h-dvh bg-bg relative overflow-x-hidden">
       <SyncIndicator />
       <AutoEncerradoBanner />
       <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top,0)]">
@@ -225,7 +225,7 @@ function SyncIndicator() {
   // Offline com itens na fila
   if (!online) {
     return (
-      <div className="fixed top-[max(env(safe-area-inset-top,0px),8px)] left-1/2 -translate-x-1/2 z-[100] flex items-center gap-1.5 bg-[var(--color-surface)] border border-amber-500/30 px-3 py-1.5 rounded-full shadow-lg animate-scale-in">
+      <div className="fixed top-[max(env(safe-area-inset-top,0px),8px)] left-1/2 -translate-x-1/2 z-[100] flex items-center gap-1.5 bg-surface border border-amber-500/30 px-3 py-1.5 rounded-full shadow-lg animate-scale-in">
         <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500" />
         <span className="text-[11px] font-medium text-amber-400">
           Offline{queued > 0 ? ` · ${queued} pendente${queued > 1 ? 's' : ''}` : ''}
@@ -237,7 +237,7 @@ function SyncIndicator() {
   // Online e sincronizando
   if (pending === 0) return null
   return (
-    <div className="fixed top-[max(env(safe-area-inset-top,0px),8px)] left-1/2 -translate-x-1/2 z-[100] flex items-center gap-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 rounded-full shadow-lg animate-scale-in">
+    <div className="fixed top-[max(env(safe-area-inset-top,0px),8px)] left-1/2 -translate-x-1/2 z-[100] flex items-center gap-1.5 bg-surface border border-border px-3 py-1.5 rounded-full shadow-lg animate-scale-in">
       <span className="animate-spin inline-block w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full" />
       <span className="text-[11px] font-medium text-text-muted">
         Sincronizando{pending > 1 ? ` (${pending})` : ''}
@@ -262,9 +262,9 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--color-bg)] flex flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top,0)] pb-[max(20px,env(safe-area-inset-bottom,0))] relative overflow-hidden">
+    <div className="min-h-dvh bg-bg flex flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top,0)] pb-[max(20px,env(safe-area-inset-bottom,0))] relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full bg-[var(--color-accent)] opacity-[0.07] blur-[100px]" />
+        <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full bg-accent opacity-[0.07] blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-20%] w-[400px] h-[400px] rounded-full bg-purple-500 opacity-[0.06] blur-[80px]" />
       </div>
 
@@ -284,7 +284,7 @@ function LoginPage() {
             (f) => (
               <span
                 key={f}
-                className="px-3 py-1.5 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] text-text-muted text-xs font-medium"
+                className="px-3 py-1.5 rounded-full bg-surface border border-border text-text-muted text-xs font-medium"
               >
                 {f}
               </span>

@@ -698,7 +698,7 @@ function TreinoAtivoPage() {
 
   if (relatorio) {
     return (
-      <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--color-bg)] overflow-y-auto">
+      <div className="fixed inset-0 z-200 flex flex-col bg-bg overflow-y-auto">
         <Confetti active={showConfetti} />
         {/* Top bar com botão fechar */}
         <div className="flex justify-end px-4 pt-4 pb-2">
@@ -713,7 +713,7 @@ function TreinoAtivoPage() {
         {/* Header */}
         <div className="flex flex-col items-center pt-2 pb-6 px-6 text-center">
           <div className="w-20 h-20 rounded-3xl bg-[rgba(34,197,94,0.15)] flex items-center justify-center mb-4 animate-trophy-bounce">
-            <Trophy size={36} className="text-[var(--color-success)]" />
+            <Trophy size={36} className="text-success" />
           </div>
           <h1 className="text-2xl font-bold text-text animate-celebration-pulse">Treino Concluído!</h1>
           <p className="text-text-muted text-sm mt-1">{relatorio.planoNome}</p>
@@ -796,14 +796,14 @@ function TreinoAtivoPage() {
   const seriesCompletadas = exercicioAtual.series.filter((s) => s.completada).length
 
   return (
-    <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
+    <div className="flex flex-col min-h-dvh bg-bg max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
       <Confetti active={showConfetti} />
       {/* PR Celebration Overlay */}
       {showPrCelebration && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-300 flex items-center justify-center pointer-events-none">
           <div className="animate-celebration-pulse text-center">
             <span className="text-7xl block mb-2">🏆</span>
-            <span className="text-xl font-black text-[var(--color-accent)]">NOVO PR!</span>
+            <span className="text-xl font-black text-accent">NOVO PR!</span>
           </div>
         </div>
       )}
@@ -811,7 +811,7 @@ function TreinoAtivoPage() {
       <div className="px-4 pt-4 pb-2 flex flex-col gap-4">
         {/* Top bar */}
         <div className="flex items-center justify-between">
-          <button onClick={() => navigate({ to: '/treinos' })} className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted">
+          <button onClick={() => navigate({ to: '/treinos' })} className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted">
             <XCircle size={18} />
           </button>
           {/* Timer geral */}
@@ -822,18 +822,18 @@ function TreinoAtivoPage() {
             </span>
             <button
               onClick={pausado ? retomar : pausarTreino}
-              className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted"
+              className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted"
             >
               {pausado ? <Play size={16} /> : <Pause size={16} />}
             </button>
           </div>
           <button onClick={() => { setNotasTemp(sessao?.notas ?? ''); setShowNotas(true) }}
-            className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted relative">
+            className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted relative">
             <FileText size={16} />
-            {sessao?.notas && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--color-accent)]" />}
+            {sessao?.notas && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent" />}
           </button>
           <button onClick={() => setShowConfirmFinalizar(true)} disabled={finalizando}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(34,197,94,0.12)] text-[var(--color-success)] text-sm font-semibold">
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(34,197,94,0.12)] text-success text-sm font-semibold">
             <Flag size={14} />
             {finalizando ? '...' : 'Finalizar'}
           </button>
@@ -887,7 +887,7 @@ function TreinoAtivoPage() {
       {/* ─── GIF do exercício ──────────────────────────────────────── */}
       <div className="px-4 mb-4 flex items-center justify-center">
         {exercicioAtual.gifUrl ? (
-          <div className="aspect-[16/9] max-h-48  rounded-2xl overflow-hidden bg-[var(--color-surface)]">
+          <div className="aspect-video max-h-48  rounded-2xl overflow-hidden bg-surface">
             <img
               src={exercicioAtual.gifUrl}
               alt={exercicioAtual.exercicioNome}
@@ -895,7 +895,7 @@ function TreinoAtivoPage() {
             />
           </div>
         ) : (
-          <div className="h-24 rounded-2xl bg-[var(--color-surface)] flex items-center justify-center">
+          <div className="h-24 rounded-2xl bg-surface flex items-center justify-center">
             <span className="text-5xl">💪</span>
           </div>
         )}
@@ -903,7 +903,7 @@ function TreinoAtivoPage() {
 
       {/* ─── Cronômetro de descanso (inline) ──────────────────── */}
       {cronometroDescansoAtivo && (
-        <div className="mx-4 mb-4 p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between animate-scale-in">
+        <div className="mx-4 mb-4 p-4 rounded-2xl bg-surface border border-border flex items-center justify-between animate-scale-in">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
               <Timer size={20} className="text-accent" />
@@ -912,7 +912,7 @@ function TreinoAtivoPage() {
               <p className="text-xs text-text-muted font-medium">Descanso</p>
               <p className={`text-2xl font-black tabular-nums ${
                 cronometroDescansoSegundos <= 10 && cronometroDescansoSegundos > 0
-                  ? 'text-[var(--color-warning)]'
+                  ? 'text-warning'
                   : 'text-text'
               }`}>
                 {formatarTempo(cronometroDescansoSegundos)}
@@ -925,7 +925,7 @@ function TreinoAtivoPage() {
               cancelarNotificacaoDescanso()
               pararDescanso()
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-2 text-text-muted text-sm font-semibold hover:bg-[var(--color-surface-3)] transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-2 text-text-muted text-sm font-semibold hover:bg-surface-3 transition-colors"
           >
             <SkipForward size={14} />
             Pular
@@ -945,8 +945,8 @@ function TreinoAtivoPage() {
           }, { rm: 0, peso: 0, reps: 0 })
           if (melhor.rm <= 0) return null
           return (
-            <div className="flex items-center justify-center gap-2 mb-2 px-3 py-1.5 rounded-xl bg-[var(--color-accent-subtle)] animate-scale-in">
-              <span className="text-[10px] font-bold text-[var(--color-accent)] uppercase tracking-wider">
+            <div className="flex items-center justify-center gap-2 mb-2 px-3 py-1.5 rounded-xl bg-accent-subtle animate-scale-in">
+              <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
                 1RM estimado: {Math.round(melhor.rm)} kg
               </span>
             </div>
@@ -983,7 +983,7 @@ function TreinoAtivoPage() {
               className={`set-row ${serie.completada ? 'completed' : ''}`}
             >
               {/* Número da série */}
-              <span className={`text-sm font-bold text-center ${serie.completada ? 'text-[var(--color-success)]' : 'text-text-subtle'}`}>
+              <span className={`text-sm font-bold text-center ${serie.completada ? 'text-success' : 'text-text-subtle'}`}>
                 {sIdx + 1}
               </span>
 
@@ -1059,8 +1059,8 @@ function TreinoAtivoPage() {
                 }}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
                   serie.completada
-                    ? 'bg-[var(--color-success)] text-white'
-                    : 'bg-surface-2 text-text-subtle hover:bg-[rgba(34,197,94,0.15)] hover:text-[var(--color-success)]'
+                    ? 'bg-success text-white'
+                    : 'bg-surface-2 text-text-subtle hover:bg-[rgba(34,197,94,0.15)] hover:text-success'
                 }`}
               >
                 <CheckCircle size={17} />
@@ -1322,7 +1322,7 @@ function TreinoAtivoPage() {
         <div className="modal-overlay" onClick={() => setShowConfirmFinalizar(false)}>
           <div className="modal-content text-center" onClick={e => e.stopPropagation()}>
             <div className="w-16 h-16 rounded-3xl bg-[rgba(34,197,94,0.12)] flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={32} className="text-[var(--color-success)]" />
+              <CheckCircle size={32} className="text-success" />
             </div>
             <h2 className="text-xl font-bold text-text mb-2">Finalizar Treino?</h2>
             <p className="text-text-muted text-sm mb-6">

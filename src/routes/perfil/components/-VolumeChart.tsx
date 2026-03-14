@@ -18,7 +18,7 @@ export function VolumeChart({ dados }: VolumeChartProps) {
     return (
       <div className="card p-4 animate-fade-up">
         <div className="flex items-center gap-2 mb-4">
-          <BarChart2 size={16} className="text-[var(--color-accent)]" />
+          <BarChart2 size={16} className="text-accent" />
           <p className="text-sm font-bold text-text">Volume Total por Sessão</p>
           <span className="text-[10px] text-text-muted ml-auto">últimas 20</span>
         </div>
@@ -32,7 +32,7 @@ export function VolumeChart({ dados }: VolumeChartProps) {
   return (
     <div className="card p-4 animate-fade-up">
       <div className="flex items-center gap-2 mb-4">
-        <BarChart2 size={16} className="text-[var(--color-accent)]" />
+        <BarChart2 size={16} className="text-accent" />
         <p className="text-sm font-bold text-text">Volume Total por Sessão</p>
         <span className="text-[10px] text-text-muted ml-auto">últimas 20</span>
       </div>

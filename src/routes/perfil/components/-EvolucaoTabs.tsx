@@ -22,7 +22,7 @@ export function EvolucaoTabs({ tab, onTabChange }: EvolucaoTabsProps) {
           onClick={() => onTabChange(id)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all ${
             tab === id
-              ? 'bg-[var(--color-surface)] text-text shadow-sm'
+              ? 'bg-surface text-text shadow-sm'
               : 'text-text-muted'
           }`}
         >
