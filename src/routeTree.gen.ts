@@ -21,6 +21,7 @@ import { Route as TreinosPlanoIdRouteImport } from './routes/treinos/$planoId'
 import { Route as TreinoAtivoPlanoIdRouteImport } from './routes/treino-ativo/$planoId'
 import { Route as PerfilMedidasRouteImport } from './routes/perfil/medidas'
 import { Route as PerfilEvolucaoRouteImport } from './routes/perfil/evolucao'
+import { Route as PerfilDiasOpcionaisRouteImport } from './routes/perfil/dias-opcionais'
 import { Route as HistoricoSessaoIdRouteImport } from './routes/historico/$sessaoId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -83,6 +84,11 @@ const PerfilEvolucaoRoute = PerfilEvolucaoRouteImport.update({
   path: '/perfil/evolucao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PerfilDiasOpcionaisRoute = PerfilDiasOpcionaisRouteImport.update({
+  id: '/perfil/dias-opcionais',
+  path: '/perfil/dias-opcionais',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HistoricoSessaoIdRoute = HistoricoSessaoIdRouteImport.update({
   id: '/historico/$sessaoId',
   path: '/historico/$sessaoId',
@@ -92,6 +98,7 @@ const HistoricoSessaoIdRoute = HistoricoSessaoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
+  '/perfil/dias-opcionais': typeof PerfilDiasOpcionaisRoute
   '/perfil/evolucao': typeof PerfilEvolucaoRoute
   '/perfil/medidas': typeof PerfilMedidasRoute
   '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
+  '/perfil/dias-opcionais': typeof PerfilDiasOpcionaisRoute
   '/perfil/evolucao': typeof PerfilEvolucaoRoute
   '/perfil/medidas': typeof PerfilMedidasRoute
   '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/historico/$sessaoId': typeof HistoricoSessaoIdRoute
+  '/perfil/dias-opcionais': typeof PerfilDiasOpcionaisRoute
   '/perfil/evolucao': typeof PerfilEvolucaoRoute
   '/perfil/medidas': typeof PerfilMedidasRoute
   '/treino-ativo/$planoId': typeof TreinoAtivoPlanoIdRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/historico/$sessaoId'
+    | '/perfil/dias-opcionais'
     | '/perfil/evolucao'
     | '/perfil/medidas'
     | '/treino-ativo/$planoId'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/historico/$sessaoId'
+    | '/perfil/dias-opcionais'
     | '/perfil/evolucao'
     | '/perfil/medidas'
     | '/treino-ativo/$planoId'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/historico/$sessaoId'
+    | '/perfil/dias-opcionais'
     | '/perfil/evolucao'
     | '/perfil/medidas'
     | '/treino-ativo/$planoId'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoricoSessaoIdRoute: typeof HistoricoSessaoIdRoute
+  PerfilDiasOpcionaisRoute: typeof PerfilDiasOpcionaisRoute
   PerfilEvolucaoRoute: typeof PerfilEvolucaoRoute
   PerfilMedidasRoute: typeof PerfilMedidasRoute
   TreinoAtivoPlanoIdRoute: typeof TreinoAtivoPlanoIdRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilEvolucaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/perfil/dias-opcionais': {
+      id: '/perfil/dias-opcionais'
+      path: '/perfil/dias-opcionais'
+      fullPath: '/perfil/dias-opcionais'
+      preLoaderRoute: typeof PerfilDiasOpcionaisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/historico/$sessaoId': {
       id: '/historico/$sessaoId'
       path: '/historico/$sessaoId'
@@ -298,6 +318,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoricoSessaoIdRoute: HistoricoSessaoIdRoute,
+  PerfilDiasOpcionaisRoute: PerfilDiasOpcionaisRoute,
   PerfilEvolucaoRoute: PerfilEvolucaoRoute,
   PerfilMedidasRoute: PerfilMedidasRoute,
   TreinoAtivoPlanoIdRoute: TreinoAtivoPlanoIdRoute,

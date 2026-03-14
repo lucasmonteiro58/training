@@ -224,18 +224,27 @@ export async function limparProgressoTreinoFirestore(userId: string): Promise<vo
 // ============================
 // Configurações do Usuário
 // ============================
-export async function getConfigUsuario(userId: string): Promise<{ metaSemanal?: number }> {
+export interface ConfigUsuario {
+  metaSemanal?: number
+  /** Dias da semana marcados como opcionais (0=dom, 1=seg, ..., 6=sáb). Não treinar nesses dias não quebra o streak. */
+  diasOpcionais?: number[]
+}
+
+export async function getConfigUsuario(userId: string): Promise<ConfigUsuario> {
   try {
     const ref = doc(db, 'configuracoes', userId)
     const snap = await getDoc(ref)
-    if (snap.exists()) return snap.data() as { metaSemanal?: number }
+    if (snap.exists()) return snap.data() as ConfigUsuario
     return {}
   } catch {
     return {}
   }
 }
 
-export async function salvarConfigUsuario(userId: string, config: { metaSemanal: number }): Promise<void> {
+export async function salvarConfigUsuario(
+  userId: string,
+  config: Partial<ConfigUsuario>
+): Promise<void> {
   try {
     const ref = doc(db, 'configuracoes', userId)
     await setDoc(ref, stripUndefined({ ...config, updatedAt: Date.now() }), { merge: true })

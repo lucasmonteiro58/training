@@ -8,6 +8,7 @@ import {
   Download,
   Info,
   ChevronRight,
+  Calendar,
 } from 'lucide-react'
 
 interface ConfiguracoesCardProps {
@@ -76,6 +77,25 @@ export function ConfiguracoesCard({
         <div className="flex-1">
           <p className="text-sm font-medium text-text">Medidas Corporais</p>
           <p className="text-xs text-text-muted mt-0.5">Acompanhe peso, gordura e circunferências</p>
+        </div>
+        <ChevronRight size={16} className="text-text-subtle" />
+      </Link>
+
+      <Separator />
+
+      <Link
+        to="/perfil/dias-opcionais"
+        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2 rounded-xl transition-colors text-left"
+        style={{ textDecoration: 'none' }}
+      >
+        <div className="w-9 h-9 rounded-xl bg-[rgba(59,130,246,0.12)] flex items-center justify-center">
+          <Calendar size={18} className="text-blue-400" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-text">Dias opcionais de treino</p>
+          <p className="text-xs text-text-muted mt-0.5">
+            Marque dias em que não treinar não quebra sua sequência
+          </p>
         </div>
         <ChevronRight size={16} className="text-text-subtle" />
       </Link>

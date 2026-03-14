@@ -49,12 +49,27 @@ function HomePage() {
   const touchStartY = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const [diasOpcionais, setDiasOpcionais] = useState<number[]>(() => {
+    try {
+      const v = localStorage.getItem('diasOpcionais')
+      if (!v) return []
+      const arr = JSON.parse(v) as unknown
+      return Array.isArray(arr) ? arr.filter((n): n is number => typeof n === 'number' && n >= 0 && n <= 6) : []
+    } catch {
+      return []
+    }
+  })
+
   useEffect(() => {
     if (!user) return
     getConfigUsuario(user.uid).then(config => {
-      if (config.metaSemanal) {
+      if (config.metaSemanal != null) {
         setMetaSemanal(config.metaSemanal)
         localStorage.setItem('metaSemanal', String(config.metaSemanal))
+      }
+      if (config.diasOpcionais && Array.isArray(config.diasOpcionais)) {
+        setDiasOpcionais(config.diasOpcionais)
+        localStorage.setItem('diasOpcionais', JSON.stringify(config.diasOpcionais))
       }
     })
   }, [user])
@@ -97,7 +112,10 @@ function HomePage() {
   const volumeTotal = sessoes.reduce((acc, s) => acc + (s.volumeTotal ?? 0), 0)
   const ultimasSessoes = sessoes.slice(0, 3)
   const carregando = loading || loadingSessoes
-  const streaks = useMemo(() => calcularStreaks(sessoes, metaSemanal), [sessoes, metaSemanal])
+  const streaks = useMemo(
+    () => calcularStreaks(sessoes, metaSemanal, diasOpcionais),
+    [sessoes, metaSemanal, diasOpcionais]
+  )
 
   const exercicioAtual = sessaoAtiva?.exercicios[exercicioAtualIndex]
   const ultimaSessao = sessoes[0]
@@ -208,6 +226,7 @@ function HomePage() {
         inicioSemana={inicioSemana}
         hoje={hoje}
         sessoes={sessoes}
+        diasOpcionais={diasOpcionais}
       />
 
       {!treinoAtivo && proximoPlano && (

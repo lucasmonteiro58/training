@@ -6,6 +6,17 @@ import { LogOut } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { calcularStreaks, calcularConquistas } from '../../lib/streaks'
+
+function parseDiasOpcionais(): number[] {
+  try {
+    const v = localStorage.getItem('diasOpcionais')
+    if (!v) return []
+    const arr = JSON.parse(v) as unknown
+    return Array.isArray(arr) ? arr.filter((n): n is number => typeof n === 'number' && n >= 0 && n <= 6) : []
+  } catch {
+    return []
+  }
+}
 import { PerfilHeader } from './components/-PerfilHeader'
 import { PerfilStats } from './components/-PerfilStats'
 import { ConquistasCard } from './components/-ConquistasCard'
@@ -25,7 +36,10 @@ function PerfilPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
 
-  const streaks = useMemo(() => calcularStreaks(sessoes), [sessoes])
+  const streaks = useMemo(
+    () => calcularStreaks(sessoes, 4, parseDiasOpcionais()),
+    [sessoes]
+  )
   const conquistas = useMemo(() => calcularConquistas(sessoes, streaks), [sessoes, streaks])
 
   const totalDuracao = sessoes.reduce((sum, s) => sum + (s.duracaoSegundos ?? 0), 0)

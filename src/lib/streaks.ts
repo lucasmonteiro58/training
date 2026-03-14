@@ -17,10 +17,33 @@ export interface Conquista {
   data?: number // timestamp do desbloqueio
 }
 
+/** Dias opcionais: 0=dom, 1=seg, ..., 6=sáb. Não treinar nesses dias não quebra o streak. */
+const defaultDiasOpcionais: number[] = []
+
+function isDiaOpcional(date: Date, diasOpcionais: number[]): boolean {
+  return diasOpcionais.length > 0 && diasOpcionais.includes(date.getDay())
+}
+
+/** Verifica se todos os dias entre prev e curr (exclusive) são opcionais. */
+function gapSoDiasOpcionais(prev: Date, curr: Date, diasOpcionais: number[]): boolean {
+  const p = new Date(prev)
+  p.setDate(p.getDate() + 1)
+  while (p.getTime() < curr.getTime()) {
+    if (!isDiaOpcional(p, diasOpcionais)) return false
+    p.setDate(p.getDate() + 1)
+  }
+  return true
+}
+
 /**
  * Calcula streaks e estatísticas semanais.
+ * @param diasOpcionais Dias da semana (0–6) em que não treinar não quebra o streak.
  */
-export function calcularStreaks(sessoes: SessaoDeTreino[], metaSemanal = 4): StreakInfo {
+export function calcularStreaks(
+  sessoes: SessaoDeTreino[],
+  metaSemanal = 4,
+  diasOpcionais: number[] = defaultDiasOpcionais
+): StreakInfo {
   if (sessoes.length === 0) {
     return { streakAtual: 0, melhorStreak: 0, treinosEstaSemana: 0, metaSemanal, totalTreinos: 0 }
   }
@@ -31,9 +54,6 @@ export function calcularStreaks(sessoes: SessaoDeTreino[], metaSemanal = 4): Str
     diasTreino.add(new Date(s.iniciadoEm).toISOString().slice(0, 10))
   })
 
-  const diasOrdenados = Array.from(diasTreino).sort().reverse()
-
-  // Streak atual: contar dias consecutivos a partir de hoje/ontem
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
   const hojeStr = hoje.toISOString().slice(0, 10)
@@ -41,6 +61,7 @@ export function calcularStreaks(sessoes: SessaoDeTreino[], metaSemanal = 4): Str
   ontem.setDate(ontem.getDate() - 1)
   const ontemStr = ontem.toISOString().slice(0, 10)
 
+  // Streak atual: contar dias consecutivos. Em dias opcionais sem treino, não quebra.
   let streakAtual = 0
   let checando = diasTreino.has(hojeStr) ? new Date(hoje) : diasTreino.has(ontemStr) ? new Date(ontem) : null
 
@@ -51,12 +72,16 @@ export function calcularStreaks(sessoes: SessaoDeTreino[], metaSemanal = 4): Str
         streakAtual++
         checando.setDate(checando.getDate() - 1)
       } else {
-        break
+        if (isDiaOpcional(checando, diasOpcionais)) {
+          checando.setDate(checando.getDate() - 1)
+        } else {
+          break
+        }
       }
     }
   }
 
-  // Melhor streak de todos os tempos
+  // Melhor streak: entre dois dias de treino, se o intervalo for só de dias opcionais, conta como consecutivo
   let melhorStreak = 0
   let streakTemp = 0
   const diasAsc = Array.from(diasTreino).sort()
@@ -67,7 +92,13 @@ export function calcularStreaks(sessoes: SessaoDeTreino[], metaSemanal = 4): Str
       const prev = new Date(diasAsc[i - 1])
       const curr = new Date(diasAsc[i])
       const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24)
-      streakTemp = diff === 1 ? streakTemp + 1 : 1
+      if (diff === 1) {
+        streakTemp += 1
+      } else if (diff > 1 && gapSoDiasOpcionais(prev, curr, diasOpcionais)) {
+        streakTemp += 1
+      } else {
+        streakTemp = 1
+      }
     }
     melhorStreak = Math.max(melhorStreak, streakTemp)
   }
