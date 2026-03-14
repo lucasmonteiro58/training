@@ -7,12 +7,12 @@ import { useAuthStore } from '../../stores'
 import { CriarExercicioModal } from './CriarExercicioModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
-interface ExercicioPicker {
+interface ExercicioPickerProps {
   onSelect: (ex: Exercicio) => void
   onClose: () => void
 }
 
-export function ExercicioPicker({ onSelect, onClose }: ExercicioPicker) {
+export function ExercicioPicker({ onSelect, onClose }: ExercicioPickerProps) {
   const user = useAuthStore((s) => s.user)
   const [exercicios, setExercicios] = useState<Exercicio[]>([])
   const [filtrados, setFiltrados] = useState<Exercicio[]>([])

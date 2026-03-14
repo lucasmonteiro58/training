@@ -5,7 +5,7 @@ import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, GripVertical, Ch
 import { v4 as uuidv4 } from 'uuid'
 import type { ExercicioNoPlano, SeriePlano, TipoSerie, TipoAgrupamento } from '../../types'
 import { GRUPOS_MUSCULARES, AGRUPAMENTO_CONFIG } from '../../types'
-import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
+import { ExercicioPicker } from '../../components/common/ExercicioPicker'
 import { toast } from 'sonner'
 import { useIniciarTreino } from '../../hooks/useIniciarTreino'
 import {

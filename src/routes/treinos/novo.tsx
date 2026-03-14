@@ -7,7 +7,7 @@ import { ArrowLeft, Plus, Trash2, GripVertical, ChevronDown, XCircle, RefreshCw,
 import { toast } from 'sonner'
 import type { ExercicioNoPlano, SeriePlano, TipoSerie, TipoAgrupamento } from '../../types'
 import { CORES_PLANO, AGRUPAMENTO_CONFIG } from '../../types'
-import { ExercicioPicker } from '../../components/exercicios/ExercicioPicker'
+import { ExercicioPicker } from '../../components/common/ExercicioPicker'
 import {
   DndContext,
   closestCenter,

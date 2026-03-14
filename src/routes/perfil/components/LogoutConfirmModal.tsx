@@ -1,0 +1,31 @@
+import { LogOut, AlertTriangle } from 'lucide-react'
+
+interface LogoutConfirmModalProps {
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+export function LogoutConfirmModal({ onConfirm, onCancel }: LogoutConfirmModalProps) {
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content text-center" onClick={e => e.stopPropagation()}>
+        <div className="w-16 h-16 rounded-3xl bg-[rgba(239,68,68,0.12)] flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle size={32} className="text-[var(--color-warning)]" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--color-text)] mb-2">Sair da Conta?</h2>
+        <p className="text-[var(--color-text-muted)] text-sm mb-6">
+          Você precisará fazer login novamente para acessar seus treinos.
+        </p>
+        <div className="flex flex-col gap-3">
+          <button type="button" onClick={onConfirm} className="btn-danger w-full py-4 text-base">
+            <LogOut size={16} />
+            Sim, Sair
+          </button>
+          <button type="button" onClick={onCancel} className="btn-ghost w-full py-3">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

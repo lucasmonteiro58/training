@@ -2,12 +2,15 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
 import type { Exercicio } from '../../types'
-import { Search, Plus, SearchX, Heart, Calculator } from 'lucide-react'
 import { getExerciciosPersonalizados, toggleFavoritoExercicio, getFavoritoIds } from '../../lib/db/dexie'
 import { useAuthStore } from '../../stores'
-import { CriarExercicioModal } from '../../components/exercicios/CriarExercicioModal'
+import { CriarExercicioModal } from '../../components/common/CriarExercicioModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Calculadora1RM } from '../../components/ui/Calculadora1RM'
+import { ExerciciosToolbar } from './components/ExerciciosToolbar'
+import { ExercicioGridCard } from './components/ExercicioGridCard'
+import { EmptyExercicios } from './components/EmptyExercicios'
+import { ExercicioDetailModal } from './components/ExercicioDetailModal'
 
 export const Route = createFileRoute('/exercicios/')({
   component: ExerciciosPage,
@@ -61,7 +64,7 @@ function ExerciciosPage() {
   }, [exercicios])
 
   const rows = useMemo(() => {
-    const r = []
+    const r: Exercicio[][] = []
     for (let i = 0; i < filtrados.length; i += 2) {
       r.push(filtrados.slice(i, i + 2))
     }
@@ -94,66 +97,20 @@ function ExerciciosPage() {
   return (
     <>
       <div className="page-container h-[calc(100dvh-16px)] pb-0! flex flex-col pt-6 overflow-hidden">
-        <div className="shrink-0 mb-4 h-auto">
-          <h1 className="text-2xl font-bold text-text mb-4 animate-fade-up">
-            Exercícios
-          </h1>
+        <ExerciciosToolbar
+          query={query}
+          onQueryChange={setQuery}
+          grupo={grupo}
+          gruposUnicos={gruposUnicos}
+          onGrupoChange={setGrupo}
+          showFavoritos={showFavoritos}
+          onToggleFavoritos={() => setShowFavoritos(!showFavoritos)}
+          favoritoCount={favoritoIds.size}
+          count={filtrados.length}
+          onOpenCriar={() => setShowCriar(true)}
+          onOpen1RM={() => setShow1RM(true)}
+        />
 
-          {/* Search */}
-          <div className="relative mb-3 animate-fade-up" style={{ animationDelay: '50ms' }}>
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
-            <input className="input pl-10!" placeholder="Buscar por nome ou músculo..."
-              value={query} onChange={(e) => setQuery(e.target.value)} />
-          </div>
-
-          {/* Grupos */}
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-1 animate-fade-up scrollbar-hide" style={{ animationDelay: '100ms' }}>
-            <button
-              onClick={() => setShowFavoritos(!showFavoritos)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                showFavoritos
-                  ? 'bg-red-500/15 text-red-400 border border-red-500/30'
-                  : 'bg-surface-2 text-text-muted border border-border'
-              }`}>
-              <Heart size={12} className={showFavoritos ? 'fill-red-400' : ''} />
-              Favoritos{favoritoIds.size > 0 ? ` (${favoritoIds.size})` : ''}
-            </button>
-            {['', ...gruposUnicos].map((g) => (
-              <button key={g}
-                onClick={() => setGrupo(g)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
-                  grupo === g
-                    ? 'bg-accent text-white'
-                    : 'bg-surface-2 text-text-muted border border-border'
-                }`}>
-                {g || 'Todos'}
-              </button>
-            ))}
-          </div>
-
-          {/* count & action */}
-          <div className="flex items-center justify-between mb-3 animate-fade-up" style={{ animationDelay: '150ms' }}>
-            <p className="text-xs text-text-muted">{filtrados.length} exercícios</p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShow1RM(true)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted bg-surface-2 px-3 py-1.5 rounded-full border border-border hover:text-accent hover:border-accent/30 transition-colors"
-              >
-                <Calculator size={14} />
-                1RM
-              </button>
-              <button
-                onClick={() => setShowCriar(true)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-full"
-              >
-                <Plus size={14} />
-                Criar
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Grid Virtualizado */}
         <div
           ref={parentRef}
           className="flex-1 overflow-y-auto overflow-x-hidden -mx-4 px-4 scrollbar-hide"
@@ -161,21 +118,12 @@ function ExerciciosPage() {
         >
           {loading ? (
             <div className="grid grid-cols-2 gap-3">
-              {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-36 rounded-2xl" />)}
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="skeleton h-36 rounded-2xl" />
+              ))}
             </div>
           ) : rows.length === 0 ? (
-            <div className="flex flex-col items-center gap-4 mt-12 animate-scale-in text-center px-4">
-              <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-2)] flex items-center justify-center">
-                <SearchX size={28} className="text-[var(--color-text-subtle)]" />
-              </div>
-              <p className="text-[var(--color-text)] font-semibold">Nenhum exercício encontrado</p>
-              <p className="text-[var(--color-text-muted)] text-sm">
-                Tente buscar com outro nome ou crie um exercício personalizado
-              </p>
-              <button onClick={() => setShowCriar(true)} className="btn-primary mt-1">
-                <Plus size={16} /> Criar Exercício
-              </button>
-            </div>
+            <EmptyExercicios onCriar={() => setShowCriar(true)} />
           ) : (
             <div
               style={{
@@ -186,7 +134,7 @@ function ExerciciosPage() {
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => (
                 <div
-                  key={virtualRow.index}
+                  key={virtualRow.key}
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -197,37 +145,17 @@ function ExerciciosPage() {
                     display: 'grid',
                     gridTemplateColumns: 'repeat(2, 1fr)',
                     gap: '12px',
-                    paddingBottom: '12px'
+                    paddingBottom: '12px',
                   }}
                 >
                   {rows[virtualRow.index].map((ex) => (
-                    <button key={ex.id} onClick={() => setSelecionado(ex)}
-                      className="card p-0 overflow-hidden text-left flex flex-col h-full relative">
-                      <button
-                        onClick={(e) => handleToggleFavorito(e, ex.id)}
-                        className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-colors hover:bg-black/60"
-                      >
-                        <Heart size={16} className={favoritoIds.has(ex.id) ? 'fill-red-400 text-red-400' : 'text-white/70'} />
-                      </button>
-                      {ex.gifUrl ? (
-                        <img src={ex.gifUrl} alt={ex.nome}
-                          className="w-full aspect-square object-cover bg-surface-2" loading="lazy" />
-                      ) : (
-                        <div className="w-full aspect-square bg-surface-2 flex items-center justify-center">
-                          <span className="text-4xl">💪</span>
-                        </div>
-                      )}
-                      <div className="p-3 pb-4 flex flex-col gap-1 min-h-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-text text-sm font-bold line-clamp-2 leading-tight">
-                            {ex.nome}
-                          </p>
-                          <p className="text-text-muted text-xs mt-1 capitalize">
-                            {ex.grupoMuscular}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
+                    <ExercicioGridCard
+                      key={ex.id}
+                      ex={ex}
+                      isFavorito={favoritoIds.has(ex.id)}
+                      onSelect={() => setSelecionado(ex)}
+                      onToggleFavorito={(e) => handleToggleFavorito(e, ex.id)}
+                    />
                   ))}
                 </div>
               ))}
@@ -236,47 +164,10 @@ function ExerciciosPage() {
         </div>
       </div>
 
-      {/* Detail modal */}
       {selecionado && (
-        <div className="modal-overlay" onClick={() => setSelecionado(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-4">
-              <h2 className="text-lg font-bold text-text truncate pr-8">{selecionado.nome}</h2>
-              <button onClick={() => setSelecionado(null)} className="btn-ghost p-2 text-text-muted">✕</button>
-            </div>
-            {selecionado.gifUrl && (
-              <img src={selecionado.gifUrl} alt={selecionado.nome}
-                className="w-full max-h-56 object-contain rounded-xl bg-surface-2 mb-4" />
-            )}
-            <div className="flex flex-col gap-3">
-              <div>
-                <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-1">Músculo</p>
-                <span className="px-2.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium capitalize">
-                  {selecionado.grupoMuscular}
-                </span>
-              </div>
-              {selecionado.equipamento && (
-                <div>
-                  <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-1">Equipamento</p>
-                  <p className="text-sm text-text">{selecionado.equipamento}</p>
-                </div>
-              )}
-              {selecionado.instrucoes && selecionado.instrucoes.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-1">INSTRUÇÕES</p>
-                  <ol className="list-decimal list-inside space-y-1.5">
-                    {selecionado.instrucoes.map((inst, i) => (
-                      <li key={i} className="text-xs text-text-muted leading-relaxed">{inst}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <ExercicioDetailModal exercicio={selecionado} onClose={() => setSelecionado(null)} />
       )}
 
-      {/* modal criar */}
       {showCriar && (
         <CriarExercicioModal
           gruposExistentes={gruposUnicos}
@@ -289,7 +180,6 @@ function ExerciciosPage() {
         />
       )}
 
-      {/* modal 1RM */}
       {show1RM && <Calculadora1RM onClose={() => setShow1RM(false)} />}
     </>
   )
