@@ -91,6 +91,25 @@ export function calcularStreaks(sessoes: SessaoDeTreino[], metaSemanal = 4): Str
  */
 export function calcularConquistas(sessoes: SessaoDeTreino[], streaks: StreakInfo): Conquista[] {
   const totalVolume = sessoes.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
+
+  // Máximo de treinos em uma única semana (domingo–sábado)
+  let maxTreinosNaSemana = 0
+  let dataSemanaIncrivel: number | undefined
+  const porSemana = new Map<number, SessaoDeTreino[]>()
+  for (const s of sessoes) {
+    const d = new Date(s.iniciadoEm)
+    d.setHours(0, 0, 0, 0)
+    d.setDate(d.getDate() - d.getDay())
+    const key = d.getTime()
+    const list = porSemana.get(key) ?? []
+    list.push(s)
+    porSemana.set(key, list)
+    if (list.length > maxTreinosNaSemana) {
+      maxTreinosNaSemana = list.length
+      dataSemanaIncrivel = list.length >= 5 ? list[4].iniciadoEm : undefined
+    }
+  }
+
   const conquistas: Conquista[] = [
     {
       id: 'primeiro-treino',
@@ -169,6 +188,14 @@ export function calcularConquistas(sessoes: SessaoDeTreino[], streaks: StreakInf
       descricao: 'Bata a meta semanal de treinos',
       icone: '🎖️',
       desbloqueada: streaks.treinosEstaSemana >= streaks.metaSemanal,
+    },
+    {
+      id: 'semana-5',
+      nome: 'Semana Incrível',
+      descricao: 'Faça 5 treinos em uma única semana',
+      icone: '🌟',
+      desbloqueada: maxTreinosNaSemana >= 5,
+      data: dataSemanaIncrivel,
     },
   ]
 
