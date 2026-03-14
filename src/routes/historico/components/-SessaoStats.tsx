@@ -8,6 +8,8 @@ interface SessaoStatsProps {
   editando: boolean
   duracaoMinutos?: number
   onDuracaoChange?: (minutos: number) => void
+  /** Quando o treino foi auto-encerrado: segundos de inatividade já descontados da duração */
+  tempoOciosoDescontadoSegundos?: number
 }
 
 export function SessaoStats({
@@ -17,7 +19,13 @@ export function SessaoStats({
   editando,
   duracaoMinutos = 0,
   onDuracaoChange,
+  tempoOciosoDescontadoSegundos,
 }: SessaoStatsProps) {
+  const tempoOcioMin =
+    tempoOciosoDescontadoSegundos != null && tempoOciosoDescontadoSegundos > 0
+      ? Math.round(tempoOciosoDescontadoSegundos / 60)
+      : 0
+
   return (
     <div className="grid grid-cols-3 gap-2 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
       <div className="card p-3 text-center">
@@ -38,9 +46,16 @@ export function SessaoStats({
             <span className="text-[10px] text-text-muted">min</span>
           </div>
         ) : (
-          <p className="text-lg font-bold text-text">
-            {duracaoSegundos ? formatarTempo(duracaoSegundos) : '–'}
-          </p>
+          <>
+            <p className="text-lg font-bold text-text">
+              {duracaoSegundos != null ? formatarTempo(duracaoSegundos) : '–'}
+            </p>
+            {tempoOcioMin > 0 && (
+              <p className="text-[10px] text-amber-400/90 mt-0.5">
+                {tempoOcioMin} min ociosos descontados
+              </p>
+            )}
+          </>
         )}
         <p className="text-[10px] text-text-muted">Duração</p>
       </div>

@@ -356,17 +356,20 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         }),
 
       restaurarDeAutoEncerrado: snapshot => {
+        const tempoOciosoSegundos = Math.floor(INATIVIDADE_AUTO_ENCERRAR_MS / 1000)
+        const cronometroAtivo = Math.max(0, snapshot.cronometroGeralSegundos - tempoOciosoSegundos)
         const sessaoAtiva = {
           ...snapshot.sessao,
           finalizadoEm: undefined,
           duracaoSegundos: undefined,
+          tempoOciosoDescontadoSegundos: undefined,
           autoEncerrado: undefined,
         }
         set({
           sessao: sessaoAtiva,
           exercicioAtualIndex: snapshot.exercicioAtualIndex,
           serieAtualIndex: snapshot.serieAtualIndex,
-          cronometroGeralSegundos: snapshot.cronometroGeralSegundos,
+          cronometroGeralSegundos: cronometroAtivo,
           cronometroDescansoSegundos: 0,
           cronometroDescansoAtivo: false,
           pausado: false,

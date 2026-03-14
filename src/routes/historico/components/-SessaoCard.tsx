@@ -1,6 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { formatarTempo } from '../../../lib/notifications'
-import { Clock, Dumbbell, TrendingUp, ChevronRight, Trash2, RotateCcw } from 'lucide-react'
+import { Clock, Dumbbell, TrendingUp, ChevronRight, Trash2, RotateCcw, TimerOff } from 'lucide-react'
 import type { SessaoDeTreino } from '../../../types'
 
 interface SessaoCardProps {
@@ -19,6 +19,10 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
     month: 'short',
   })
 
+  const tempoOcioMin = sessao.tempoOciosoDescontadoSegundos
+    ? Math.round(sessao.tempoOciosoDescontadoSegundos / 60)
+    : 0
+
   return (
     <div className="card p-4 animate-fade-up" style={{ animationDelay: `${index * 40}ms` }}>
       <div className="flex items-start justify-between mb-2">
@@ -26,18 +30,33 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
           <p className="text-text font-bold">{sessao.planoNome}</p>
           <p className="text-text-muted text-xs mt-0.5 capitalize">{dataStr}</p>
         </div>
-        <button
-          onClick={() => onExcluir(sessao.id)}
-          className="btn-ghost p-2 text-text-subtle hover:text-danger"
-        >
-          <Trash2 size={14} />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {sessao.autoEncerrado && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/25">
+              <TimerOff size={10} />
+              Auto
+            </span>
+          )}
+          <button
+            onClick={() => onExcluir(sessao.id)}
+            className="btn-ghost p-2 text-text-subtle hover:text-danger"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
-      <div className="flex gap-4 mb-3">
-        {sessao.duracaoSegundos && (
-          <div className="flex items-center gap-1.5">
-            <Clock size={13} className="text-text-subtle" />
-            <span className="text-xs text-text-muted">{formatarTempo(sessao.duracaoSegundos)}</span>
+      <div className="flex flex-wrap gap-4 mb-3">
+        {sessao.duracaoSegundos != null && (
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <Clock size={13} className="text-text-subtle" />
+              <span className="text-xs text-text-muted">{formatarTempo(sessao.duracaoSegundos)}</span>
+            </div>
+            {sessao.autoEncerrado && tempoOcioMin > 0 && (
+              <span className="text-[10px] text-amber-400/90">
+                {tempoOcioMin} min ociosos descontados
+              </span>
+            )}
           </div>
         )}
         <div className="flex items-center gap-1.5">

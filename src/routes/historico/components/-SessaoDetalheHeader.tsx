@@ -1,9 +1,11 @@
-import { ArrowLeft, Edit2, Save } from 'lucide-react'
+import { ArrowLeft, Edit2, Save, TimerOff } from 'lucide-react'
 
 interface SessaoDetalheHeaderProps {
   planoNome: string
   dataStr: string
   editando: boolean
+  /** Treino encerrado automaticamente por inatividade */
+  autoEncerrado?: boolean
   /** Timestamp (iniciadoEm) para edição da data; quando editando, permite alterar */
   iniciadoEm?: number
   onIniciadoEmChange?: (timestamp: number) => void
@@ -25,6 +27,7 @@ export function SessaoDetalheHeader({
   planoNome,
   dataStr,
   editando,
+  autoEncerrado,
   iniciadoEm,
   onIniciadoEmChange,
   onVoltar,
@@ -41,7 +44,15 @@ export function SessaoDetalheHeader({
         <ArrowLeft size={18} />
       </button>
       <div className="flex-1 min-w-0">
-        <h1 className="text-xl font-bold text-text truncate">{planoNome}</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-xl font-bold text-text truncate">{planoNome}</h1>
+          {autoEncerrado && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/25 shrink-0">
+              <TimerOff size={10} />
+              Encerrado automaticamente
+            </span>
+          )}
+        </div>
         {editando && iniciadoEm != null && onIniciadoEmChange ? (
           <label className="block mt-1">
             <span className="text-xs text-text-muted block mb-1">Data do treino</span>

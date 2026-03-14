@@ -94,10 +94,13 @@ function RootComponent() {
         if (historicoState.sessaoAutoEncerrada?.sessao.id === dados.sessao?.id) return
         const sessao = dados.sessao
         if (!sessao) return
+        const cronometroBruto = (dados as { cronometroGeralSegundos?: number }).cronometroGeralSegundos ?? 0
+        const tempoOciosoSegundos = Math.floor(INATIVIDADE_AUTO_ENCERRAR_MS / 1000)
         const finalizada = {
           ...sessao,
           finalizadoEm: Date.now(),
-          duracaoSegundos: (dados as { cronometroGeralSegundos?: number }).cronometroGeralSegundos ?? 0,
+          duracaoSegundos: Math.max(0, cronometroBruto - tempoOciosoSegundos),
+          tempoOciosoDescontadoSegundos: tempoOciosoSegundos,
           volumeTotal: calcularVolume(sessao),
           autoEncerrado: true,
         }

@@ -110,6 +110,7 @@ function SessaoDetalhePage() {
         planoNome={displaySessao.planoNome}
         dataStr={dataStr}
         editando={editando}
+        autoEncerrado={displaySessao.autoEncerrado}
         iniciadoEm={editando && editData ? editData.iniciadoEm : undefined}
         onIniciadoEmChange={editando ? updateIniciadoEm : undefined}
         onVoltar={() => navigate({ to: '/historico' })}
@@ -130,6 +131,7 @@ function SessaoDetalhePage() {
           editData?.duracaoSegundos != null ? Math.round(editData.duracaoSegundos / 60) : undefined
         }
         onDuracaoChange={editando ? updateDuracao : undefined}
+        tempoOciosoDescontadoSegundos={displaySessao.tempoOciosoDescontadoSegundos}
       />
 
       <ProgressoSeries seriesOk={seriesOk} totalSeries={totalSeries} />

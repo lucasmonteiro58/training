@@ -95,6 +95,8 @@ export interface SessaoDeTreino {
   syncedAt?: number
   /** true quando o treino foi encerrado automaticamente por inatividade (20 min) */
   autoEncerrado?: boolean
+  /** quando autoEncerrado: segundos de inatividade descontados do tempo total (ex: 1200 = 20 min) */
+  tempoOciosoDescontadoSegundos?: number
 }
 
 // Stats calculados do histórico
