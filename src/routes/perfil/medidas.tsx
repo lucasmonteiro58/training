@@ -6,11 +6,11 @@ import type { MedidaCorporal } from '../../types'
 import { useState, useMemo } from 'react'
 import { ChevronLeft, Ruler } from 'lucide-react'
 import { toast } from 'sonner'
-import { MedidasHeader } from './components/MedidasHeader'
-import { MedidasChart } from './components/MedidasChart'
-import { MedidaCard } from './components/MedidaCard'
-import { NovaMedidaModal } from './components/NovaMedidaModal'
-import { ConfirmDeleteMedidaModal } from './components/ConfirmDeleteMedidaModal'
+import { MedidasHeader } from './components/-MedidasHeader'
+import { MedidasChart } from './components/-MedidasChart'
+import { MedidaCard } from './components/-MedidaCard'
+import { NovaMedidaModal } from './components/-NovaMedidaModal'
+import { ConfirmDeleteMedidaModal } from './components/-ConfirmDeleteMedidaModal'
 
 export const Route = createFileRoute('/perfil/medidas')({
   component: MedidasPage,
@@ -69,7 +69,7 @@ function MedidasPage() {
           <button type="button" onClick={() => navigate({ to: '/perfil' })} className="btn-icon">
             <ChevronLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold text-[var(--color-text)]">Medidas Corporais</h1>
+          <h1 className="text-xl font-bold text-text">Medidas Corporais</h1>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
@@ -97,9 +97,9 @@ function MedidasPage() {
 
       {medidas.length === 0 ? (
         <div className="card p-8 text-center animate-fade-up">
-          <Ruler size={40} className="text-[var(--color-text-subtle)] mx-auto mb-3" />
-          <p className="text-[var(--color-text-muted)] text-sm">Nenhuma medida registrada ainda.</p>
-          <p className="text-xs text-[var(--color-text-subtle)] mt-1">
+          <Ruler size={40} className="text-text-subtle mx-auto mb-3" />
+          <p className="text-text-muted text-sm">Nenhuma medida registrada ainda.</p>
+          <p className="text-xs text-text-subtle mt-1">
             Acompanhe seu peso, medidas e composição corporal.
           </p>
         </div>

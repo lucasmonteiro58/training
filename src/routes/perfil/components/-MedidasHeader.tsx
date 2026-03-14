@@ -12,7 +12,7 @@ export function MedidasHeader({ onVoltar, onNova }: MedidasHeaderProps) {
         <button type="button" onClick={onVoltar} className="btn-icon">
           <ChevronLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-[var(--color-text)]">Medidas Corporais</h1>
+        <h1 className="text-xl font-bold text-text">Medidas Corporais</h1>
       </div>
       <button
         type="button"

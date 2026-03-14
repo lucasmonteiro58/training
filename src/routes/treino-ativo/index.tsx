@@ -18,8 +18,8 @@ function TreinoAtivoIndexPage() {
             <Dumbbell size={36} className="text-[var(--color-accent)]" />
           </div>
           <div className="text-center">
-            <p className="text-[var(--color-text-muted)] text-sm">Treino em andamento</p>
-            <h2 className="text-xl font-bold text-[var(--color-text)] mt-1">{sessao.planoNome}</h2>
+            <p className="text-text-muted text-sm">Treino em andamento</p>
+            <h2 className="text-xl font-bold text-text mt-1">{sessao.planoNome}</h2>
           </div>
           <Link to="/treino-ativo/$planoId" params={{ planoId: sessao.planoId }} style={{ textDecoration: 'none' }}>
             <button className="btn-primary flex items-center gap-2">
@@ -34,12 +34,12 @@ function TreinoAtivoIndexPage() {
 
   return (
     <div className="page-container pt-6">
-      <h1 className="text-2xl font-bold text-[var(--color-text)] mb-6 animate-fade-up">Treinar</h1>
+      <h1 className="text-2xl font-bold text-text mb-6 animate-fade-up">Treinar</h1>
       <div className="flex flex-col items-center gap-4 mt-12 animate-scale-in">
-        <div className="w-20 h-20 rounded-3xl bg-[var(--color-surface-2)] flex items-center justify-center">
-          <Dumbbell size={36} className="text-[var(--color-text-subtle)]" />
+        <div className="w-20 h-20 rounded-3xl bg-surface-2 flex items-center justify-center">
+          <Dumbbell size={36} className="text-text-subtle" />
         </div>
-        <p className="text-[var(--color-text-muted)] text-center text-sm">
+        <p className="text-text-muted text-center text-sm">
           Escolha um plano para iniciar seu treino
         </p>
         <Link to="/treinos" style={{ textDecoration: 'none' }}>

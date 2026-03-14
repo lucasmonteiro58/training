@@ -704,7 +704,7 @@ function TreinoAtivoPage() {
         <div className="flex justify-end px-4 pt-4 pb-2">
           <button
             onClick={() => navigate({ to: '/treinos' })}
-            className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)]"
+            className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted"
             aria-label="Fechar"
           >
             <X size={18} />
@@ -788,7 +788,7 @@ function TreinoAtivoPage() {
   if (!plano || !sessao || !exercicioAtual) {
     return (
       <div className="page-container pt-6 text-center">
-        <p className="text-[var(--color-text-muted)]">Carregando treino...</p>
+        <p className="text-text-muted">Carregando treino...</p>
       </div>
     )
   }
@@ -811,24 +811,24 @@ function TreinoAtivoPage() {
       <div className="px-4 pt-4 pb-2 flex flex-col gap-4">
         {/* Top bar */}
         <div className="flex items-center justify-between">
-          <button onClick={() => navigate({ to: '/treinos' })} className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)]">
+          <button onClick={() => navigate({ to: '/treinos' })} className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted">
             <XCircle size={18} />
           </button>
           {/* Timer geral */}
           <div className="flex items-center gap-2">
-            <Timer size={14} className="text-[var(--color-text-subtle)]" />
-            <span className="timer-sm text-[var(--color-text-muted)]">
+            <Timer size={14} className="text-text-subtle" />
+            <span className="timer-sm text-text-muted">
               {formatarTempo(cronometroGeralSegundos)}
             </span>
             <button
               onClick={pausado ? retomar : pausarTreino}
-              className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)]"
+              className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted"
             >
               {pausado ? <Play size={16} /> : <Pause size={16} />}
             </button>
           </div>
           <button onClick={() => { setNotasTemp(sessao?.notas ?? ''); setShowNotas(true) }}
-            className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)] relative">
+            className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted relative">
             <FileText size={16} />
             {sessao?.notas && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--color-accent)]" />}
           </button>
@@ -851,13 +851,13 @@ function TreinoAtivoPage() {
             <ChevronLeft size={18} />
           </button>
           <div className="text-center">
-            <p className="text-[10px] text-[var(--color-text-subtle)] font-medium">
+            <p className="text-[10px] text-text-subtle font-medium">
               {exercicioAtualIndex + 1} / {totalExercicios}
             </p>
-            <p className="text-[var(--color-text)] font-bold text-sm">
+            <p className="text-text font-bold text-sm">
               {exercicioAtual.exercicioNome}
             </p>
-            <p className="text-[10px] text-[var(--color-text-muted)]">
+            <p className="text-[10px] text-text-muted">
               {exercicioAtual.grupoMuscular}
             </p>
             {exercicioAtual.agrupamentoId && (
@@ -909,11 +909,11 @@ function TreinoAtivoPage() {
               <Timer size={20} className="text-accent" />
             </div>
             <div>
-              <p className="text-xs text-[var(--color-text-muted)] font-medium">Descanso</p>
+              <p className="text-xs text-text-muted font-medium">Descanso</p>
               <p className={`text-2xl font-black tabular-nums ${
                 cronometroDescansoSegundos <= 10 && cronometroDescansoSegundos > 0
                   ? 'text-[var(--color-warning)]'
-                  : 'text-[var(--color-text)]'
+                  : 'text-text'
               }`}>
                 {formatarTempo(cronometroDescansoSegundos)}
               </p>
@@ -925,7 +925,7 @@ function TreinoAtivoPage() {
               cancelarNotificacaoDescanso()
               pararDescanso()
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--color-surface-2)] text-[var(--color-text-muted)] text-sm font-semibold hover:bg-[var(--color-surface-3)] transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-2 text-text-muted text-sm font-semibold hover:bg-[var(--color-surface-3)] transition-colors"
           >
             <SkipForward size={14} />
             Pular
@@ -960,7 +960,7 @@ function TreinoAtivoPage() {
           return (
             <div className="grid grid-cols-[32px_1fr_1fr_40px] gap-2 px-3 mb-1">
               {['#', 'Peso (kg)', labels[tipo] ?? 'Reps', ''].map((h, i) => (
-                <span key={i} className="text-[10px] text-[var(--color-text-subtle)] font-semibold text-center">{h}</span>
+                <span key={i} className="text-[10px] text-text-subtle font-semibold text-center">{h}</span>
               ))}
             </div>
           )
@@ -983,7 +983,7 @@ function TreinoAtivoPage() {
               className={`set-row ${serie.completada ? 'completed' : ''}`}
             >
               {/* Número da série */}
-              <span className={`text-sm font-bold text-center ${serie.completada ? 'text-[var(--color-success)]' : 'text-[var(--color-text-subtle)]'}`}>
+              <span className={`text-sm font-bold text-center ${serie.completada ? 'text-[var(--color-success)]' : 'text-text-subtle'}`}>
                 {sIdx + 1}
               </span>
 
@@ -1060,7 +1060,7 @@ function TreinoAtivoPage() {
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
                   serie.completada
                     ? 'bg-[var(--color-success)] text-white'
-                    : 'bg-[var(--color-surface-2)] text-[var(--color-text-subtle)] hover:bg-[rgba(34,197,94,0.15)] hover:text-[var(--color-success)]'
+                    : 'bg-surface-2 text-text-subtle hover:bg-[rgba(34,197,94,0.15)] hover:text-[var(--color-success)]'
                 }`}
               >
                 <CheckCircle size={17} />
@@ -1121,7 +1121,7 @@ function TreinoAtivoPage() {
 
         {/* Progresso séries */}
         <div className="mt-4 text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">
+          <p className="text-xs text-text-muted">
             {seriesCompletadas}/{exercicioAtual.series.length} séries completadas
           </p>
           <div className="progress-bar mt-2">
@@ -1260,7 +1260,7 @@ function TreinoAtivoPage() {
       {showNotas && (
         <div className="modal-overlay" onClick={() => setShowNotas(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-[var(--color-text)] mb-3">📝 Notas do Treino</h2>
+            <h2 className="text-lg font-bold text-text mb-3">📝 Notas do Treino</h2>
             <textarea
               value={notasTemp}
               onChange={e => setNotasTemp(e.target.value)}
@@ -1324,8 +1324,8 @@ function TreinoAtivoPage() {
             <div className="w-16 h-16 rounded-3xl bg-[rgba(34,197,94,0.12)] flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={32} className="text-[var(--color-success)]" />
             </div>
-            <h2 className="text-xl font-bold text-[var(--color-text)] mb-2">Finalizar Treino?</h2>
-            <p className="text-[var(--color-text-muted)] text-sm mb-6">
+            <h2 className="text-xl font-bold text-text mb-2">Finalizar Treino?</h2>
+            <p className="text-text-muted text-sm mb-6">
               Parabéns pelo esforço! Todas as séries concluídas serão registradas no seu histórico.
             </p>
             <div className="flex flex-col gap-3">

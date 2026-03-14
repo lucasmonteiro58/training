@@ -5,12 +5,12 @@ import { calcularRecordes } from '../../lib/records'
 import { useState, useMemo } from 'react'
 import type { SessaoDeTreino } from '../../types'
 import { toast } from 'sonner'
-import { SessaoDetalheHeader } from './components/SessaoDetalheHeader'
-import { SessaoStats } from './components/SessaoStats'
-import { ProgressoSeries } from './components/ProgressoSeries'
-import { BotaoRetornarTreino } from './components/BotaoRetornarTreino'
-import { NotasTreino } from './components/NotasTreino'
-import { ExercicioSessaoCard } from './components/ExercicioSessaoCard'
+import { SessaoDetalheHeader } from './components/-SessaoDetalheHeader'
+import { SessaoStats } from './components/-SessaoStats'
+import { ProgressoSeries } from './components/-ProgressoSeries'
+import { BotaoRetornarTreino } from './components/-BotaoRetornarTreino'
+import { NotasTreino } from './components/-NotasTreino'
+import { ExercicioSessaoCard } from './components/-ExercicioSessaoCard'
 
 export const Route = createFileRoute('/historico/$sessaoId')({
   component: SessaoDetalhePage,
@@ -34,7 +34,7 @@ function SessaoDetalhePage() {
   if (!sessao) {
     return (
       <div className="page-container pt-6 text-center">
-        <p className="text-[var(--color-text-muted)]">Sessão não encontrada.</p>
+        <p className="text-text-muted">Sessão não encontrada.</p>
         <Link to="/historico" className="text-[var(--color-accent)] text-sm mt-2 block" style={{ textDecoration: 'none' }}>
           Voltar
         </Link>

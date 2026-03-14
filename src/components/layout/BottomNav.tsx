@@ -30,7 +30,7 @@ export function BottomNav() {
                     } hover:bg-[var(--color-accent-hover)] active:scale-95`
                   : isActive
                   ? 'text-[var(--color-accent)]'
-                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                  : 'text-text-muted hover:text-text'
               }`}
               style={{ textDecoration: 'none' }}
             >

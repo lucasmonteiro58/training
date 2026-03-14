@@ -21,8 +21,8 @@ export function PerfilHeader({ photoURL, displayName, email }: PerfilHeaderProps
         </div>
       )}
       <div>
-        <p className="text-xl font-bold text-[var(--color-text)]">{displayName ?? 'Atleta'}</p>
-        <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{email}</p>
+        <p className="text-xl font-bold text-text">{displayName ?? 'Atleta'}</p>
+        <p className="text-sm text-text-muted mt-0.5">{email}</p>
       </div>
     </div>
   )

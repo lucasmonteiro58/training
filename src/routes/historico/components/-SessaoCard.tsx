@@ -23,12 +23,12 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
     <div className="card p-4 animate-fade-up" style={{ animationDelay: `${index * 40}ms` }}>
       <div className="flex items-start justify-between mb-2">
         <div>
-          <p className="text-[var(--color-text)] font-bold">{sessao.planoNome}</p>
-          <p className="text-[var(--color-text-muted)] text-xs mt-0.5 capitalize">{dataStr}</p>
+          <p className="text-text font-bold">{sessao.planoNome}</p>
+          <p className="text-text-muted text-xs mt-0.5 capitalize">{dataStr}</p>
         </div>
         <button
           onClick={() => onExcluir(sessao.id)}
-          className="btn-ghost p-2 text-[var(--color-text-subtle)] hover:text-[var(--color-danger)]"
+          className="btn-ghost p-2 text-text-subtle hover:text-[var(--color-danger)]"
         >
           <Trash2 size={14} />
         </button>
@@ -36,18 +36,18 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
       <div className="flex gap-4 mb-3">
         {sessao.duracaoSegundos && (
           <div className="flex items-center gap-1.5">
-            <Clock size={13} className="text-[var(--color-text-subtle)]" />
-            <span className="text-xs text-[var(--color-text-muted)]">{formatarTempo(sessao.duracaoSegundos)}</span>
+            <Clock size={13} className="text-text-subtle" />
+            <span className="text-xs text-text-muted">{formatarTempo(sessao.duracaoSegundos)}</span>
           </div>
         )}
         <div className="flex items-center gap-1.5">
-          <Dumbbell size={13} className="text-[var(--color-text-subtle)]" />
-          <span className="text-xs text-[var(--color-text-muted)]">{sessao.exercicios.length} exercícios</span>
+          <Dumbbell size={13} className="text-text-subtle" />
+          <span className="text-xs text-text-muted">{sessao.exercicios.length} exercícios</span>
         </div>
         {sessao.volumeTotal !== undefined && sessao.volumeTotal > 0 && (
           <div className="flex items-center gap-1.5">
-            <TrendingUp size={13} className="text-[var(--color-text-subtle)]" />
-            <span className="text-xs text-[var(--color-text-muted)]">{Math.round(sessao.volumeTotal)} kg</span>
+            <TrendingUp size={13} className="text-text-subtle" />
+            <span className="text-xs text-text-muted">{Math.round(sessao.volumeTotal)} kg</span>
           </div>
         )}
       </div>

@@ -11,7 +11,7 @@ export function VolumeChart({ dados }: VolumeChartProps) {
     <div className="card p-4 mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp size={16} className="text-[var(--color-accent)]" />
-        <p className="text-sm font-bold text-[var(--color-text)]">Volume por Semana (kg)</p>
+        <p className="text-sm font-bold text-text">Volume por Semana (kg)</p>
       </div>
       <ResponsiveContainer width="100%" height={120}>
         <BarChart data={dados} barSize={20}>

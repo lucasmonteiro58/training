@@ -2,10 +2,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useHistoricoStore } from '../../stores'
 import { useState, useMemo } from 'react'
 import { TrendingUp } from 'lucide-react'
-import { EvolucaoHeader } from './components/EvolucaoHeader'
-import { EvolucaoTabs, type EvolucaoTabId } from './components/EvolucaoTabs'
-import { EvolucaoExercicioCard } from './components/EvolucaoExercicioCard'
-import { VolumeChart } from './components/VolumeChart'
+import { EvolucaoHeader } from './components/-EvolucaoHeader'
+import { EvolucaoTabs, type EvolucaoTabId } from './components/-EvolucaoTabs'
+import { EvolucaoExercicioCard } from './components/-EvolucaoExercicioCard'
+import { VolumeChart } from './components/-VolumeChart'
 
 export const Route = createFileRoute('/perfil/evolucao')({
   component: EvolucaoPage,
@@ -77,10 +77,10 @@ function EvolucaoPage() {
   if (sessoes.length === 0) {
     return (
       <div className="page-container pt-6 flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="w-16 h-16 rounded-3xl bg-[var(--color-surface-2)] flex items-center justify-center mb-4">
-          <TrendingUp size={28} className="text-[var(--color-text-subtle)]" />
+        <div className="w-16 h-16 rounded-3xl bg-surface-2 flex items-center justify-center mb-4">
+          <TrendingUp size={28} className="text-text-subtle" />
         </div>
-        <p className="text-[var(--color-text-muted)] text-sm text-center">
+        <p className="text-text-muted text-sm text-center">
           Complete alguns treinos para ver
           <br />
           sua evolução aqui.
@@ -98,7 +98,7 @@ function EvolucaoPage() {
       {tab === 'exercicios' && (
         <div className="flex flex-col gap-3 animate-fade-up">
           {exercicios.length === 0 ? (
-            <p className="text-xs text-[var(--color-text-muted)] text-center py-10">
+            <p className="text-xs text-text-muted text-center py-10">
               Nenhum exercício com peso registrado encontrado.
             </p>
           ) : (

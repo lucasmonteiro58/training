@@ -9,7 +9,7 @@ export function ConquistasCard({ conquistas }: ConquistasCardProps) {
 
   return (
     <div className="card p-4 mb-5 animate-fade-up" style={{ animationDelay: '75ms' }}>
-      <p className="text-xs font-bold text-[var(--color-text-muted)] mb-3">
+      <p className="text-xs font-bold text-text-muted mb-3">
         CONQUISTAS ({desbloqueadas}/{conquistas.length})
       </p>
       <div className="grid grid-cols-4 gap-2">
@@ -22,7 +22,7 @@ export function ConquistasCard({ conquistas }: ConquistasCardProps) {
             title={`${c.nome}: ${c.descricao}`}
           >
             <span className="text-2xl">{c.icone}</span>
-            <span className="text-[9px] font-semibold text-[var(--color-text-muted)] text-center leading-tight">
+            <span className="text-[9px] font-semibold text-text-muted text-center leading-tight">
               {c.nome}
             </span>
           </div>

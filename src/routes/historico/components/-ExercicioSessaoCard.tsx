@@ -31,16 +31,16 @@ export function ExercicioSessaoCard({
           <img
             src={ex.gifUrl}
             alt={ex.exercicioNome}
-            className="w-12 h-12 rounded-xl object-contain bg-[var(--color-surface-2)] flex-shrink-0"
+            className="w-12 h-12 rounded-xl object-contain bg-surface-2 flex-shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center flex-shrink-0">
             <span className="text-2xl">💪</span>
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[var(--color-text)] font-bold text-sm truncate">{ex.exercicioNome}</p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{ex.grupoMuscular}</p>
+          <p className="text-text font-bold text-sm truncate">{ex.exercicioNome}</p>
+          <p className="text-xs text-text-muted mt-0.5">{ex.grupoMuscular}</p>
         </div>
         {seriesPRs.some(Boolean) && (
           <span className="flex items-center gap-1 text-[10px] font-bold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full">
@@ -51,7 +51,7 @@ export function ExercicioSessaoCard({
 
       <div className="grid grid-cols-[24px_1fr_1fr_24px] gap-2 px-1 mb-1">
         {['#', 'Peso (kg)', 'Reps', ''].map((h, i) => (
-          <span key={i} className="text-[9px] text-[var(--color-text-subtle)] font-semibold text-center">{h}</span>
+          <span key={i} className="text-[9px] text-text-subtle font-semibold text-center">{h}</span>
         ))}
       </div>
       {ex.series.map((s, sIdx) => (
@@ -59,7 +59,7 @@ export function ExercicioSessaoCard({
           key={s.id}
           className={`grid grid-cols-[24px_1fr_1fr_24px] gap-2 px-1 py-1.5 rounded-lg ${s.completada ? 'bg-[rgba(34,197,94,0.06)]' : ''}`}
         >
-          <span className="text-xs text-center text-[var(--color-text-subtle)] font-bold">{sIdx + 1}</span>
+          <span className="text-xs text-center text-text-subtle font-bold">{sIdx + 1}</span>
           {editando ? (
             <>
               <input
@@ -83,10 +83,10 @@ export function ExercicioSessaoCard({
             </>
           ) : (
             <>
-              <span className="text-sm text-center text-[var(--color-text)] font-semibold">
+              <span className="text-sm text-center text-text font-semibold">
                 {s.peso ? `${s.peso}kg` : '–'}
               </span>
-              <span className="text-sm text-center text-[var(--color-text)] font-semibold">
+              <span className="text-sm text-center text-text font-semibold">
                 {s.repeticoes || '–'}
               </span>
             </>
@@ -96,13 +96,13 @@ export function ExercicioSessaoCard({
               <button
                 type="button"
                 onClick={() => onUpdateSerie(exIdx, sIdx, { completada: !s.completada })}
-                className="p-0.5 rounded-full hover:bg-[var(--color-surface-2)] transition-colors"
+                className="p-0.5 rounded-full hover:bg-surface-2 transition-colors"
                 title={s.completada ? 'Marcar como não concluída' : 'Marcar como concluída'}
               >
                 {s.completada ? (
                   <CheckCircle2 size={15} className="text-[var(--color-success)]" />
                 ) : (
-                  <Circle size={15} className="text-[var(--color-text-subtle)]" />
+                  <Circle size={15} className="text-text-subtle" />
                 )}
               </button>
             ) : seriesPRs[sIdx] ? (
@@ -110,7 +110,7 @@ export function ExercicioSessaoCard({
             ) : s.completada ? (
               <CheckCircle2 size={15} className="text-[var(--color-success)]" />
             ) : (
-              <Circle size={15} className="text-[var(--color-text-subtle)]" />
+              <Circle size={15} className="text-text-subtle" />
             )}
           </span>
         </div>

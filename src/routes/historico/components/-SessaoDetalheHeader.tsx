@@ -23,13 +23,13 @@ export function SessaoDetalheHeader({
     <div className="flex items-center gap-3 mb-6 animate-fade-up">
       <button
         onClick={onVoltar}
-        className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)]"
+        className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted"
       >
         <ArrowLeft size={18} />
       </button>
       <div className="flex-1 min-w-0">
-        <h1 className="text-xl font-bold text-[var(--color-text)] truncate">{planoNome}</h1>
-        <p className="text-xs text-[var(--color-text-muted)] capitalize mt-0.5">{dataStr}</p>
+        <h1 className="text-xl font-bold text-text truncate">{planoNome}</h1>
+        <p className="text-xs text-text-muted capitalize mt-0.5">{dataStr}</p>
       </div>
       {editando ? (
         <div className="flex gap-2">

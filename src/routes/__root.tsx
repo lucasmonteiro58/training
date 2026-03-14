@@ -138,7 +138,7 @@ function RootComponent() {
           <div className="flex items-center justify-center animate-pulse">
             <img src="/icon.png" alt="Logo" className="w-14 h-14 rounded-xl" />
           </div>
-          <p className="text-[var(--color-text-muted)] text-sm">Carregando...</p>
+          <p className="text-text-muted text-sm">Carregando...</p>
         </div>
       </div>
     )
@@ -199,7 +199,7 @@ function AutoEncerradoBanner() {
   return (
     <div className="mx-4 mt-2 mb-1 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 animate-scale-in">
       <p className="text-sm font-semibold text-amber-200 mb-1">Treino encerrado por inatividade</p>
-      <p className="text-xs text-[var(--color-text-muted)] mb-3">
+      <p className="text-xs text-text-muted mb-3">
         Não houve interação nos últimos 20 minutos. Você pode retornar ao treino ou continuar depois.
       </p>
       <div className="flex gap-2">
@@ -239,7 +239,7 @@ function SyncIndicator() {
   return (
     <div className="fixed top-[max(env(safe-area-inset-top,0px),8px)] left-1/2 -translate-x-1/2 z-[100] flex items-center gap-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] px-3 py-1.5 rounded-full shadow-lg animate-scale-in">
       <span className="animate-spin inline-block w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full" />
-      <span className="text-[11px] font-medium text-[var(--color-text-muted)]">
+      <span className="text-[11px] font-medium text-text-muted">
         Sincronizando{pending > 1 ? ` (${pending})` : ''}
       </span>
     </div>
@@ -273,7 +273,7 @@ function LoginPage() {
           <img src="/icon.png" alt="Logo" className="w-20 h-20 rounded-xl" />
           <div className="text-center">
             <h1 className="text-4xl font-black gradient-text">Training</h1>
-            <p className="text-[var(--color-text-muted)] mt-2 text-base">
+            <p className="text-text-muted mt-2 text-base">
               Seu parceiro de treino inteligente
             </p>
           </div>
@@ -284,7 +284,7 @@ function LoginPage() {
             (f) => (
               <span
                 key={f}
-                className="px-3 py-1.5 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] text-xs font-medium"
+                className="px-3 py-1.5 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] text-text-muted text-xs font-medium"
               >
                 {f}
               </span>
@@ -317,7 +317,7 @@ function LoginPage() {
             </svg>
             Entrar com Google
           </button>
-          <p className="text-center text-xs text-[var(--color-text-subtle)]">
+          <p className="text-center text-xs text-text-subtle">
             Seus treinos ficam seguros e sincronizados 🔒
           </p>
         </div>

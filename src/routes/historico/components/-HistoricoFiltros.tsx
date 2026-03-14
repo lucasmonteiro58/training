@@ -48,7 +48,7 @@ export function HistoricoFiltros({
               key={val}
               onClick={() => onPeriodoChange(val)}
               className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                filtroPeriodo === val ? 'bg-accent text-white' : 'bg-[var(--color-surface-2)] text-text-muted'
+                filtroPeriodo === val ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted'
               }`}
             >
               {label}

@@ -2,12 +2,12 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useHistorico } from '../../hooks/useHistorico'
 import { useTreinoAtivoStore } from '../../stores'
 import { useMemo, useState } from 'react'
-import { HistoricoHeader } from './components/HistoricoHeader'
-import { HistoricoFiltros, type Periodo } from './components/HistoricoFiltros'
-import { VolumeChart } from './components/VolumeChart'
-import { EmptyHistorico } from './components/EmptyHistorico'
-import { SessaoCard } from './components/SessaoCard'
-import { ConfirmExcluirModal } from './components/ConfirmExcluirModal'
+import { HistoricoHeader } from './components/-HistoricoHeader'
+import { HistoricoFiltros, type Periodo } from './components/-HistoricoFiltros'
+import { VolumeChart } from './components/-VolumeChart'
+import { EmptyHistorico } from './components/-EmptyHistorico'
+import { SessaoCard } from './components/-SessaoCard'
+import { ConfirmExcluirModal } from './components/-ConfirmExcluirModal'
 
 export const Route = createFileRoute('/historico/')({
   component: HistoricoPage,

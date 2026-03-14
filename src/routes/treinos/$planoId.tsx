@@ -59,7 +59,7 @@ function PlanoDetalheComponent() {
   if (!plano) {
     return (
       <div className="page-container pt-6 text-center">
-        <p className="text-[var(--color-text-muted)]">Plano não encontrado.</p>
+        <p className="text-text-muted">Plano não encontrado.</p>
         <Link to="/treinos" className="text-[var(--color-accent)] text-sm mt-2 block">Voltar</Link>
       </div>
     )
@@ -165,13 +165,13 @@ function PlanoDetalheComponent() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-6 animate-fade-up">
           <button onClick={() => navigate({ to: '/treinos' })}
-            className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)]">
+            className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted">
             <ArrowLeft size={18} />
           </button>
           {editando ? (
             <input className="input flex-1 text-lg font-bold py-2" value={nome} onChange={(e) => setNome(e.target.value)} />
           ) : (
-            <h1 className="text-xl font-bold text-[var(--color-text)] flex-1">{plano.nome}</h1>
+            <h1 className="text-xl font-bold text-text flex-1">{plano.nome}</h1>
           )}
           {editando ? (
             <button onClick={salvarEdicao} className="btn-primary py-2 px-4 text-sm">Salvar</button>
@@ -191,8 +191,8 @@ function PlanoDetalheComponent() {
             { label: 'Descanso', value: `${plano.exercicios[0]?.descansoSegundos ?? '-'}s`, icon: Clock },
           ].map((stat, i) => (
             <div key={i} className="card p-3 text-center">
-              <p className="text-lg font-bold text-[var(--color-text)]">{stat.value}</p>
-              <p className="text-[10px] text-[var(--color-text-muted)]">{stat.label}</p>
+              <p className="text-lg font-bold text-text">{stat.value}</p>
+              <p className="text-[10px] text-text-muted">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -211,7 +211,7 @@ function PlanoDetalheComponent() {
         {/* Exercises list */}
         <div className="animate-fade-up" style={{ animationDelay: '150ms' }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-[var(--color-text)]">
+            <h2 className="text-sm font-bold text-text">
               EXERCÍCIOS
             </h2>
             {editando && exerciciosEdit.length >= 2 && (
@@ -336,7 +336,7 @@ function PlanoDetalheComponent() {
 
           {editando && (
             <button onClick={() => setShowPicker(true)}
-              className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-[var(--color-border-strong)] text-[var(--color-text-muted)] flex items-center justify-center gap-2 text-sm font-medium hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors">
+              className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-[var(--color-border-strong)] text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors">
               <Plus size={18} /> Adicionar Exercício
             </button>
           )}

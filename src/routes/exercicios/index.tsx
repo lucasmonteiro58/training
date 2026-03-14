@@ -7,10 +7,10 @@ import { useAuthStore } from '../../stores'
 import { CriarExercicioModal } from '../../components/common/CriarExercicioModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Calculadora1RM } from '../../components/ui/Calculadora1RM'
-import { ExerciciosToolbar } from './components/ExerciciosToolbar'
-import { ExercicioGridCard } from './components/ExercicioGridCard'
-import { EmptyExercicios } from './components/EmptyExercicios'
-import { ExercicioDetailModal } from './components/ExercicioDetailModal'
+import { ExerciciosToolbar } from './components/-ExerciciosToolbar'
+import { ExercicioGridCard } from './components/-ExercicioGridCard'
+import { EmptyExercicios } from './components/-EmptyExercicios'
+import { ExercicioDetailModal } from './components/-ExercicioDetailModal'
 
 export const Route = createFileRoute('/exercicios/')({
   component: ExerciciosPage,

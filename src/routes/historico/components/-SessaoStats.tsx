@@ -27,7 +27,7 @@ export function SessaoStats({
             <input
               type="number"
               min={0}
-              className="w-full text-lg font-bold text-[var(--color-text)] bg-[var(--color-surface-2)] rounded-lg px-2 py-1 text-center"
+              className="w-full text-lg font-bold text-text bg-surface-2 rounded-lg px-2 py-1 text-center"
               value={duracaoMinutos}
               onChange={(e) => {
                 const min = e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0
@@ -35,26 +35,26 @@ export function SessaoStats({
               }}
               onFocus={(e) => e.target.select()}
             />
-            <span className="text-[10px] text-[var(--color-text-muted)]">min</span>
+            <span className="text-[10px] text-text-muted">min</span>
           </div>
         ) : (
-          <p className="text-lg font-bold text-[var(--color-text)]">
+          <p className="text-lg font-bold text-text">
             {duracaoSegundos ? formatarTempo(duracaoSegundos) : '–'}
           </p>
         )}
-        <p className="text-[10px] text-[var(--color-text-muted)]">Duração</p>
+        <p className="text-[10px] text-text-muted">Duração</p>
       </div>
       <div className="card p-3 text-center">
         <Dumbbell size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
-        <p className="text-lg font-bold text-[var(--color-text)]">{numExercicios}</p>
-        <p className="text-[10px] text-[var(--color-text-muted)]">Exercícios</p>
+        <p className="text-lg font-bold text-text">{numExercicios}</p>
+        <p className="text-[10px] text-text-muted">Exercícios</p>
       </div>
       <div className="card p-3 text-center">
         <TrendingUp size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
-        <p className="text-lg font-bold text-[var(--color-text)]">
+        <p className="text-lg font-bold text-text">
           {volumeTotal != null ? Math.round(volumeTotal) : '–'}
         </p>
-        <p className="text-[10px] text-[var(--color-text-muted)]">Volume (kg)</p>
+        <p className="text-[10px] text-text-muted">Volume (kg)</p>
       </div>
     </div>
   )

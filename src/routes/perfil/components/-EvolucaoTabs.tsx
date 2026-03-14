@@ -14,7 +14,7 @@ const TABS: { id: EvolucaoTabId; label: string; icon: React.ElementType }[] = [
 
 export function EvolucaoTabs({ tab, onTabChange }: EvolucaoTabsProps) {
   return (
-    <div className="flex gap-2 mb-5 animate-fade-up bg-[var(--color-surface-2)] p-1 rounded-2xl">
+    <div className="flex gap-2 mb-5 animate-fade-up bg-surface-2 p-1 rounded-2xl">
       {TABS.map(({ id, label, icon: Icon }) => (
         <button
           key={id}
@@ -22,8 +22,8 @@ export function EvolucaoTabs({ tab, onTabChange }: EvolucaoTabsProps) {
           onClick={() => onTabChange(id)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-medium transition-all ${
             tab === id
-              ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
-              : 'text-[var(--color-text-muted)]'
+              ? 'bg-[var(--color-surface)] text-text shadow-sm'
+              : 'text-text-muted'
           }`}
         >
           <Icon size={14} />

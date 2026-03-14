@@ -19,10 +19,10 @@ export function VolumeChart({ dados }: VolumeChartProps) {
       <div className="card p-4 animate-fade-up">
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 size={16} className="text-[var(--color-accent)]" />
-          <p className="text-sm font-bold text-[var(--color-text)]">Volume Total por Sessão</p>
-          <span className="text-[10px] text-[var(--color-text-muted)] ml-auto">últimas 20</span>
+          <p className="text-sm font-bold text-text">Volume Total por Sessão</p>
+          <span className="text-[10px] text-text-muted ml-auto">últimas 20</span>
         </div>
-        <p className="text-xs text-[var(--color-text-muted)] text-center py-6">
+        <p className="text-xs text-text-muted text-center py-6">
           Complete pelo menos 2 treinos para ver o volume.
         </p>
       </div>
@@ -33,8 +33,8 @@ export function VolumeChart({ dados }: VolumeChartProps) {
     <div className="card p-4 animate-fade-up">
       <div className="flex items-center gap-2 mb-4">
         <BarChart2 size={16} className="text-[var(--color-accent)]" />
-        <p className="text-sm font-bold text-[var(--color-text)]">Volume Total por Sessão</p>
-        <span className="text-[10px] text-[var(--color-text-muted)] ml-auto">últimas 20</span>
+        <p className="text-sm font-bold text-text">Volume Total por Sessão</p>
+        <span className="text-[10px] text-text-muted ml-auto">últimas 20</span>
       </div>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={dados} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>

@@ -10,11 +10,11 @@ export function EvolucaoHeader({ onVoltar }: EvolucaoHeaderProps) {
       <button
         type="button"
         onClick={onVoltar}
-        className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-[var(--color-text-muted)]"
+        className="w-9 h-9 rounded-xl bg-[var(--color-surface)] flex items-center justify-center text-text-muted"
       >
         <ChevronLeft size={20} />
       </button>
-      <h1 className="text-xl font-bold text-[var(--color-text)]">Evolução de Peso</h1>
+      <h1 className="text-xl font-bold text-text">Evolução de Peso</h1>
     </div>
   )
 }

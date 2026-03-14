@@ -61,7 +61,7 @@ function PlanoSortableCard({
             ref={setActivatorNodeRef}
             {...attributes}
             {...listeners}
-            className="p-1 text-[var(--color-text-subtle)] touch-none cursor-grab active:cursor-grabbing"
+            className="p-1 text-text-subtle touch-none cursor-grab active:cursor-grabbing"
           >
             <GripVertical size={20} />
           </button>
@@ -82,9 +82,9 @@ function PlanoSortableCard({
           className="flex-1 min-w-0"
           style={{ textDecoration: 'none' }}
         >
-          <p className="text-[var(--color-text)] font-semibold truncate">{plano.nome}</p>
+          <p className="text-text font-semibold truncate">{plano.nome}</p>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs text-[var(--color-text-muted)]">
+            <span className="text-xs text-text-muted">
               {plano.exercicios.length} exercícios
             </span>
           </div>
@@ -99,7 +99,7 @@ function PlanoSortableCard({
               <Play size={14} className="text-white ml-0.5" />
             </button>
             <button
-              className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-subtle)] hover:text-[var(--color-accent)] hover:bg-[rgba(99,102,241,0.1)] transition-colors"
+              className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-subtle hover:text-[var(--color-accent)] hover:bg-[rgba(99,102,241,0.1)] transition-colors"
               onClick={() => onArchive(plano.id)}
               disabled={processando === plano.id}
               title="Arquivar"
@@ -117,7 +117,7 @@ function PlanoSortableCard({
             .map((grupo) => (
               <span
                 key={grupo}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
+                className="text-[10px] px-2 py-0.5 rounded-full bg-surface-2 text-text-muted border border-[var(--color-border)]"
               >
                 {grupo}
               </span>
@@ -196,7 +196,7 @@ function TreinosPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 mb-6 animate-fade-up">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Meus Treinos</h1>
+          <h1 className="text-2xl font-bold text-text">Meus Treinos</h1>
           <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
             <button className="btn-primary flex items-center gap-1.5 py-2 px-3 text-sm">
               <Plus size={16} />
@@ -238,12 +238,12 @@ function TreinosPage() {
         </div>
       ) : planosAtivos.length === 0 && planosArquivados.length === 0 ? (
         <div className="flex flex-col items-center gap-6 mt-16 animate-scale-in">
-          <div className="w-20 h-20 rounded-3xl bg-[var(--color-surface-2)] flex items-center justify-center">
-            <Dumbbell size={36} className="text-[var(--color-text-subtle)]" />
+          <div className="w-20 h-20 rounded-3xl bg-surface-2 flex items-center justify-center">
+            <Dumbbell size={36} className="text-text-subtle" />
           </div>
           <div className="text-center">
-            <p className="text-[var(--color-text)] font-semibold text-lg">Nenhum plano ainda</p>
-            <p className="text-[var(--color-text-muted)] text-sm mt-1">
+            <p className="text-text font-semibold text-lg">Nenhum plano ainda</p>
+            <p className="text-text-muted text-sm mt-1">
               Crie seu primeiro plano ou importe via CSV
             </p>
           </div>
@@ -264,7 +264,7 @@ function TreinosPage() {
           {/* Planos Ativos */}
           <div className="flex flex-col gap-3">
             {planosAtivos.length === 0 && (
-              <p className="text-center text-[var(--color-text-muted)] text-sm py-8">
+              <p className="text-center text-text-muted text-sm py-8">
                 Nenhum treino ativo no momento.
               </p>
             )}
@@ -304,7 +304,7 @@ function TreinosPage() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => setMostrarArquivados(!mostrarArquivados)}
-                className="flex items-center justify-between px-2 py-1 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                className="flex items-center justify-between px-2 py-1 text-sm font-medium text-text-muted hover:text-text transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Archive size={16} />
@@ -325,21 +325,21 @@ function TreinosPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--color-surface-2)]"
+                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-surface-2"
                         >
-                          <Archive size={18} className="text-[var(--color-text-muted)]" />
+                          <Archive size={18} className="text-text-muted" />
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className="text-[var(--color-text)] font-semibold truncate text-sm">{plano.nome}</p>
-                          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          <p className="text-text font-semibold truncate text-sm">{plano.nome}</p>
+                          <p className="text-xs text-text-muted mt-0.5">
                             {plano.exercicios.length} exercícios
                           </p>
                         </div>
 
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button
-                            className="w-9 h-9 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-subtle)] hover:text-[var(--color-accent)] transition-colors"
+                            className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-[var(--color-accent)] transition-colors"
                             onClick={() => handleRestore(plano.id)}
                             disabled={processando === plano.id}
                             title="Desarquivar"
@@ -347,7 +347,7 @@ function TreinosPage() {
                             <ArchiveRestore size={14} />
                           </button>
                           <button
-                            className="w-9 h-9 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-subtle)] hover:text-[var(--color-danger)] transition-colors"
+                            className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-[var(--color-danger)] transition-colors"
                             onClick={() => handleDelete(plano.id, plano.nome)}
                             disabled={deletando === plano.id}
                             title="Excluir Permanentemente"

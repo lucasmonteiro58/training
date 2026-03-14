@@ -6,12 +6,12 @@ import { LogOut } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { calcularStreaks, calcularConquistas } from '../../lib/streaks'
-import { PerfilHeader } from './components/PerfilHeader'
-import { PerfilStats } from './components/PerfilStats'
-import { ConquistasCard } from './components/ConquistasCard'
-import { ConfiguracoesCard } from './components/ConfiguracoesCard'
-import { ExportModal } from './components/ExportModal'
-import { LogoutConfirmModal } from './components/LogoutConfirmModal'
+import { PerfilHeader } from './components/-PerfilHeader'
+import { PerfilStats } from './components/-PerfilStats'
+import { ConquistasCard } from './components/-ConquistasCard'
+import { ConfiguracoesCard } from './components/-ConfiguracoesCard'
+import { ExportModal } from './components/-ExportModal'
+import { LogoutConfirmModal } from './components/-LogoutConfirmModal'
 
 export const Route = createFileRoute('/perfil/')({
   component: PerfilPage,
@@ -96,7 +96,7 @@ function PerfilPage() {
         Sair da Conta
       </button>
 
-      <p className="text-center text-xs text-[var(--color-text-subtle)] mt-4 mb-2">
+      <p className="text-center text-xs text-text-subtle mt-4 mb-2">
         Seus dados estão sincronizados com o Firebase 🔒
       </p>
 

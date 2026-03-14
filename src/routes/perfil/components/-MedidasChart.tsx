@@ -13,11 +13,11 @@ export function MedidasChart({ campoGrafico, dados, onCampoChange }: MedidasChar
   return (
     <div className="card p-4 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase">Evolução</p>
+        <p className="text-xs font-bold text-text-muted uppercase">Evolução</p>
         <select
           value={campoGrafico}
           onChange={e => onCampoChange(e.target.value)}
-          className="text-xs bg-[var(--color-surface-2)] text-[var(--color-text)] border border-[var(--color-border)] rounded-lg px-2 py-1"
+          className="text-xs bg-surface-2 text-text border border-[var(--color-border)] rounded-lg px-2 py-1"
         >
           {CAMPOS_MEDIDA.map(c => (
             <option key={c.key} value={c.key}>
@@ -54,7 +54,7 @@ export function MedidasChart({ campoGrafico, dados, onCampoChange }: MedidasChar
           </LineChart>
         </ResponsiveContainer>
       ) : (
-        <p className="text-xs text-[var(--color-text-muted)] text-center py-6">
+        <p className="text-xs text-text-muted text-center py-6">
           Registre mais medidas de {campoAtual?.label.toLowerCase()} para ver o gráfico.
         </p>
       )}

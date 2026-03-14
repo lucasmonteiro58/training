@@ -12,8 +12,8 @@ export function ConfirmExcluirModal({ onConfirm, onCancel }: ConfirmExcluirModal
         <div className="w-16 h-16 rounded-3xl bg-[rgba(239,68,68,0.12)] flex items-center justify-center mx-auto mb-4">
           <Trash2 size={32} className="text-[var(--color-danger)]" />
         </div>
-        <h2 className="text-xl font-bold text-[var(--color-text)] mb-2">Excluir Sessão?</h2>
-        <p className="text-[var(--color-text-muted)] text-sm mb-6">
+        <h2 className="text-xl font-bold text-text mb-2">Excluir Sessão?</h2>
+        <p className="text-text-muted text-sm mb-6">
           Esta ação não pode ser desfeita. O registro deste treino será removido do seu histórico.
         </p>
         <div className="flex flex-col gap-3">

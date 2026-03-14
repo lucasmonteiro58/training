@@ -128,22 +128,22 @@ function ExercicioEditCard({
           {idx + 1}
         </span>
         <button className="flex-1 text-left min-w-0" onClick={onToggle}>
-          <p className="text-sm font-medium text-[var(--color-text)] truncate">{ex.exercicio.nome}</p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+          <p className="text-sm font-medium text-text truncate">{ex.exercicio.nome}</p>
+          <p className="text-xs text-text-muted mt-0.5">
             {series.length} série{series.length !== 1 ? 's' : ''} · {ex.exercicio.grupoMuscular} · ⏱ {ex.descansoSegundos}s
           </p>
         </button>
         <button onClick={onRemove} className="p-1.5 text-[var(--color-danger)] opacity-60 hover:opacity-100 flex-shrink-0">
           <Trash2 size={15} />
         </button>
-        <button onClick={onToggle} className="p-1.5 text-[var(--color-text-muted)] flex-shrink-0">
+        <button onClick={onToggle} className="p-1.5 text-text-muted flex-shrink-0">
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       </div>
 
       {/* Expanded form */}
       {expanded && (
-        <div className="border-t border-[var(--color-border)] p-3 flex flex-col gap-3 bg-[var(--color-surface-2)]/40">
+        <div className="border-t border-[var(--color-border)] p-3 flex flex-col gap-3 bg-surface-2/40">
 
           {/* Nome */}
           <div>
@@ -398,15 +398,15 @@ function PlanoEditCard({
   return (
     <div className="card overflow-hidden">
       {/* Plan header */}
-      <div className="flex items-center gap-3 p-4 bg-[var(--color-surface-2)]/60">
+      <div className="flex items-center gap-3 p-4 bg-surface-2/60">
         <button
           onClick={() => onChange(p => ({ ...p, collapsed: !p.collapsed }))}
-          className="text-[var(--color-text-muted)]"
+          className="text-text-muted"
         >
           {plano.collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
         </button>
         <div className="flex-1 min-w-0">
-          <label className="text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1 block">
+          <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
             NOME DO PLANO
           </label>
           <input
@@ -423,7 +423,7 @@ function PlanoEditCard({
 
       {!plano.collapsed && (
         <div className="p-3 flex flex-col gap-2">
-          <p className="text-xs text-[var(--color-text-muted)] mb-1">
+          <p className="text-xs text-text-muted mb-1">
             {totalExs} exercício{totalExs !== 1 ? 's' : ''} · {totalSeries} série{totalSeries !== 1 ? 's' : ''} no total
           </p>
           {plano.exercicios.map((ex, i) => (
@@ -441,7 +441,7 @@ function PlanoEditCard({
             />
           ))}
           {plano.exercicios.length === 0 && (
-            <p className="text-xs text-[var(--color-text-subtle)] text-center py-4">
+            <p className="text-xs text-text-subtle text-center py-4">
               Nenhum exercício. Remova este plano ou adicione exercícios manualmente.
             </p>
           )}
@@ -542,11 +542,11 @@ function ImportarCsvPage() {
       <div className="flex items-center gap-3 mb-6 animate-fade-up">
         <button
           onClick={() => navigate({ to: '/treinos' })}
-          className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)]"
+          className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted"
         >
           <ArrowLeft size={18} />
         </button>
-        <h1 className="text-xl font-bold text-[var(--color-text)]">Importar CSV</h1>
+        <h1 className="text-xl font-bold text-text">Importar CSV</h1>
         {planos && (
           <span className="ml-auto text-xs font-medium px-2.5 py-1 rounded-full bg-[var(--color-accent-subtle)] text-[var(--color-accent)]">
             {planos.length} plano{planos.length !== 1 ? 's' : ''}
@@ -557,12 +557,12 @@ function ImportarCsvPage() {
       {sucesso ? (
         <div className="flex flex-col items-center gap-4 mt-16 animate-scale-in">
           <CheckCircle size={48} className="text-[var(--color-success)]" />
-          <p className="text-[var(--color-text)] font-semibold text-lg">
+          <p className="text-text font-semibold text-lg">
             {planosValidos.length > 1
               ? `${planosValidos.length} planos criados com sucesso!`
               : 'Plano criado com sucesso!'}
           </p>
-          <p className="text-[var(--color-text-muted)] text-sm">Redirecionando...</p>
+          <p className="text-text-muted text-sm">Redirecionando...</p>
         </div>
       ) : (
         <>
@@ -570,8 +570,8 @@ function ImportarCsvPage() {
           <div className="card p-4 mb-4 animate-fade-up">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 pr-3">
-                <h2 className="text-sm font-bold text-[var(--color-text)]">Formato do CSV</h2>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                <h2 className="text-sm font-bold text-text">Formato do CSV</h2>
+                <p className="text-xs text-text-muted mt-1">
                   Use a coluna <strong>id</strong> para vincular ao banco de exercícios.
                   Se o nome for exatamente igual, o exercício também será reconhecido automaticamente.
                   Use a coluna <strong>plano</strong> para criar múltiplos planos de uma só vez.
@@ -586,7 +586,7 @@ function ImportarCsvPage() {
                 Template
               </button>
             </div>
-            <pre className="text-[10px] text-[var(--color-text-muted)] bg-[var(--color-surface-2)] p-3 rounded-xl overflow-x-auto font-mono">
+            <pre className="text-[10px] text-text-muted bg-surface-2 p-3 rounded-xl overflow-x-auto font-mono">
               {`id,plano,nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,...`}
             </pre>
           </div>
@@ -600,9 +600,9 @@ function ImportarCsvPage() {
               onDragOver={(e) => e.preventDefault()}
               onClick={() => inputRef.current?.click()}
             >
-              <FileUp size={36} className="mx-auto text-[var(--color-text-subtle)] mb-3" />
-              <p className="text-[var(--color-text)] font-semibold text-sm">Solte o arquivo aqui</p>
-              <p className="text-[var(--color-text-muted)] text-xs mt-1">ou clique para selecionar</p>
+              <FileUp size={36} className="mx-auto text-text-subtle mb-3" />
+              <p className="text-text font-semibold text-sm">Solte o arquivo aqui</p>
+              <p className="text-text-muted text-xs mt-1">ou clique para selecionar</p>
               <input
                 ref={inputRef}
                 type="file"
@@ -624,7 +624,7 @@ function ImportarCsvPage() {
               </div>
               <ul className="list-disc list-inside space-y-1">
                 {erros.map((e, i) => (
-                  <li key={i} className="text-xs text-[var(--color-text-muted)]">{e}</li>
+                  <li key={i} className="text-xs text-text-muted">{e}</li>
                 ))}
               </ul>
             </div>
@@ -634,12 +634,12 @@ function ImportarCsvPage() {
           {planos && (
             <div className="mt-4 animate-fade-up flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-[var(--color-text)]">
+                <h2 className="text-sm font-bold text-text">
                   Revise e edite antes de salvar
                 </h2>
                 <button
                   onClick={() => { setPlanos(null); setErros([]) }}
-                  className="btn-ghost p-2 text-[var(--color-text-muted)]"
+                  className="btn-ghost p-2 text-text-muted"
                 >
                   <X size={16} />
                 </button>
@@ -657,7 +657,7 @@ function ImportarCsvPage() {
               ))}
 
               {planos.length === 0 && (
-                <p className="text-xs text-[var(--color-text-muted)] text-center py-6">
+                <p className="text-xs text-text-muted text-center py-6">
                   Todos os planos foram removidos.
                 </p>
               )}

@@ -31,8 +31,8 @@ function PlanoCard({ plano }: { plano: { id: string; nome: string; cor?: string 
               <Dumbbell size={18} className="text-white" />
             </div>
             <div>
-              <p className="text-[var(--color-text)] font-semibold text-sm">{plano.nome}</p>
-              <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+              <p className="text-text font-semibold text-sm">{plano.nome}</p>
+              <p className="text-text-muted text-xs mt-0.5">
                 {plano.exercicios.length} exercícios
               </p>
             </div>
@@ -161,7 +161,7 @@ function HomePage() {
           className="flex items-center justify-center transition-all duration-150"
           style={{ height: pullDistance > 0 ? pullDistance : PULL_THRESHOLD, marginTop: -8 }}
         >
-          <div className={`w-8 h-8 flex items-center justify-center rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] ${isRefreshing ? '' : ''}`}>
+          <div className={`w-8 h-8 flex items-center justify-center rounded-full bg-surface-2 border border-[var(--color-border)] ${isRefreshing ? '' : ''}`}>
             <RefreshCw
               size={16}
               className={`text-[var(--color-accent)] transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -174,8 +174,8 @@ function HomePage() {
       {/* Header */}
       <div className="mb-6 animate-fade-up flex items-start justify-between">
         <div>
-          <p className="text-[var(--color-text-muted)] text-sm">{saudacao},</p>
-          <h1 className="text-2xl font-bold text-[var(--color-text)] mt-0.5">
+          <p className="text-text-muted text-sm">{saudacao},</p>
+          <h1 className="text-2xl font-bold text-text mt-0.5">
             {nome} 👋
           </h1>
         </div>
@@ -203,7 +203,7 @@ function HomePage() {
         >
           <div className={`card p-4 border-2 transition-colors ${
             pausado
-              ? 'border-[var(--color-text-subtle)] bg-[var(--color-surface-2)]'
+              ? 'border-[var(--color-text-subtle)] bg-surface-2'
               : 'border-[var(--color-accent)] bg-[var(--color-accent-subtle)] animate-pulse-glow'
           }`}>
             <div className="flex items-center justify-between">
@@ -215,7 +215,7 @@ function HomePage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="text-[var(--color-text)] font-bold text-sm">
+                    <p className="text-text font-bold text-sm">
                       {pausado ? 'Treino Pausado' : 'Treino Ativo'}
                     </p>
                     <span className={`px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold tabular-nums transition-colors ${
@@ -224,13 +224,13 @@ function HomePage() {
                       {formatarTempo(cronometroGeralSegundos)}
                     </span>
                   </div>
-                  <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+                  <p className="text-text-muted text-xs mt-0.5">
                     {exercicioAtual ? exercicioAtual.exercicioNome : sessaoAtiva.planoNome}
                   </p>
                 </div>
               </div>
               <div className={`flex items-center gap-2 font-semibold text-sm transition-colors ${
-                pausado ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-accent)]'
+                pausado ? 'text-text-muted' : 'text-[var(--color-accent)]'
               }`}>
                 Continuar <ChevronRight size={16} />
               </div>
@@ -250,22 +250,22 @@ function HomePage() {
       <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
         <div className="card p-3 text-center">
           <Flame size={18} className="text-orange-400 mx-auto mb-1" />
-          <p className="text-xl font-bold text-[var(--color-text)]">{treinosSemana}</p>
-          <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">esta semana</p>
+          <p className="text-xl font-bold text-text">{treinosSemana}</p>
+          <p className="text-[10px] text-text-muted mt-0.5">esta semana</p>
         </div>
         <div className="card p-3 text-center">
           <TrendingUp size={18} className="text-[var(--color-accent)] mx-auto mb-1" />
-          <p className="text-xl font-bold text-[var(--color-text)]">
+          <p className="text-xl font-bold text-text">
             {volumeTotal > 1000
               ? `${(volumeTotal / 1000).toFixed(1)}k`
               : Math.round(volumeTotal)}
           </p>
-          <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">vol. total (kg)</p>
+          <p className="text-[10px] text-text-muted mt-0.5">vol. total (kg)</p>
         </div>
         <div className="card p-3 text-center">
           <Dumbbell size={18} className="text-green-400 mx-auto mb-1" />
-          <p className="text-xl font-bold text-[var(--color-text)]">{sessoes.length}</p>
-          <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">treinos total</p>
+          <p className="text-xl font-bold text-text">{sessoes.length}</p>
+          <p className="text-[10px] text-text-muted mt-0.5">treinos total</p>
         </div>
       </div>
       )}
@@ -279,8 +279,8 @@ function HomePage() {
               <Flame size={20} className="text-orange-400" />
             </div>
             <div>
-              <p className="text-2xl font-black text-[var(--color-text)] tabular-nums">{streaks.streakAtual}</p>
-              <p className="text-[10px] text-[var(--color-text-muted)]">
+              <p className="text-2xl font-black text-text tabular-nums">{streaks.streakAtual}</p>
+              <p className="text-[10px] text-text-muted">
                 {streaks.streakAtual === 1 ? 'dia seguido' : 'dias seguidos'}
               </p>
             </div>
@@ -291,10 +291,10 @@ function HomePage() {
             className="card p-4 text-left"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Meta Semanal</span>
+              <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Meta Semanal</span>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-[var(--color-text)]">{streaks.treinosEstaSemana}/{streaks.metaSemanal}</span>
-                <Target size={12} className="text-[var(--color-text-subtle)]" />
+                <span className="text-xs font-bold text-text">{streaks.treinosEstaSemana}/{streaks.metaSemanal}</span>
+                <Target size={12} className="text-text-subtle" />
               </div>
             </div>
             <div className="progress-bar h-2!">
@@ -314,7 +314,7 @@ function HomePage() {
 
       {/* Dias da semana */}
       <div className="card p-4 mb-6 animate-fade-up" style={{ animationDelay: '100ms' }}>
-        <p className="text-xs text-[var(--color-text-muted)] font-medium mb-3">ESTA SEMANA</p>
+        <p className="text-xs text-text-muted font-medium mb-3">ESTA SEMANA</p>
         <div className="flex justify-between">
           {diasDaSemana.map((dia, idx) => {
             const diaDate = new Date(inicioSemana)
@@ -326,7 +326,7 @@ function HomePage() {
             const isHoje = diaDate.toDateString() === hoje.toDateString()
             return (
               <div key={idx} className="flex flex-col items-center gap-1.5">
-                <span className={`text-[10px] ${isHoje ? 'text-[var(--color-accent)] font-semibold' : 'text-[var(--color-text-subtle)]'}`}>
+                <span className={`text-[10px] ${isHoje ? 'text-[var(--color-accent)] font-semibold' : 'text-text-subtle'}`}>
                   {dia}
                 </span>
                 <div
@@ -335,7 +335,7 @@ function HomePage() {
                       ? 'bg-[var(--color-accent)] text-white'
                       : isHoje
                       ? 'border-2 border-[var(--color-accent)] text-[var(--color-accent)]'
-                      : 'bg-[var(--color-surface-2)] text-[var(--color-text-subtle)]'
+                      : 'bg-surface-2 text-text-subtle'
                   }`}
                 >
                   {temTreino ? '✓' : diaDate.getDate()}
@@ -351,9 +351,9 @@ function HomePage() {
         <>
           <div className="mb-6 animate-fade-up" style={{ animationDelay: '112ms' }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-[var(--color-text)]">Próximo Treino</h2>
+              <h2 className="text-base font-bold text-text">Próximo Treino</h2>
               {ultimaSessao && (
-                <span className="text-[10px] text-[var(--color-text-subtle)] font-medium">
+                <span className="text-[10px] text-text-subtle font-medium">
                   baseado no último concluído
                 </span>
               )}
@@ -367,8 +367,8 @@ function HomePage() {
                   <Zap size={20} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-[var(--color-text)] font-bold text-sm">{proximoPlano.nome}</p>
-                  <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+                  <p className="text-text font-bold text-sm">{proximoPlano.nome}</p>
+                  <p className="text-text-muted text-xs mt-0.5">
                     {proximoPlano.exercicios.length} exercícios
                   </p>
                 </div>
@@ -412,13 +412,13 @@ function HomePage() {
 
         return (
           <div className="card p-4 mb-6 animate-fade-up" style={{ animationDelay: '125ms' }}>
-            <p className="text-xs text-[var(--color-text-muted)] font-medium mb-3">GRUPOS MUSCULARES</p>
+            <p className="text-xs text-text-muted font-medium mb-3">GRUPOS MUSCULARES</p>
             <div className="flex flex-col gap-2">
               {alertas.map(a => (
                 <div key={a.grupo} className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: a.cor }} />
-                  <span className="text-sm text-[var(--color-text)] font-medium flex-1">{a.grupo}</span>
-                  <span className={`text-xs font-semibold ${a.dias >= 14 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]'}`}>
+                  <span className="text-sm text-text font-medium flex-1">{a.grupo}</span>
+                  <span className={`text-xs font-semibold ${a.dias >= 14 ? 'text-[var(--color-warning)]' : 'text-text-muted'}`}>
                     {a.dias === 1 ? '1 dia' : `${a.dias} dias`}
                   </span>
                 </div>
@@ -431,7 +431,7 @@ function HomePage() {
       {/* Meus Planos */}
       <div className="mb-6 animate-fade-up" style={{ animationDelay: '150ms' }}>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-[var(--color-text)]">Meus Planos</h2>
+          <h2 className="text-base font-bold text-text">Meus Planos</h2>
           <Link to="/treinos" className="text-[var(--color-accent)] text-sm font-medium" style={{ textDecoration: 'none' }}>
             Ver todos
           </Link>
@@ -450,8 +450,8 @@ function HomePage() {
                 <Plus size={24} className="text-[var(--color-accent)]" />
               </div>
               <div>
-                <p className="text-[var(--color-text)] font-semibold text-sm">Crie seu primeiro plano</p>
-                <p className="text-[var(--color-text-muted)] text-xs mt-1">Monte sua rotina de treino personalizada</p>
+                <p className="text-text font-semibold text-sm">Crie seu primeiro plano</p>
+                <p className="text-text-muted text-xs mt-1">Monte sua rotina de treino personalizada</p>
               </div>
             </div>
           </Link>
@@ -468,7 +468,7 @@ function HomePage() {
       {carregando ? (
         <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-[var(--color-text)]">Últimos Treinos</h2>
+            <h2 className="text-base font-bold text-text">Últimos Treinos</h2>
           </div>
           <div className="flex flex-col gap-2">
             {[...Array(2)].map((_, i) => (
@@ -479,7 +479,7 @@ function HomePage() {
       ) : ultimasSessoes.length > 0 && (
         <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-[var(--color-text)]">Últimos Treinos</h2>
+            <h2 className="text-base font-bold text-text">Últimos Treinos</h2>
             <Link to="/historico" className="text-[var(--color-accent)] text-sm font-medium" style={{ textDecoration: 'none' }}>
               Histórico
             </Link>
@@ -489,8 +489,8 @@ function HomePage() {
               <Link key={sessao.id} to="/historico/$sessaoId" params={{ sessaoId: sessao.id }} style={{ textDecoration: 'none' }}>
                 <div className="card p-4 flex items-center justify-between">
                   <div>
-                    <p className="text-[var(--color-text)] font-semibold text-sm">{sessao.planoNome}</p>
-                    <p className="text-[var(--color-text-muted)] text-xs mt-0.5">
+                    <p className="text-text font-semibold text-sm">{sessao.planoNome}</p>
+                    <p className="text-text-muted text-xs mt-0.5">
                       {new Date(sessao.iniciadoEm).toLocaleDateString('pt-BR', {
                         weekday: 'short',
                         day: 'numeric',
@@ -500,12 +500,12 @@ function HomePage() {
                   </div>
                   <div className="text-right">
                     {sessao.duracaoSegundos && (
-                      <p className="text-[var(--color-text-muted)] text-xs font-medium">
+                      <p className="text-text-muted text-xs font-medium">
                         {formatarTempo(sessao.duracaoSegundos)}
                       </p>
                     )}
                     {sessao.volumeTotal !== undefined && (
-                      <p className="text-[var(--color-text-subtle)] text-xs mt-0.5">
+                      <p className="text-text-subtle text-xs mt-0.5">
                         {Math.round(sessao.volumeTotal)} kg
                       </p>
                     )}
@@ -521,8 +521,8 @@ function HomePage() {
       {showEditMeta && (
         <div className="modal-overlay" onClick={() => setShowEditMeta(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-[var(--color-text)] mb-1">Meta Semanal</h2>
-            <p className="text-sm text-[var(--color-text-muted)] mb-4">Quantos treinos por semana você quer fazer?</p>
+            <h2 className="text-lg font-bold text-text mb-1">Meta Semanal</h2>
+            <p className="text-sm text-text-muted mb-4">Quantos treinos por semana você quer fazer?</p>
             <div className="flex items-center justify-center gap-4 mb-6">
               {[2, 3, 4, 5, 6, 7].map(n => (
                 <button
@@ -531,7 +531,7 @@ function HomePage() {
                   className={`w-11 h-11 rounded-xl font-bold text-lg transition-all ${
                     String(n) === metaInput
                       ? 'bg-[var(--color-accent)] text-white scale-110'
-                      : 'bg-[var(--color-surface-2)] text-[var(--color-text-muted)]'
+                      : 'bg-surface-2 text-text-muted'
                   }`}
                 >
                   {n}

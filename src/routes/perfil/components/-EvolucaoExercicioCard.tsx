@@ -43,10 +43,10 @@ export function EvolucaoExercicioCard({ nome, pontos }: EvolucaoExercicioCardPro
       <button type="button" className="w-full text-left" onClick={() => setExpandido(v => !v)}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[var(--color-text)] truncate">{nome}</p>
+            <p className="text-sm font-semibold text-text truncate">{nome}</p>
             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-              <span className="text-xs text-[var(--color-text-muted)]">
-                🏆 Recorde: <span className="font-bold text-[var(--color-text)]">{record} kg</span>
+              <span className="text-xs text-text-muted">
+                🏆 Recorde: <span className="font-bold text-text">{record} kg</span>
               </span>
               {pontos.length >= 2 && (
                 <span
@@ -60,7 +60,7 @@ export function EvolucaoExercicioCard({ nome, pontos }: EvolucaoExercicioCardPro
                   {deltaPct}%)
                 </span>
               )}
-              <span className="text-[10px] text-[var(--color-text-subtle)]">
+              <span className="text-[10px] text-text-subtle">
                 {pontos.length} sess{pontos.length === 1 ? 'ão' : 'ões'}
               </span>
             </div>
@@ -82,7 +82,7 @@ export function EvolucaoExercicioCard({ nome, pontos }: EvolucaoExercicioCardPro
             </div>
           )}
 
-          <div className="text-[var(--color-text-subtle)] flex-shrink-0">
+          <div className="text-text-subtle flex-shrink-0">
             {expandido ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
         </div>
@@ -110,7 +110,7 @@ export function EvolucaoExercicioCard({ nome, pontos }: EvolucaoExercicioCardPro
       )}
 
       {expandido && pontos.length < 2 && (
-        <p className="text-xs text-[var(--color-text-muted)] text-center mt-4 py-2">
+        <p className="text-xs text-text-muted text-center mt-4 py-2">
           Complete pelo menos 2 sessões para ver o gráfico.
         </p>
       )}
