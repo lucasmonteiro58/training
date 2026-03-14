@@ -8,6 +8,8 @@ interface SessaoDetalheHeaderProps {
   autoEncerrado?: boolean
   /** Timestamp (iniciadoEm) para edição da data; quando editando, permite alterar */
   iniciadoEm?: number
+  /** Timestamp (finalizadoEm) para exibir hora de fim */
+  finalizadoEm?: number
   onIniciadoEmChange?: (timestamp: number) => void
   onVoltar: () => void
   onIniciarEdicao: () => void
@@ -23,12 +25,17 @@ function toDateInputValue(timestamp: number): string {
   return `${y}-${m}-${day}`
 }
 
+function formatarHora(ts: number): string {
+  return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
 export function SessaoDetalheHeader({
   planoNome,
   dataStr,
   editando,
   autoEncerrado,
   iniciadoEm,
+  finalizadoEm,
   onIniciadoEmChange,
   onVoltar,
   onIniciarEdicao,
@@ -70,7 +77,15 @@ export function SessaoDetalheHeader({
             />
           </label>
         ) : (
-          <p className="text-xs text-text-muted capitalize mt-0.5">{dataStr}</p>
+          <div className="mt-0.5 space-y-0.5">
+            <p className="text-xs text-text-muted capitalize">{dataStr}</p>
+            <p className="text-xs text-text-subtle">
+              Início {iniciadoEm != null ? formatarHora(iniciadoEm) : '–'}
+              {finalizadoEm != null && (
+                <> · Fim {formatarHora(finalizadoEm)}</>
+              )}
+            </p>
+          </div>
         )}
       </div>
       {editando ? (

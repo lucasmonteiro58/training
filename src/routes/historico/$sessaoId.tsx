@@ -111,7 +111,8 @@ function SessaoDetalhePage() {
         dataStr={dataStr}
         editando={editando}
         autoEncerrado={displaySessao.autoEncerrado}
-        iniciadoEm={editando && editData ? editData.iniciadoEm : undefined}
+        iniciadoEm={editando && editData ? editData.iniciadoEm : displaySessao.iniciadoEm}
+        finalizadoEm={displaySessao.finalizadoEm}
         onIniciadoEmChange={editando ? updateIniciadoEm : undefined}
         onVoltar={() => navigate({ to: '/historico' })}
         onIniciarEdicao={iniciarEdicao}
