@@ -64,6 +64,7 @@ export function calcularRecordes(sessoes: SessaoDeTreino[]): Map<string, Recorde
 /**
  * Detecta se uma série recém-completada é um novo PR (personal record).
  * Retorna o tipo de PR ou null.
+ * PR de peso só é retornado se já existir recorde anterior (maiorPeso > 0) — não mostra para "primeira vez".
  */
 export function detectarNovoPR(
   serie: SerieRegistrada,
@@ -73,14 +74,15 @@ export function detectarNovoPR(
   if (!serie.completada || serie.peso <= 0) return null
 
   const rec = recordes.get(exercicioId)
-  if (!rec) return { tipo: 'peso', valor: serie.peso } // first ever → PR!
-
   const volumeSerie = serie.peso * (serie.repeticoes ?? 0)
   const est1RM = serie.repeticoes > 0
     ? serie.peso * (1 + (serie.repeticoes ?? 0) / 30)
     : serie.peso
 
-  if (serie.peso > rec.maiorPeso) return { tipo: 'peso', valor: serie.peso }
+  // Só considera PR de peso se o recorde anterior for > 0 (não mostra quando era 0 / primeira vez)
+  if (rec && rec.maiorPeso > 0 && serie.peso > rec.maiorPeso) return { tipo: 'peso', valor: serie.peso }
+  if (!rec) return null // primeiro contato com o exercício → não mostra tela de PR
+
   if (volumeSerie > rec.maiorVolumeSerie) return { tipo: 'volume', valor: volumeSerie }
   if (est1RM > rec.maior1RM) return { tipo: '1rm', valor: Math.round(est1RM) }
 
