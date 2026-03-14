@@ -126,8 +126,8 @@ function TreinoAtivoPage() {
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPrCelebration, setShowPrCelebration] = useState(false)
-  /** Exercícios para os quais já mostramos a tela de PR nesta sessão (só mostra uma vez por exercício) */
-  const prExibidoRef = useRef<Set<string>>(new Set())
+  /** Maior peso por exercício para o qual já mostramos PR nesta sessão — mostra de novo só se bater esse valor */
+  const prExibidoRef = useRef<Map<string, number>>(new Map())
 
   // ─── Cronômetro de série (para exercícios por tempo) ──────────────────────
   const [timerSerie, setTimerSerie] = useState<{ sIdx: number; restando: number } | null>(null)
@@ -295,17 +295,18 @@ function TreinoAtivoPage() {
       // Salvar pesos no plano ao completar série
       setTimeout(() => salvarPesosNoPlano(), 0)
 
-      // PR de peso: só mostra se recorde anterior > 0, peso atual > recorde, e primeira vez que bate PR neste exercício na sessão
+      // PR de peso: mostra se recorde anterior > 0, peso atual > recorde, e peso atual > maior peso já celebrado neste exercício na sessão
       const serieAtual = exercicioAtual.series[serieIdx]
       const exId = exercicioAtual.exercicioId
-      if (!prExibidoRef.current.has(exId)) {
+      const pesoCelebrado = prExibidoRef.current.get(exId) ?? 0
+      if (serieAtual.peso > pesoCelebrado) {
         const prCheck = detectarNovoPR(
           { ...serieAtual, completada: true },
           exId,
           recordes,
         )
         if (prCheck && prCheck.tipo === 'peso') {
-          prExibidoRef.current.add(exId)
+          prExibidoRef.current.set(exId, serieAtual.peso)
           setShowPrCelebration(true)
           setShowConfetti(true)
           navigator.vibrate?.([100, 50, 100, 50, 200])
