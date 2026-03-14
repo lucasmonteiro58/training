@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { solicitarPermissaoNotificacao } from '../lib/notifications'
 import type { PlanoDeTreino, SessaoDeTreino, SerieRegistrada, ExercicioNaSessao } from '../types'
@@ -22,9 +22,21 @@ export function useIniciarSessaoTreino({
   sessao,
   iniciarTreino,
 }: UseIniciarSessaoTreinoParams) {
+  const startedForPlanoIdRef = useRef<string | null>(null)
+
   useEffect(() => {
     if (!plano || !user) return
-    if (iniciado && sessao?.planoId === planoId) return
+
+    if (iniciado && sessao?.planoId === planoId) {
+      startedForPlanoIdRef.current = planoId
+      return
+    }
+    // Trocar de plano: permitir iniciar sessão para o novo plano
+    if (startedForPlanoIdRef.current !== null && startedForPlanoIdRef.current !== planoId) {
+      startedForPlanoIdRef.current = null
+    }
+    // Não re-iniciar sessão após cancelar/finalizar: já tratamos este plano nesta visita
+    if (startedForPlanoIdRef.current === planoId) return
 
     const ultimaSessao = sessoes
       .filter((s) => s.planoId === planoId && s.finalizadoEm)
@@ -72,6 +84,7 @@ export function useIniciarSessaoTreino({
       exercicios: exerciciosNaSessao,
     }
     iniciarTreino(novaSessao)
+    startedForPlanoIdRef.current = planoId
     solicitarPermissaoNotificacao()
   }, [plano, user, planoId, sessoes, iniciado, sessao?.planoId, iniciarTreino])
 }
