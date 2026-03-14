@@ -63,7 +63,7 @@ function TreinoAtivoPage() {
     pausado, iniciado,
     iniciarTreino, finalizarTreino, pausarTreino, retomar,
     proximoExercicio, exercicioAnterior, atualizarSerie,
-    marcarSerieCompletada, desfazerUltimaSerie,
+    marcarSerieCompletada,
     iniciarDescanso, pararDescanso, tickGeral, tickDescanso,
     atualizarNotas, limparLocal, heartbeat,
   } = store
@@ -1069,7 +1069,7 @@ function TreinoAtivoPage() {
 
             {/* Repetir valor — aparece logo abaixo da série editada */}
             {applyAll && applyAll.sIdx === sIdx && (
-              <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-3 ml-[44px] mr-[52px] mb-2 mt-1">
+              <div className="bg-accent/10 border border-accent /20 rounded-xl px-3 py-3 ml-[44px] mr-[52px] mb-2 mt-1">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-text-muted">
                     Repetir{' '}
@@ -1094,7 +1094,7 @@ function TreinoAtivoPage() {
                         })
                         setApplyAll(null)
                       }}
-                      className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent/20"
+                      className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent /20"
                     >
                       ↓ Seguintes
                     </button>
@@ -1221,7 +1221,7 @@ function TreinoAtivoPage() {
 
               {/* Observação do plano */}
               {exercicioAtual.notas && (
-                <div className="p-3 rounded-xl bg-accent/5 border border-accent/10">
+                <div className="p-3 rounded-xl bg-accent/5 border border-accent /10">
                   <p className="text-[10px] font-bold text-accent uppercase tracking-wider mb-1">Observação do Treino</p>
                   <p className="text-sm text-text italic">"{exercicioAtual.notas}"</p>
                 </div>

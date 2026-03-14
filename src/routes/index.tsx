@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
-import { useAuthStore, useHistoricoStore } from '../stores'
+import { useAuthStore } from '../stores'
 import { useHistorico } from '../hooks/useHistorico'
 import { usePlanos } from '../hooks/usePlanos'
 import { useTreinoAtivoStore } from '../stores'
@@ -38,7 +38,7 @@ function PlanoCard({ plano }: { plano: { id: string; nome: string; cor?: string 
             </div>
           </div>
           <button
-            className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
+            className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center hover:bg-accent-hover transition-colors"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -55,7 +55,6 @@ function PlanoCard({ plano }: { plano: { id: string; nome: string; cor?: string 
 }
 
 function HomePage() {
-  const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const { planosAtivos, loading, sincronizar: sincronizarPlanos } = usePlanos()
   const { sessoes, loading: loadingSessoes, sincronizar: sincronizarSessoes } = useHistorico()
@@ -203,13 +202,13 @@ function HomePage() {
         >
           <div className={`card p-4 border-2 transition-colors ${
             pausado
-              ? 'border-[var(--color-text-subtle)] bg-surface-2'
-              : 'border-[var(--color-accent)] bg-accent-subtle animate-pulse-glow'
+              ? 'border-text-subtle bg-surface-2'
+              : 'border-accent bg-accent-subtle animate-pulse-glow'
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                  pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-accent'
+                  pausado ? 'bg-text-subtle' : 'bg-accent'
                 }`}>
                   <Clock size={18} className="text-white" />
                 </div>
@@ -219,7 +218,7 @@ function HomePage() {
                       {pausado ? 'Treino Pausado' : 'Treino Ativo'}
                     </p>
                     <span className={`px-1.5 py-0.5 rounded-md text-white text-[10px] font-bold tabular-nums transition-colors ${
-                      pausado ? 'bg-[var(--color-text-subtle)]' : 'bg-accent'
+                      pausado ? 'bg-text-subtle' : 'bg-accent'
                     }`}>
                       {formatarTempo(cronometroGeralSegundos)}
                     </span>
@@ -334,7 +333,7 @@ function HomePage() {
                     temTreino
                       ? 'bg-accent text-white'
                       : isHoje
-                      ? 'border-2 border-[var(--color-accent)] text-accent'
+                      ? 'border-2 border-accent text-accent'
                       : 'bg-surface-2 text-text-subtle'
                   }`}
                 >
@@ -358,7 +357,7 @@ function HomePage() {
                 </span>
               )}
             </div>
-            <div className="card p-4 flex items-center justify-between border border-[var(--color-accent)]/30">
+            <div className="card p-4 flex items-center justify-between border border-accent/30">
               <div className="flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center"
@@ -374,7 +373,7 @@ function HomePage() {
                 </div>
               </div>
               <button
-                className="flex items-center gap-1.5 bg-accent text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[var(--color-accent-hover)] active:scale-95 transition-all"
+                className="flex items-center gap-1.5 bg-accent text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-accent-hover active:scale-95 transition-all"
                 onClick={() => handleIniciar(proximoPlano.id)}
               >
                 <Play size={14} className="ml-0.5" /> Iniciar
@@ -445,7 +444,7 @@ function HomePage() {
           </div>
         ) : planosAtivos.length === 0 ? (
           <Link to="/treinos/novo" style={{ textDecoration: 'none' }}>
-            <div className="card p-6 border-dashed border-[var(--color-border-strong)] flex flex-col items-center gap-3 text-center">
+            <div className="card p-6 border-dashed border-border-strong flex flex-col items-center gap-3 text-center">
               <div className="w-12 h-12 rounded-2xl bg-accent-subtle flex items-center justify-center">
                 <Plus size={24} className="text-accent" />
               </div>

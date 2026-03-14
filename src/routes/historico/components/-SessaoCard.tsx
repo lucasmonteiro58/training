@@ -28,7 +28,7 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
         </div>
         <button
           onClick={() => onExcluir(sessao.id)}
-          className="btn-ghost p-2 text-text-subtle hover:text-[var(--color-danger)]"
+          className="btn-ghost p-2 text-text-subtle hover:text-danger"
         >
           <Trash2 size={14} />
         </button>

@@ -67,7 +67,7 @@ export function Calculadora1RM({ onClose, pesoInicial, repsInicial }: Calculador
 
         {/* 1RM Result */}
         {rm1 > 0 && (
-          <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4 mb-4 text-center shrink-0 animate-scale-in">
+          <div className="bg-accent/10 border border-accent /20 rounded-2xl p-4 mb-4 text-center shrink-0 animate-scale-in">
             <p className="text-xs text-text-muted mb-1">1RM Estimada</p>
             <p className="text-3xl font-black text-accent">
               {Math.round(rm1 * 10) / 10} <span className="text-sm font-medium">kg</span>

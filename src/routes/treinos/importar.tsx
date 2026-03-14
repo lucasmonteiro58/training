@@ -124,7 +124,7 @@ function ExercicioEditCard({
     <div className="card overflow-hidden">
       {/* Row header */}
       <div className="flex items-center gap-2 p-3">
-        <span className="w-6 h-6 rounded-full bg-accent-subtle text-accent text-xs font-bold flex items-center justify-center flex-shrink-0">
+        <span className="w-6 h-6 rounded-full bg-accent-subtle text-accent text-xs font-bold flex items-center justify-center shrink-0">
           {idx + 1}
         </span>
         <button className="flex-1 text-left min-w-0" onClick={onToggle}>
@@ -133,10 +133,10 @@ function ExercicioEditCard({
             {series.length} série{series.length !== 1 ? 's' : ''} · {ex.exercicio.grupoMuscular} · ⏱ {ex.descansoSegundos}s
           </p>
         </button>
-        <button onClick={onRemove} className="p-1.5 text-[var(--color-danger)] opacity-60 hover:opacity-100 flex-shrink-0">
+        <button onClick={onRemove} className="p-1.5 text-danger opacity-60 hover:opacity-100 shrink-0">
           <Trash2 size={15} />
         </button>
-        <button onClick={onToggle} className="p-1.5 text-text-muted flex-shrink-0">
+        <button onClick={onToggle} className="p-1.5 text-text-muted shrink-0">
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       </div>
@@ -206,7 +206,7 @@ function ExercicioEditCard({
                     key={i}
                     onClick={() => setField('gifUrl', url)}
                     className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
-                      ex.exercicio.gifUrl === url ? 'border-accent opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
+                      ex.exercicio.gifUrl === url ? 'border-accent  opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img src={url} className="w-full h-full object-cover" loading="lazy" />
@@ -278,8 +278,8 @@ function ExercicioEditCard({
                   title={`Mudar para: ${nextLabelTipo[tipo]}`}
                   className={`flex items-center justify-center gap-1 rounded-md border px-1.5 py-0.5 transition-colors ${
                     tipo === 'reps'
-                      ? 'text-text-muted border-border hover:text-accent hover:border-accent/50'
-                      : 'text-accent border-accent/40 bg-accent/10'
+                      ? 'text-text-muted border-border hover:text-accent hover:border-accent /50'
+                      : 'text-accent border-accent /40 bg-accent/10'
                   }`}
                 >
                   {labelTipo[tipo]}
@@ -324,7 +324,7 @@ function ExercicioEditCard({
 
               {/* Apply-all popup */}
               {applyAll && (
-                <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-2.5">
+                <div className="bg-accent/10 border border-accent /20 rounded-xl px-3 py-2.5">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs text-text-muted">
                       Repetir{' '}
@@ -347,7 +347,7 @@ function ExercicioEditCard({
                     {applyAll.sIdx < series.length - 1 && (
                       <button
                         onClick={() => applyAllSeries(false)}
-                        className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent/20"
+                        className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent /20"
                       >
                         ↓ Seguintes
                       </button>
@@ -364,7 +364,7 @@ function ExercicioEditCard({
 
               <button
                 onClick={addSerie}
-                className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent hover:bg-accent/5 rounded-lg border border-dashed border-accent/20 transition-colors"
+                className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent hover:bg-accent/5 rounded-lg border border-dashed border-accent /20 transition-colors"
               >
                 <Plus size={14} />
                 Adicionar Série
@@ -416,7 +416,7 @@ function PlanoEditCard({
             onClick={e => e.stopPropagation()}
           />
         </div>
-        <button onClick={onRemove} className="p-2 text-[var(--color-danger)] opacity-60 hover:opacity-100 flex-shrink-0">
+        <button onClick={onRemove} className="p-2 text-danger opacity-60 hover:opacity-100 shrink-0">
           <Trash2 size={16} />
         </button>
       </div>
@@ -580,7 +580,7 @@ function ImportarCsvPage() {
               </div>
               <button
                 onClick={downloadTemplateCsv}
-                className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5 flex-shrink-0"
+                className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5 shrink-0"
               >
                 <Download size={14} />
                 Template
@@ -594,7 +594,7 @@ function ImportarCsvPage() {
           {/* Drop zone */}
           {!planos && (
             <div
-              className="border-2 border-dashed border-[var(--color-border-strong)] rounded-2xl p-10 text-center cursor-pointer hover:border-[var(--color-accent)] transition-colors animate-fade-up"
+              className="border-2 border-dashed border-border-strong rounded-2xl p-10 text-center cursor-pointer hover:border-accent transition-colors animate-fade-up"
               style={{ animationDelay: '50ms' }}
               onDrop={onDrop}
               onDragOver={(e) => e.preventDefault()}
@@ -617,8 +617,8 @@ function ImportarCsvPage() {
           {erros.length > 0 && (
             <div className="mt-4 card p-4 border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.05)] animate-fade-up">
               <div className="flex items-center gap-2 mb-2">
-                <AlertCircle size={16} className="text-[var(--color-danger)]" />
-                <p className="text-sm font-semibold text-[var(--color-danger)]">
+                <AlertCircle size={16} className="text-danger" />
+                <p className="text-sm font-semibold text-danger">
                   {erros.length} erro(s) encontrado(s)
                 </p>
               </div>
@@ -668,7 +668,7 @@ function ImportarCsvPage() {
 
       {/* Sticky save button */}
       {planos && !sucesso && (
-        <div className="fixed left-0 right-0 p-4 bg-bg/90 backdrop-blur border-t border-border z-[60]" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed left-0 right-0 p-4 bg-bg/90 backdrop-blur border-t border-border z-60" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
           <button
             onClick={salvar}
             disabled={planosValidos.length === 0 || salvando}

@@ -302,7 +302,7 @@ function NovoPlanoPage() {
 
           <button
             onClick={() => setShowPicker(true)}
-            className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-border-strong text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-accent hover:text-accent transition-colors"
+            className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-border-strong text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-accent  hover:text-accent transition-colors"
           >
             <Plus size={18} />
             Adicionar Exercício
@@ -465,7 +465,7 @@ function ExercicioNoPlanoCard({
           <button
             onClick={(e) => { e.stopPropagation(); onToggleSelect?.() }}
             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-              isSelected ? 'bg-accent border-accent text-white' : 'border-border-strong'
+              isSelected ? 'bg-accent border-accent  text-white' : 'border-border-strong'
             }`}
           >
             {isSelected && <span className="text-xs">✓</span>}
@@ -535,8 +535,8 @@ function ExercicioNoPlanoCard({
                   title={`Mudar para: ${nextLabels[tipo]}`}
                   className={`flex items-center justify-center gap-1 rounded-md border px-1.5 py-0.5 transition-colors ${
                     tipo === 'reps'
-                      ? 'text-text-muted border-border hover:text-accent hover:border-accent/50'
-                      : 'text-accent border-accent/40 bg-accent/10'
+                      ? 'text-text-muted border-border hover:text-accent hover:border-accent /50'
+                      : 'text-accent border-accent /40 bg-accent/10'
                   }`}
                 >
                   {labels[tipo]}
@@ -584,7 +584,7 @@ function ExercicioNoPlanoCard({
           </div>
 
           {applyAll && (
-            <div className="bg-accent/10 border border-accent/20 rounded-xl px-3 py-2.5">
+            <div className="bg-accent/10 border border-accent /20 rounded-xl px-3 py-2.5">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-text-muted">
                   Repetir{' '}
@@ -613,7 +613,7 @@ function ExercicioNoPlanoCard({
                       onUpdate({ seriesDetalhadas: novasSeries })
                       setApplyAll(null)
                     }}
-                    className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent/20"
+                    className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent /20"
                   >
                     ↓ Seguintes
                   </button>
@@ -634,7 +634,7 @@ function ExercicioNoPlanoCard({
 
           <button
             onClick={addSerie}
-            className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent hover:bg-accent/5 rounded-lg border border-dashed border-accent/20 transition-colors"
+            className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent hover:bg-accent/5 rounded-lg border border-dashed border-accent /20 transition-colors"
           >
             <Plus size={14} />
             Adicionar Série

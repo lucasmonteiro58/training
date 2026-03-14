@@ -105,7 +105,7 @@ export function ConfiguracoesCard({
           </p>
         </div>
         <div
-          className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+          className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
             notifPermitida ? 'bg-amber-400' : 'bg-[var(--color-border-strong)]'
           }`}
         >

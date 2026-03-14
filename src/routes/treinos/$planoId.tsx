@@ -336,7 +336,7 @@ function PlanoDetalheComponent() {
 
           {editando && (
             <button onClick={() => setShowPicker(true)}
-              className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-[var(--color-border-strong)] text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-[var(--color-accent)] hover:text-accent transition-colors">
+              className="mt-3 w-full py-4 rounded-2xl border-2 border-dashed border-border-strong text-text-muted flex items-center justify-center gap-2 text-sm font-medium hover:border-accent hover:text-accent transition-colors">
               <Plus size={18} /> Adicionar Exercício
             </button>
           )}
@@ -529,7 +529,7 @@ function ExercicioDetalheCard({
           <button
             onClick={(e) => { e.stopPropagation(); onToggleSelect?.() }}
             className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-              isSelected ? 'bg-accent border-accent text-white' : 'border-border-strong'
+              isSelected ? 'bg-accent border-accent  text-white' : 'border-border-strong'
             }`}
           >
             {isSelected && <span className="text-xs">✓</span>}
@@ -619,7 +619,7 @@ function ExercicioDetalheCard({
                     key={i}
                     onClick={() => onUpdateExercicio({ gifUrl: url })}
                     className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
-                      ex.exercicio.gifUrl === url ? 'border-accent opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
+                      ex.exercicio.gifUrl === url ? 'border-accent  opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img src={url} className="w-full h-full object-cover" loading="lazy" />
@@ -655,8 +655,8 @@ function ExercicioDetalheCard({
               onClick={() => onUpdateTipoSerie(proximo)}
               className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-colors ${
                 tipo === 'reps'
-                  ? 'text-text-muted border-border hover:text-accent hover:border-accent/50'
-                  : 'text-accent border-accent/40 bg-accent/10'
+                  ? 'text-text-muted border-border hover:text-accent hover:border-accent /50'
+                  : 'text-accent border-accent /40 bg-accent/10'
               }`}
             >
               {tipoLabels[tipo]} → {tipoLabels[proximo]}

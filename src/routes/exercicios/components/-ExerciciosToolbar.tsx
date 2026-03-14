@@ -74,7 +74,7 @@ export function ExerciciosToolbar({
         <div className="flex items-center gap-2">
           <button
             onClick={onOpen1RM}
-            className="flex items-center gap-1.5 text-xs font-semibold text-text-muted bg-surface-2 px-3 py-1.5 rounded-full border border-border hover:text-accent hover:border-accent/30 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold text-text-muted bg-surface-2 px-3 py-1.5 rounded-full border border-border hover:text-accent hover:border-accent /30 transition-colors"
           >
             <Calculator size={14} />
             1RM

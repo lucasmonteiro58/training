@@ -210,7 +210,7 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
                     key={i}
                     onClick={() => setGifUrl(url)}
                     className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
-                      gifUrl === url ? 'border-accent opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
+                      gifUrl === url ? 'border-accent  opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img src={url} className="w-full h-full object-cover" loading="lazy" />

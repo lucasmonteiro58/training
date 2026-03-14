@@ -31,10 +31,10 @@ export function ExercicioSessaoCard({
           <img
             src={ex.gifUrl}
             alt={ex.exercicioNome}
-            className="w-12 h-12 rounded-xl object-contain bg-surface-2 flex-shrink-0"
+            className="w-12 h-12 rounded-xl object-contain bg-surface-2 shrink-0"
           />
         ) : (
-          <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center shrink-0">
             <span className="text-2xl">💪</span>
           </div>
         )}

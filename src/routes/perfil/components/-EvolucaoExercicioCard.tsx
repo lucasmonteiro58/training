@@ -67,7 +67,7 @@ export function EvolucaoExercicioCard({ nome, pontos }: EvolucaoExercicioCardPro
           </div>
 
           {pontos.length >= 2 && !expandido && (
-            <div className="w-20 h-10 flex-shrink-0">
+            <div className="w-20 h-10 shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={pontos}>
                   <Line
@@ -82,7 +82,7 @@ export function EvolucaoExercicioCard({ nome, pontos }: EvolucaoExercicioCardPro
             </div>
           )}
 
-          <div className="text-text-subtle flex-shrink-0">
+          <div className="text-text-subtle shrink-0">
             {expandido ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
         </div>

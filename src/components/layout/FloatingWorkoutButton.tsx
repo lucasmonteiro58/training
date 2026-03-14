@@ -40,7 +40,7 @@ export function FloatingWorkoutButton() {
       <div className={`w-14 h-14 rounded-full shadow-xl flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 border-2 ${
         pausado
           ? 'bg-surface-2 border-text-subtle/40'
-          : 'bg-accent border-accent ring-4 ring-accent/20'
+          : 'bg-accent border-accent  ring-4 ring-accent/20'
       }`}>
         <Clock size={18} className="text-white" />
         <span className="text-white text-[9px] font-bold tabular-nums leading-none">

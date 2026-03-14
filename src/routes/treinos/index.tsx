@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { usePlanos } from '../../hooks/usePlanos'
 import { Dumbbell, Plus, FileUp, Play, ChevronRight, Trash2, Archive, ArchiveRestore, GripVertical, ArrowUpDown } from 'lucide-react'
 import { useState } from 'react'
@@ -29,9 +29,7 @@ function PlanoSortableCard({
   plano,
   reordenando,
   processando,
-  deletando,
   onArchive,
-  onDelete,
 }: {
   plano: PlanoDeTreino
   reordenando: boolean
@@ -42,7 +40,6 @@ function PlanoSortableCard({
 }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: plano.id })
-  const navigate = useNavigate()
   const { handleIniciar, modal } = useIniciarTreino()
 
   const style = {
@@ -69,7 +66,7 @@ function PlanoSortableCard({
 
         {!reordenando && (
           <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
             style={{ background: `${plano.cor ?? '#6366f1'}22` }}
           >
             <Dumbbell size={20} style={{ color: plano.cor ?? '#6366f1' }} />
@@ -91,9 +88,9 @@ function PlanoSortableCard({
         </Link>
 
         {!reordenando && (
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
-              className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center hover:bg-[var(--color-accent-hover)] transition-colors"
+              className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center hover:bg-accent-hover transition-colors"
               onClick={() => handleIniciar(plano.id)}
             >
               <Play size={14} className="text-white ml-0.5" />
@@ -145,7 +142,7 @@ function TreinosPage() {
   const [mostrarArquivados, setMostrarArquivados] = useState(false)
   const [reordenando, setReordenando] = useState(false)
   const [ordemLocal, setOrdemLocal] = useState<PlanoDeTreino[]>([])
-  const navigate = useNavigate()
+
 
   const listaOrdenada = reordenando ? ordemLocal : planosAtivos
 
@@ -285,7 +282,7 @@ function TreinosPage() {
                 </SortableContext>
               </DndContext>
             ) : (
-              planosAtivos.map((plano, idx) => (
+              planosAtivos.map((plano) => (
                 <PlanoSortableCard
                   key={plano.id}
                   plano={plano}
@@ -325,7 +322,7 @@ function TreinosPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-surface-2"
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-surface-2"
                         >
                           <Archive size={18} className="text-text-muted" />
                         </div>
@@ -337,7 +334,7 @@ function TreinosPage() {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-accent transition-colors"
                             onClick={() => handleRestore(plano.id)}
@@ -347,7 +344,7 @@ function TreinosPage() {
                             <ArchiveRestore size={14} />
                           </button>
                           <button
-                            className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-[var(--color-danger)] transition-colors"
+                            className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-danger transition-colors"
                             onClick={() => handleDelete(plano.id, plano.nome)}
                             disabled={deletando === plano.id}
                             title="Excluir Permanentemente"
