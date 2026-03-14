@@ -335,6 +335,7 @@ function TreinoAtivoPage() {
         }, 600)
       } else if (todasExercicioCompletas && isInGroup && !nextInGroup) {
         // Last in group: rest then loop back to first in group or move on
+        prepararAudio()
         iniciarDescanso(exercicioAtual.descansoSegundos)
         // Check if all series in entire group are done
         const allGroupDone = groupExercises.every(({ idx }) =>
@@ -373,6 +374,7 @@ function TreinoAtivoPage() {
         }
       } else {
         // Normal (non-group) behavior
+        prepararAudio()
         iniciarDescanso(exercicioAtual.descansoSegundos)
 
         const isLastExercicio = exercicioAtualIndex === sessao.exercicios.length - 1

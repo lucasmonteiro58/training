@@ -228,7 +228,7 @@ self.addEventListener('message', (event) => {
     restEndTimer = setTimeout(() => {
       restEndTimer = null
 
-      // Notifica o fim do descanso
+      // Notifica o fim do descanso (som padrão do sistema + vibração; funciona em background PWA)
       self.registration.showNotification('💪 Descanso finalizado!', {
         body: exercicioNome
           ? `Hora de voltar — ${exercicioNome}`
@@ -238,7 +238,8 @@ self.addEventListener('message', (event) => {
         tag: 'training-rest-end',
         renotify: true,
         requireInteraction: true,
-        vibrate: [300, 150, 300, 150, 300],
+        silent: false,
+        vibrate: [300, 150, 300, 150, 400],
         actions: [
           { action: 'open', title: '▶ Continuar Treino' },
         ],
