@@ -2,12 +2,12 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useHistory } from '../../hooks/useHistory'
 import { useActiveWorkoutStore } from '../../stores'
 import { useMemo, useState } from 'react'
-import { HistoricoHeader } from './components/-HistoricoHeader'
-import { HistoricoFiltros, type Periodo } from './components/-HistoricoFiltros'
+import { HistoryHeader } from './components/-HistoryHeader'
+import { HistoryFilters, type Periodo } from './components/-HistoryFilters'
 import { VolumeChart } from './components/-VolumeChart'
-import { EmptyHistorico } from './components/-EmptyHistorico'
-import { SessaoCard } from './components/-SessaoCard'
-import { ConfirmExcluirModal } from './components/-ConfirmExcluirModal'
+import { EmptyHistory } from './components/-EmptyHistory'
+import { SessionCard } from './components/-SessionCard'
+import { ConfirmDeleteModal } from './components/-ConfirmDeleteModal'
 
 export const Route = createFileRoute('/history/')({
   component: HistoricoPage,
@@ -65,7 +65,7 @@ function HistoricoPage() {
 
   return (
     <div className="page-container pt-6">
-      <HistoricoHeader
+      <HistoryHeader
         hasSessoes={sessoes.length > 0}
         filtroAtivo={filtroAtivo}
         onVoltar={() => navigate({ to: '/profile' })}
@@ -73,7 +73,7 @@ function HistoricoPage() {
       />
 
       {showFiltros && (
-        <HistoricoFiltros
+        <HistoryFilters
           filtroPlano={filtroPlano}
           filtroPeriodo={filtroPeriodo}
           filtroAtivo={filtroAtivo}
@@ -91,7 +91,7 @@ function HistoricoPage() {
           {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
         </div>
       ) : sessoesFiltradas.length === 0 ? (
-        <EmptyHistorico filtroAtivo={filtroAtivo} onLimparFiltros={handleLimparFiltros} />
+        <EmptyHistory filtroAtivo={filtroAtivo} onLimparFiltros={handleLimparFiltros} />
       ) : (
         <div className="flex flex-col gap-3">
           {filtroAtivo && (
@@ -100,7 +100,7 @@ function HistoricoPage() {
             </p>
           )}
           {sessoesFiltradas.map((sessao, idx) => (
-            <SessaoCard
+            <SessionCard
               key={sessao.id}
               sessao={sessao}
               index={idx}
@@ -112,7 +112,7 @@ function HistoricoPage() {
       )}
 
       {confirmExcluir && (
-        <ConfirmExcluirModal
+        <ConfirmDeleteModal
           onConfirm={() => {
             excluirSessao(confirmExcluir)
             setConfirmExcluir(null)

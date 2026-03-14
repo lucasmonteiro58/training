@@ -9,13 +9,13 @@ import { carregarExercicios } from '../../lib/exercises/freeExerciseDb'
 import { toast } from 'sonner'
 import type { Exercise } from '../../types'
 import { X } from 'lucide-react'
-import type { PlanoEditado } from './components/-PlanoEditCard'
-import { PlanoEditCard } from './components/-PlanoEditCard'
-import { ImportarHeader } from './components/-ImportarHeader'
-import { ImportarSucesso } from './components/-ImportarSucesso'
-import { FormatoCsvCard } from './components/-FormatoCsvCard'
-import { ImportarDropZone } from './components/-ImportarDropZone'
-import { ErrosImportacao } from './components/-ErrosImportacao'
+import type { PlanoEditado } from './components/-PlanEditCard'
+import { PlanEditCard } from './components/-PlanEditCard'
+import { ImportHeader } from './components/-ImportHeader'
+import { ImportSuccess } from './components/-ImportSuccess'
+import { CsvFormatCard } from './components/-CsvFormatCard'
+import { ImportDropZone } from './components/-ImportDropZone'
+import { ImportErrors } from './components/-ImportErrors'
 
 export const Route = createFileRoute('/workouts/import')({
   component: ImportarCsvPage,
@@ -96,19 +96,19 @@ function ImportarCsvPage() {
 
   return (
     <div className="page-container pt-4 pb-[450px]">
-      <ImportarHeader onBack={() => navigate({ to: '/workouts' })} planosCount={planos?.length} />
+      <ImportHeader onBack={() => navigate({ to: '/workouts' })} planosCount={planos?.length} />
 
       {sucesso ? (
-        <ImportarSucesso planosCount={planosValidos.length} />
+        <ImportSuccess planosCount={planosValidos.length} />
       ) : (
         <>
-          <FormatoCsvCard />
+          <CsvFormatCard />
 
           {!planos && (
-            <ImportarDropZone inputRef={inputRef} onFile={handleFile} />
+            <ImportDropZone inputRef={inputRef} onFile={handleFile} />
           )}
 
-          <ErrosImportacao erros={erros} />
+          <ImportErrors erros={erros} />
 
           {planos && (
             <div className="mt-4 animate-fade-up flex flex-col gap-4">
@@ -127,7 +127,7 @@ function ImportarCsvPage() {
               </div>
 
               {planos.map(plano => (
-                <PlanoEditCard
+                <PlanEditCard
                   key={plano.id}
                   plano={plano}
                   expandedExs={expandedExs}

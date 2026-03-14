@@ -4,12 +4,12 @@ import { useHistoryStore, useActiveWorkoutStore } from '../../stores'
 import { calcularRecordes } from '../../lib/records'
 import { useSessionEdit } from '../../hooks/useSessionEdit'
 import { useMemo } from 'react'
-import { SessaoDetalheHeader } from './components/-SessaoDetalheHeader'
-import { SessaoStats } from './components/-SessaoStats'
-import { ProgressoSeries } from './components/-ProgressoSeries'
-import { BotaoRetornarTreino } from './components/-BotaoRetornarTreino'
-import { NotasTreino } from './components/-NotasTreino'
-import { ExercicioSessaoCard } from './components/-ExercicioSessaoCard'
+import { SessionDetailHeader } from './components/-SessionDetailHeader'
+import { SessionStats } from './components/-SessionStats'
+import { SetsProgress } from './components/-SetsProgress'
+import { ReturnToWorkoutButton } from './components/-ReturnToWorkoutButton'
+import { WorkoutNotes } from './components/-WorkoutNotes'
+import { ExerciseSessionCard } from './components/-ExerciseSessionCard'
 
 export const Route = createFileRoute('/history/$sessionId')({
   component: SessaoDetalhePage,
@@ -76,7 +76,7 @@ function SessaoDetalhePage() {
 
   return (
     <div className="page-container pt-4">
-      <SessaoDetalheHeader
+      <SessionDetailHeader
         planoNome={displaySessao!.planoNome}
         dataStr={dataStr}
         editando={editando}
@@ -92,7 +92,7 @@ function SessaoDetalhePage() {
         onSalvarEdicao={salvarEdicao}
       />
 
-      <SessaoStats
+      <SessionStats
         duracaoSegundos={displaySessao!.duracaoSegundos}
         numExercicios={displaySessao!.exercicios.length}
         volumeTotal={displaySessao!.volumeTotal}
@@ -108,9 +108,9 @@ function SessaoDetalhePage() {
         }
       />
 
-      <ProgressoSeries seriesOk={seriesOk} totalSeries={totalSeries} />
+      <SetsProgress seriesOk={seriesOk} totalSeries={totalSeries} />
 
-      <BotaoRetornarTreino
+      <ReturnToWorkoutButton
         onClick={() => {
           restaurarDeHistorico(displaySessao!)
           navigate({
@@ -121,12 +121,12 @@ function SessaoDetalhePage() {
       />
 
       {displaySessao!.notas && (
-        <NotasTreino notas={displaySessao!.notas} />
+        <WorkoutNotes notas={displaySessao!.notas} />
       )}
 
       <div className="flex flex-col gap-3">
         {displaySessao!.exercicios.map((ex, eIdx) => (
-          <ExercicioSessaoCard
+          <ExerciseSessionCard
             key={`${ex.exercicioId}-${eIdx}`}
             ex={ex}
             exIdx={eIdx}

@@ -9,14 +9,14 @@ import { useUserConfig } from '../hooks/useUserConfig'
 import { useHomeStats } from '../hooks/useHomeStats'
 import { HomeHeader } from './index/components/-HomeHeader'
 import { PullToRefreshIndicator } from './index/components/-PullToRefreshIndicator'
-import { TreinoAtivoBanner } from './index/components/-TreinoAtivoBanner'
+import { ActiveWorkoutBanner } from './index/components/-ActiveWorkoutBanner'
 import { HomeStats } from './index/components/-HomeStats'
 import { StreakMetaSection } from './index/components/-StreakMetaSection'
 import { WeekDaysCard } from './index/components/-WeekDaysCard'
-import { ProximoTreinoSection } from './index/components/-ProximoTreinoSection'
-import { FrequenciaGruposCard } from './index/components/-FrequenciaGruposCard'
-import { MeusPlanosSection } from './index/components/-MeusPlanosSection'
-import { UltimosTreinosSection } from './index/components/-UltimosTreinosSection'
+import { NextWorkoutSection } from './index/components/-NextWorkoutSection'
+import { GroupFrequencyCard } from './index/components/-GroupFrequencyCard'
+import { MyPlansSection } from './index/components/-MyPlansSection'
+import { LastWorkoutsSection } from './index/components/-LastWorkoutsSection'
 import { EditMetaModal } from './index/components/-EditMetaModal'
 
 export const Route = createFileRoute('/')({
@@ -110,7 +110,7 @@ function HomePage() {
       />
 
       {treinoAtivo && sessaoAtiva && (
-        <TreinoAtivoBanner
+        <ActiveWorkoutBanner
           planoId={sessaoAtiva.planoId}
           pausado={pausado}
           cronometroGeralSegundos={cronometroGeralSegundos}
@@ -155,19 +155,19 @@ function HomePage() {
       />
 
       {!treinoAtivo && proximoPlano && (
-        <ProximoTreinoSection
+        <NextWorkoutSection
           proximoPlano={proximoPlano}
           ultimaSessao={ultimaSessao}
         />
       )}
 
       {!carregando && sessoes.length > 0 && (
-        <FrequenciaGruposCard alertas={alertasGrupos} />
+        <GroupFrequencyCard alertas={alertasGrupos} />
       )}
 
-      <MeusPlanosSection planos={planosAtivos} carregando={carregando} />
+      <MyPlansSection planos={planosAtivos} carregando={carregando} />
 
-      <UltimosTreinosSection
+      <LastWorkoutsSection
         sessoes={ultimasSessoes.map(s => ({
           id: s.id,
           planoNome: s.planoNome,

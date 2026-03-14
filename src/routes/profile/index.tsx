@@ -17,10 +17,10 @@ function parseDiasOpcionais(): number[] {
     return []
   }
 }
-import { PerfilHeader } from './components/-PerfilHeader'
-import { PerfilStats } from './components/-PerfilStats'
-import { ConquistasCard } from './components/-ConquistasCard'
-import { ConfiguracoesCard } from './components/-ConfiguracoesCard'
+import { ProfileHeader } from './components/-ProfileHeader'
+import { ProfileStats } from './components/-ProfileStats'
+import { AchievementsCard } from './components/-AchievementsCard'
+import { SettingsCard } from './components/-SettingsCard'
 import { ExportModal } from './components/-ExportModal'
 import { LogoutConfirmModal } from './components/-LogoutConfirmModal'
 
@@ -79,22 +79,22 @@ function PerfilPage() {
 
   return (
     <div className="page-container pt-6">
-      <PerfilHeader
+      <ProfileHeader
         photoURL={user?.photoURL}
         displayName={user?.displayName}
         email={user?.email}
       />
 
-      <PerfilStats
+      <ProfileStats
         totalTreinos={sessoes.length}
         totalPlanos={planos.length}
         volumeTotal={totalVolume}
         tempoTotal={totalDuracao}
       />
 
-      <ConquistasCard conquistas={conquistas} />
+      <AchievementsCard conquistas={conquistas} />
 
-      <ConfiguracoesCard
+      <SettingsCard
         notifPermitida={notifPermitida}
         onNotifToggle={handleNotif}
         onExportClick={() => setShowExportMenu(true)}

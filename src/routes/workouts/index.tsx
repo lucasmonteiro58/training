@@ -16,10 +16,10 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import type { WorkoutPlan } from '../../types'
-import { TreinosHeader } from './components/-TreinosHeader'
-import { EmptyPlanos } from './components/-EmptyPlanos'
-import { PlanoSortableCard } from './components/-PlanoSortableCard'
-import { PlanosArquivadosSection } from './components/-PlanosArquivadosSection'
+import { WorkoutsHeader } from './components/-WorkoutsHeader'
+import { EmptyPlans } from './components/-EmptyPlans'
+import { PlanSortableCard } from './components/-PlanSortableCard'
+import { ArchivedPlansSection } from './components/-ArchivedPlansSection'
 
 export const Route = createFileRoute('/workouts/')({
   component: TreinosPage,
@@ -90,7 +90,7 @@ function TreinosPage() {
       className="page-container pt-6"
       style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
     >
-      <TreinosHeader
+      <WorkoutsHeader
         reordenando={reordenando}
         podeOrdenar={planosAtivos.length > 1}
         onToggleReordenar={handleToggleReordenar}
@@ -103,7 +103,7 @@ function TreinosPage() {
           ))}
         </div>
       ) : planosAtivos.length === 0 && planosArquivados.length === 0 ? (
-        <EmptyPlanos />
+        <EmptyPlans />
       ) : (
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-3">
@@ -117,7 +117,7 @@ function TreinosPage() {
                   strategy={verticalListSortingStrategy}
                 >
                   {listaOrdenada.map(plano => (
-                    <PlanoSortableCard
+                    <PlanSortableCard
                       key={plano.id}
                       plano={plano}
                       reordenando={reordenando}
@@ -129,7 +129,7 @@ function TreinosPage() {
               </DndContext>
             ) : (
               planosAtivos.map(plano => (
-                <PlanoSortableCard
+                <PlanSortableCard
                   key={plano.id}
                   plano={plano}
                   reordenando={false}
@@ -140,7 +140,7 @@ function TreinosPage() {
             )}
           </div>
 
-          <PlanosArquivadosSection
+          <ArchivedPlansSection
             planos={planosArquivados}
             expandido={mostrarArquivados}
             processando={processando}

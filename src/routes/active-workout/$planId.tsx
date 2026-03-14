@@ -20,13 +20,13 @@ import { calcularRecordes } from '../../lib/records'
 import { CheckCircle, SkipForward, Timer, Zap } from 'lucide-react'
 import { Confetti } from '../../components/ui/Confetti'
 import { gerarImagemRelatorio } from '../../lib/relatorioImage'
-import { TreinoRelatorioScreen } from './components/-TreinoRelatorioScreen'
-import { TreinoAtivoHeader } from './components/-TreinoAtivoHeader'
-import { DescansoCard } from './components/-DescansoCard'
-import { ConfirmCancelarModal } from './components/-ConfirmCancelarModal'
-import { ConfirmFinalizarModal } from './components/-ConfirmFinalizarModal'
-import { ExercicioInfoModal } from './components/-ExercicioInfoModal'
-import { NotasTreinoModal } from './components/-NotasTreinoModal'
+import { WorkoutReportScreen } from './components/-WorkoutReportScreen'
+import { ActiveWorkoutHeader } from './components/-ActiveWorkoutHeader'
+import { RestCard } from './components/-RestCard'
+import { ConfirmCancelModal } from './components/-ConfirmCancelModal'
+import { ConfirmFinishModal } from './components/-ConfirmFinishModal'
+import { ExerciseInfoModal } from './components/-ExerciseInfoModal'
+import { WorkoutNotesModal } from './components/-WorkoutNotesModal'
 import { PRCelebrationOverlay } from './components/-PRCelebrationOverlay'
 
 export const Route = createFileRoute('/active-workout/$planId')({
@@ -201,7 +201,7 @@ function TreinoAtivoPage() {
     return (
       <>
         <Confetti active={showConfetti} />
-        <TreinoRelatorioScreen
+        <WorkoutReportScreen
           relatorio={relatorio}
           gerandoImagem={gerandoImagem}
           copiado={copiado}
@@ -225,7 +225,7 @@ function TreinoAtivoPage() {
     <div className="flex flex-col min-h-dvh bg-bg max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
       <Confetti active={showConfetti} />
       {showPrCelebration && <PRCelebrationOverlay />}
-      <TreinoAtivoHeader
+      <ActiveWorkoutHeader
         cronometroGeralSegundos={cronometroGeralSegundos}
         pausado={pausado}
         onPause={pausarTreino}
@@ -262,7 +262,7 @@ function TreinoAtivoPage() {
       </div>
 
       {cronometroDescansoAtivo && (
-        <DescansoCard
+        <RestCard
           segundosRestantes={cronometroDescansoSegundos}
           onPular={() => {
             descansoAcabouNaturalRef.current = false
@@ -490,7 +490,7 @@ function TreinoAtivoPage() {
       </div>
 
       {showConfirmCancelar && (
-        <ConfirmCancelarModal
+        <ConfirmCancelModal
           onConfirm={() => {
             cancelarNotificacaoDescanso()
             limparLocal()
@@ -501,7 +501,7 @@ function TreinoAtivoPage() {
       )}
 
       {showInfo && (
-        <ExercicioInfoModal
+        <ExerciseInfoModal
           exercicio={exercicioAtual}
           exercicioPlano={planoExercicio}
           onClose={() => setShowInfo(false)}
@@ -509,7 +509,7 @@ function TreinoAtivoPage() {
       )}
 
       {showNotas && (
-        <NotasTreinoModal
+        <WorkoutNotesModal
           notas={notasTemp}
           onNotasChange={setNotasTemp}
           onSalvar={() => {
@@ -522,7 +522,7 @@ function TreinoAtivoPage() {
       )}
 
       {showConfirmFinalizar && (
-        <ConfirmFinalizarModal
+        <ConfirmFinishModal
           onConfirm={handleFinalizar}
           onCancel={() => setShowConfirmFinalizar(false)}
           finalizando={finalizando}

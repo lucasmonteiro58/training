@@ -7,9 +7,9 @@ import { useAuthStore } from '../../stores'
 import { CreateExerciseModal } from '../../components/common/CreateExerciseModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Calculadora1RM } from '../../components/ui/Calculadora1RM'
-import { ExerciciosToolbar } from './components/-ExerciciosToolbar'
+import { ExercisesToolbar } from './components/-ExercisesToolbar'
 import { ExerciseGridCard } from './components/-ExercicioGridCard'
-import { EmptyExercicios } from './components/-EmptyExercicios'
+import { EmptyExercises } from './components/-EmptyExercises'
 import { ExerciseDetailModal } from './components/-ExercicioDetailModal'
 
 export const Route = createFileRoute('/exercises/')({
@@ -97,7 +97,7 @@ function ExercisesPage() {
   return (
     <>
       <div className="page-container h-[calc(100dvh-16px)] pb-0! flex flex-col pt-6 overflow-hidden">
-        <ExerciciosToolbar
+        <ExercisesToolbar
           query={query}
           onQueryChange={setQuery}
           grupo={grupo}
@@ -123,7 +123,7 @@ function ExercisesPage() {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <EmptyExercicios onCriar={() => setShowCriar(true)} />
+            <EmptyExercises onCriar={() => setShowCriar(true)} />
           ) : (
             <div
               style={{

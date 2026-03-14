@@ -6,7 +6,7 @@ import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, XCircle, Copy, L
 import type { GroupingType } from '../../types'
 import { GROUPING_CONFIG } from '../../types'
 import { ExercisePicker } from '../../components/common/ExercisePicker'
-import { ExercicioDetalheCard } from './components/-ExercicioDetalheCard'
+import { ExerciseDetailCard } from './components/-ExerciseDetailCard'
 import { toast } from 'sonner'
 import { useStartWorkout } from '../../hooks/useStartWorkout'
 import { DndContext, closestCenter } from '@dnd-kit/core'
@@ -163,7 +163,7 @@ function PlanoDetalheComponent() {
                             </div>
                             <div className="flex flex-col gap-1">
                               {groupExs.map(gex => (
-                                <ExercicioDetalheCard
+                                <ExerciseDetailCard
                                   key={gex.id}
                                   ex={gex}
                                   editando
@@ -186,7 +186,7 @@ function PlanoDetalheComponent() {
                       }
                       if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
                       return (
-                        <ExercicioDetalheCard
+                        <ExerciseDetailCard
                           key={ex.id}
                           ex={ex}
                           editando
@@ -225,7 +225,7 @@ function PlanoDetalheComponent() {
                         </div>
                         <div className="flex flex-col gap-1">
                           {groupExs.map(gex => (
-                            <ExercicioDetalheCard key={gex.id} ex={gex} editando={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
+                            <ExerciseDetailCard key={gex.id} ex={gex} editando={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
                           ))}
                         </div>
                       </div>
@@ -233,7 +233,7 @@ function PlanoDetalheComponent() {
                   }
                   if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
                   return (
-                    <ExercicioDetalheCard key={ex.id} ex={ex} editando={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
+                    <ExerciseDetailCard key={ex.id} ex={ex} editando={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
                   )
                 })
               })()}

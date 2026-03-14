@@ -10,7 +10,7 @@ import { useAuth as useAuthHook } from '../hooks/useAuth'
 import { useWorkoutProgressSync } from '../hooks/useWorkoutProgressSync'
 import appCss from '../styles.css?url'
 import { AuthLoadingScreen } from './__root/components/-AuthLoadingScreen'
-import { AutoEncerradoBanner } from './__root/components/-AutoEncerradoBanner'
+import { AutoClosedBanner } from './__root/components/-AutoClosedBanner'
 import { SyncIndicator } from './__root/components/-SyncIndicator'
 import { LoginPage } from './__root/components/-LoginPage'
 
@@ -93,7 +93,7 @@ function RootComponent() {
   return (
     <div className="flex flex-col min-h-dvh bg-bg relative overflow-x-hidden">
       <SyncIndicator />
-      <AutoEncerradoBanner />
+      <AutoClosedBanner />
       <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top,0)]">
         <div className="pt-4 py-2">
           <Outlet />

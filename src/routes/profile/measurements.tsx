@@ -6,11 +6,11 @@ import type { BodyMeasurement } from '../../types'
 import { useState, useMemo } from 'react'
 import { ChevronLeft, Ruler } from 'lucide-react'
 import { toast } from 'sonner'
-import { MedidasHeader } from './components/-MedidasHeader'
-import { MedidasChart } from './components/-MedidasChart'
-import { MedidaCard } from './components/-MedidaCard'
-import { NovaMedidaModal } from './components/-NovaMedidaModal'
-import { ConfirmDeleteMedidaModal } from './components/-ConfirmDeleteMedidaModal'
+import { MeasurementsHeader } from './components/-MeasurementsHeader'
+import { MeasurementsChart } from './components/-MeasurementsChart'
+import { MeasurementCard } from './components/-MeasurementCard'
+import { NewMeasurementModal } from './components/-NewMeasurementModal'
+import { ConfirmDeleteMeasurementModal } from './components/-ConfirmDeleteMeasurementModal'
 
 export const Route = createFileRoute('/profile/measurements')({
   component: MedidasPage,
@@ -82,13 +82,13 @@ function MedidasPage() {
 
   return (
     <div className="page-container pt-6 pb-28">
-      <MedidasHeader
+      <MeasurementsHeader
         onVoltar={() => navigate({ to: '/profile' })}
         onNova={() => setShowForm(true)}
       />
 
       {medidas.length >= 1 && (
-        <MedidasChart
+        <MeasurementsChart
           campoGrafico={campoGrafico}
           dados={dadosGrafico}
           onCampoChange={setCampoGrafico}
@@ -106,7 +106,7 @@ function MedidasPage() {
       ) : (
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
           {medidas.map(m => (
-            <MedidaCard
+            <MeasurementCard
               key={m.id}
               medida={m}
               onExcluir={() => setConfirmDelete(m.id)}
@@ -116,7 +116,7 @@ function MedidasPage() {
       )}
 
       {showForm && (
-        <NovaMedidaModal
+        <NewMeasurementModal
           form={form}
           onFormChange={setForm}
           onSalvar={handleSalvar}
@@ -125,7 +125,7 @@ function MedidasPage() {
       )}
 
       {confirmDelete && (
-        <ConfirmDeleteMedidaModal
+        <ConfirmDeleteMeasurementModal
           onConfirm={async () => {
             await remover(confirmDelete)
             setConfirmDelete(null)

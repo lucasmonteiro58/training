@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useHistoryStore } from '../../stores'
 import { useState, useMemo } from 'react'
 import { TrendingUp } from 'lucide-react'
-import { EvolucaoHeader } from './components/-EvolucaoHeader'
-import { EvolucaoTabs, type EvolucaoTabId } from './components/-EvolucaoTabs'
-import { EvolucaoExercicioCard } from './components/-EvolucaoExercicioCard'
+import { ProgressHeader } from './components/-ProgressHeader'
+import { ProgressTabs, type ProgressTabId } from './components/-ProgressTabs'
+import { ProgressExerciseCard } from './components/-ProgressExerciseCard'
 import { VolumeChart } from './components/-VolumeChart'
 
 export const Route = createFileRoute('/profile/progress')({
@@ -14,7 +14,7 @@ export const Route = createFileRoute('/profile/progress')({
 function EvolucaoPage() {
   const sessoes = useHistoryStore(s => s.sessoes)
   const navigate = useNavigate()
-  const [tab, setTab] = useState<EvolucaoTabId>('exercicios')
+  const [tab, setTab] = useState<ProgressTabId>('exercicios')
 
   const exercicios = useMemo(() => {
     const map = new Map<string, string>()
@@ -91,9 +91,9 @@ function EvolucaoPage() {
 
   return (
     <div className="page-container pt-4">
-      <EvolucaoHeader onVoltar={() => navigate({ to: '/profile' })} />
+      <ProgressHeader onVoltar={() => navigate({ to: '/profile' })} />
 
-      <EvolucaoTabs tab={tab} onTabChange={setTab} />
+      <ProgressTabs tab={tab} onTabChange={setTab} />
 
       {tab === 'exercicios' && (
         <div className="flex flex-col gap-3 animate-fade-up">
@@ -103,7 +103,7 @@ function EvolucaoPage() {
             </p>
           ) : (
             exercicios.map(ex => (
-              <EvolucaoExercicioCard
+              <ProgressExerciseCard
                 key={ex.id}
                 nome={ex.nome}
                 pontos={timelineByExercicio.get(ex.id) ?? []}

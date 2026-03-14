@@ -6,10 +6,10 @@ import { GROUPING_CONFIG } from '../../types'
 import { ExercisePicker } from '../../components/common/ExercisePicker'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { NovoPlanoHeader } from './components/-NovoPlanoHeader'
+import { NewPlanHeader } from './components/-NewPlanHeader'
 import { PlanDetailsCard } from './components/-PlanDetailsCard'
-import { ExerciseInPlanCard } from './components/-ExercicioNoPlanoCard'
-import { CancelarCriacaoModal } from './components/-CancelarCriacaoModal'
+import { ExerciseInPlanCard } from './components/-ExerciseInPlanCard'
+import { CancelCreationModal } from './components/-CancelCreationModal'
 import { GroupTypeModal } from './components/-GroupTypeModal'
 
 export const Route = createFileRoute('/workouts/new')({
@@ -55,7 +55,7 @@ function NovoPlanoPage() {
   return (
     <>
       <div className="page-container pt-4">
-        <NovoPlanoHeader
+        <NewPlanHeader
           onBack={() => navigate({ to: '/workouts' })}
           onSave={salvar}
           saving={saving}
@@ -174,7 +174,7 @@ function NovoPlanoPage() {
       </div>
 
       {blockerStatus === 'blocked' && (
-        <CancelarCriacaoModal onConfirm={() => blockerProceed?.()} onCancel={blockerReset} />
+        <CancelCreationModal onConfirm={() => blockerProceed?.()} onCancel={blockerReset} />
       )}
 
       {showPicker && (
