@@ -23,14 +23,22 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
     ? Math.round(sessao.tempoOciosoDescontadoSegundos / 60)
     : 0
 
+  const goToDetalhes = () => {
+    navigate({ to: '/historico/$sessaoId', params: { sessaoId: sessao.id } })
+  }
+
   return (
-    <div className="card p-4 animate-fade-up" style={{ animationDelay: `${index * 40}ms` }}>
+    <div
+      className="card p-4 animate-fade-up cursor-pointer"
+      style={{ animationDelay: `${index * 40}ms` }}
+      onClick={goToDetalhes}
+    >
       <div className="flex items-start justify-between mb-2">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-text font-bold">{sessao.planoNome}</p>
           <p className="text-text-muted text-xs mt-0.5 capitalize">{dataStr}</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
           {sessao.autoEncerrado && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/25">
               <TimerOff size={10} />
@@ -38,6 +46,7 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
             </span>
           )}
           <button
+            type="button"
             onClick={() => onExcluir(sessao.id)}
             className="btn-ghost p-2 text-text-subtle hover:text-danger"
           >
@@ -70,7 +79,7 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
           </div>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2" onClick={e => e.stopPropagation()}>
         <button
           type="button"
           onClick={() => {
@@ -82,7 +91,7 @@ export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardP
           <RotateCcw size={13} /> Retornar
         </button>
         <Link to="/historico/$sessaoId" params={{ sessaoId: sessao.id }} style={{ textDecoration: 'none' }} className="flex-1">
-          <button className="btn-ghost w-full py-2 text-xs border border-border rounded-xl flex items-center justify-center gap-1">
+          <button type="button" className="btn-ghost w-full py-2 text-xs border border-border rounded-xl flex items-center justify-center gap-1">
             Detalhes <ChevronRight size={13} />
           </button>
         </Link>
