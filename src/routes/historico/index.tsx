@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useHistorico } from '../../hooks/useHistorico'
 import { usePlanosStore } from '../../stores'
 import { formatarTempo } from '../../lib/notifications'
-import { History, Dumbbell, Clock, TrendingUp, ChevronRight, Trash2, Filter, X } from 'lucide-react'
+import { History, Dumbbell, Clock, TrendingUp, ChevronRight, Trash2, Filter, X, ArrowLeft } from 'lucide-react'
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { useMemo, useState } from 'react'
 
@@ -13,6 +13,7 @@ export const Route = createFileRoute('/historico/')({
 type Periodo = 'todos' | '7d' | '30d' | '90d'
 
 function HistoricoPage() {
+  const navigate = useNavigate()
   const { sessoes, loading, excluirSessao } = useHistorico()
   const planos = usePlanosStore(s => s.planos)
   const [confirmExcluir, setConfirmExcluir] = useState<string | null>(null)
@@ -59,8 +60,15 @@ function HistoricoPage() {
 
   return (
     <div className="page-container pt-6">
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">Histórico</h1>
+      <div className="flex items-center gap-3 mb-6 animate-fade-up">
+        <button
+          onClick={() => navigate({ to: '/perfil' })}
+          className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)] shrink-0"
+          aria-label="Voltar"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <h1 className="text-2xl font-bold text-[var(--color-text)] flex-1 min-w-0">Histórico</h1>
         {sessoes.length > 0 && (
           <button
             onClick={() => setShowFiltros(v => !v)}

@@ -129,7 +129,7 @@ function PerfilPage() {
             <p className="text-sm font-medium text-[var(--color-text)]">Histórico de Treinos</p>
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Veja todos os seus treinos passados</p>
           </div>
-          <History size={16} className="text-[var(--color-text-subtle)]" />
+          <ChevronRight size={16} className="text-[var(--color-text-subtle)]" />
         </Link>
 
         <div className="mx-4 h-px bg-[var(--color-border)] opacity-20" />

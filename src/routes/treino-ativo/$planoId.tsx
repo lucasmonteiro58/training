@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle,
+  X,
   XCircle,
   SkipForward,
   Timer,
@@ -691,8 +692,18 @@ function TreinoAtivoPage() {
     return (
       <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--color-bg)] overflow-y-auto">
         <Confetti active={showConfetti} />
+        {/* Top bar com botão fechar */}
+        <div className="flex justify-end px-4 pt-4 pb-2">
+          <button
+            onClick={() => navigate({ to: '/treinos' })}
+            className="w-10 h-10 rounded-xl bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-muted)]"
+            aria-label="Fechar"
+          >
+            <X size={18} />
+          </button>
+        </div>
         {/* Header */}
-        <div className="flex flex-col items-center pt-10 pb-6 px-6 text-center">
+        <div className="flex flex-col items-center pt-2 pb-6 px-6 text-center">
           <div className="w-20 h-20 rounded-3xl bg-[rgba(34,197,94,0.15)] flex items-center justify-center mb-4 animate-trophy-bounce">
             <Trophy size={36} className="text-[var(--color-success)]" />
           </div>
