@@ -94,7 +94,7 @@ export function ConfiguracoesCard({
         <div className="flex-1">
           <p className="text-sm font-medium text-text">Dias opcionais de treino</p>
           <p className="text-xs text-text-muted mt-0.5">
-            Marque dias em que não treinar não quebra sua sequência
+            Dias que você pode pular sem perder a sequência
           </p>
         </div>
         <ChevronRight size={16} className="text-text-subtle" />

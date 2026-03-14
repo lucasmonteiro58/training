@@ -63,15 +63,14 @@ function DiasOpcionaisPage() {
         <div>
           <h1 className="text-lg font-bold text-text">Dias opcionais</h1>
           <p className="text-sm text-text-muted">
-            Dias em que não treinar não quebra sua sequência (streak)
+            Dias que você pode pular sem perder a sequência
           </p>
         </div>
       </header>
 
       <div className="card p-1 mb-4">
         <p className="text-xs text-text-muted px-4 py-3">
-          Toque nos dias que são opcionais para você. Eles não entram na meta de dias seguidos na
-          Home nem nas conquistas.
+          Toque para marcar os dias que você pode pular. Eles não contam para a meta nem para as conquistas.
         </p>
         {DIAS_NOMES.map((nome, idx) => {
           const isOptional = dias.includes(idx)
@@ -98,10 +97,6 @@ function DiasOpcionaisPage() {
           )
         })}
       </div>
-
-      <p className="text-center text-xs text-text-subtle">
-        Alterações são salvas automaticamente no dispositivo e no Firebase.
-      </p>
     </div>
   )
 }
