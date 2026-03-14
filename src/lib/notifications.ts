@@ -18,6 +18,9 @@ export function setNotifAtivas(ativo: boolean): void {
 
 export async function registrarServiceWorker(): Promise<void> {
   if (!('serviceWorker' in navigator)) return
+  // Em desenvolvimento o SW pode cachear HTML/CSS e deixar a página sem estilos
+  // até limpar o cache; só registramos em produção.
+  if (import.meta.env.DEV) return
   try {
     swRegistration = await navigator.serviceWorker.register('/sw.js')
     console.log('SW registrado:', swRegistration.scope)
