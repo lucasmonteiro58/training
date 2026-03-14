@@ -1,14 +1,13 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { BottomNav } from '../components/layout/BottomNav'
-import { useTreinoAtivoStore, useHistoricoStore, INATIVIDADE_AUTO_ENCERRAR_MS, calcularVolume } from '../stores'
+import { useTreinoAtivoStore } from '../stores'
 import { registrarServiceWorker } from '../lib/notifications'
-import { subscribeToProgressoTreino, limparProgressoTreinoFirestore } from '../lib/firestore/sync'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
 import { Toaster } from 'sonner'
 import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
 import { useAuth as useAuthHook } from '../hooks/useAuth'
-import { useHistorico } from '../hooks/useHistorico'
+import { useProgressoTreinoSync } from '../hooks/useProgressoTreinoSync'
 import appCss from '../styles.css?url'
 import { AuthLoadingScreen } from './__root/components/-AuthLoadingScreen'
 import { AutoEncerradoBanner } from './__root/components/-AutoEncerradoBanner'
@@ -65,8 +64,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { user, loading: loadingAuth } = useAuthHook()
   const { iniciado, pausado, tickGeral } = useTreinoAtivoStore()
-  const { salvarSessaoCompleta } = useHistorico()
-  const setSessaoAutoEncerrada = useHistoricoStore(s => s.setSessaoAutoEncerrada)
+
+  useProgressoTreinoSync(user)
 
   useEffect(() => {
     if (import.meta.env.DEV && 'serviceWorker' in navigator) {
@@ -76,57 +75,6 @@ function RootComponent() {
     }
     registrarServiceWorker()
   }, [])
-
-  useEffect(() => {
-    if (!user) return
-
-    const unsub = subscribeToProgressoTreino(user.uid, dados => {
-      const state = useTreinoAtivoStore.getState()
-      const historicoState = useHistoricoStore.getState()
-
-      if (!dados || !dados.iniciado) {
-        if (state.iniciado) state.limparLocal()
-        return
-      }
-
-      const updatedAt = (dados as { updatedAt?: number }).updatedAt
-      if (updatedAt && Date.now() - updatedAt > INATIVIDADE_AUTO_ENCERRAR_MS) {
-        if (historicoState.sessaoAutoEncerrada?.sessao.id === dados.sessao?.id) return
-        const sessao = dados.sessao
-        if (!sessao) return
-        const cronometroBruto = (dados as { cronometroGeralSegundos?: number }).cronometroGeralSegundos ?? 0
-        const tempoOciosoSegundos = Math.floor(INATIVIDADE_AUTO_ENCERRAR_MS / 1000)
-        const finalizada = {
-          ...sessao,
-          finalizadoEm: Date.now(),
-          duracaoSegundos: Math.max(0, cronometroBruto - tempoOciosoSegundos),
-          tempoOciosoDescontadoSegundos: tempoOciosoSegundos,
-          volumeTotal: calcularVolume(sessao),
-          autoEncerrado: true,
-        }
-        salvarSessaoCompleta(finalizada).then(() => {
-          limparProgressoTreinoFirestore(user.uid)
-          state.limparLocal()
-          setSessaoAutoEncerrada({
-            sessao: finalizada,
-            exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
-            serieAtualIndex: dados.serieAtualIndex ?? 0,
-            cronometroGeralSegundos: (dados as { cronometroGeralSegundos?: number }).cronometroGeralSegundos ?? 0,
-          })
-        })
-        return
-      }
-
-      if (!state.iniciado) {
-        state.restaurarDeExterno(dados)
-        return
-      }
-
-      state.sincronizarEstadoExterno(dados)
-    })
-
-    return unsub
-  }, [user, salvarSessaoCompleta, setSessaoAutoEncerrada])
 
   useEffect(() => {
     if (!iniciado || pausado) return

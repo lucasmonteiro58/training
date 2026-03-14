@@ -1,25 +1,22 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState, useMemo } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import { usePlanos } from '../../hooks/usePlanos'
 import { useHistorico } from '../../hooks/useHistorico'
 import { useAuthStore, useTreinoAtivoStore, useHistoricoStore } from '../../stores'
 import {
-  enviarNotificacaoTreino,
   limparNotificacoesTreino,
-  solicitarPermissaoNotificacao,
-  agendarNotificacaoDescanso,
   cancelarNotificacaoDescanso,
-  tocarAlertaDescanso,
-  vibrarDescansoFim,
-  prepararAudio,
-  onSwMessage,
   formatarTempo,
 } from '../../lib/notifications'
-import type { SessaoDeTreino, SerieRegistrada, ExercicioNaSessao } from '../../types'
+import { useTimerSerie } from '../../hooks/useTimerSerie'
+import { useNotificacoesDescanso } from '../../hooks/useNotificacoesDescanso'
+import { useSalvarPesosNoPlano } from '../../hooks/useSalvarPesosNoPlano'
+import { useIniciarSessaoTreino } from '../../hooks/useIniciarSessaoTreino'
+import { useCompletarSerieTreino } from '../../hooks/useCompletarSerieTreino'
+import type { SessaoDeTreino } from '../../types'
 import { toast } from 'sonner'
 import { calcular1RM } from '../../lib/calculadora1rm'
-import { calcularRecordes, detectarNovoPR } from '../../lib/records'
+import { calcularRecordes } from '../../lib/records'
 import { CheckCircle, SkipForward, Timer, Zap } from 'lucide-react'
 import { Confetti } from '../../components/ui/Confetti'
 import { gerarImagemRelatorio } from '../../lib/relatorioImage'
@@ -61,41 +58,22 @@ function TreinoAtivoPage() {
   const timerRef = useRef<number | null>(null)
   const descansoRef = useRef<number | null>(null)
 
-  // ─── Salvar pesos no plano quando muda de exercício ───────────────────────
-  const salvarPesosNoPlano = (exIdx?: number) => {
-    if (!plano || !sessao) return
-    const idx = exIdx ?? exercicioAtualIndex
-    const exSessao = sessao.exercicios[idx]
-    if (!exSessao) return
-    const planoExIdx = plano.exercicios.findIndex(e => e.exercicioId === exSessao.exercicioId)
-    if (planoExIdx === -1) return
-    const exPlano = plano.exercicios[planoExIdx]
-    const seriesDetalhadas = exSessao.series.map((s, i) => ({
-      ...(exPlano.seriesDetalhadas?.[i] ?? {}),
-      peso: s.peso,
-      repeticoes: s.repeticoes,
-    }))
-    // Só salvar se houve mudança
-    const changed = seriesDetalhadas.some((sd, i) => {
-      const old = exPlano.seriesDetalhadas?.[i]
-      return !old || old.peso !== sd.peso || old.repeticoes !== sd.repeticoes
-    })
-    if (!changed) return
-    const exercicios = plano.exercicios.map((ex, i) =>
-      i === planoExIdx ? { ...ex, seriesDetalhadas } : ex
-    )
-    atualizarPlano({ ...plano, exercicios })
-  }
+  const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
+  const { salvarPesosNoPlano } = useSalvarPesosNoPlano(
+    plano ?? undefined,
+    sessao,
+    exercicioAtualIndex,
+    atualizarPlano,
+    () => setApplyAll(null)
+  )
 
-  const prevExIdxRef = useRef(exercicioAtualIndex)
-  useEffect(() => {
-    // Salva pesos do exercício anterior quando troca
-    if (prevExIdxRef.current !== exercicioAtualIndex) {
-      salvarPesosNoPlano(prevExIdxRef.current)
-      prevExIdxRef.current = exercicioAtualIndex
-    }
-    setApplyAll(null)
-  }, [exercicioAtualIndex])
+  const { timerSerie, iniciarTimerSerie, pararTimerSerie } = useTimerSerie(exercicioAtualIndex)
+  const { descansoAcabouNaturalRef } = useNotificacoesDescanso({
+    cronometroDescansoAtivo,
+    cronometroDescansoSegundos,
+    sessao,
+    exercicioAtualIndex,
+  })
 
   // Heartbeat: atualiza Firestore a cada 1 min para não encerrar por inatividade (20 min)
   useEffect(() => {
@@ -113,94 +91,43 @@ function TreinoAtivoPage() {
   const [showInfo, setShowInfo] = useState(false)
   const [showNotas, setShowNotas] = useState(false)
   const [notasTemp, setNotasTemp] = useState('')
-  const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPrCelebration, setShowPrCelebration] = useState(false)
-  /** Maior peso por exercício para o qual já mostramos PR nesta sessão — mostra de novo só se bater esse valor */
-  const prExibidoRef = useRef<Map<string, number>>(new Map())
 
-  // ─── Cronômetro de série (para exercícios por tempo) ──────────────────────
-  const [timerSerie, setTimerSerie] = useState<{ sIdx: number; restando: number } | null>(null)
-  const timerSerieRef = useRef<number | null>(null)
+  useIniciarSessaoTreino({
+    planoId,
+    plano: plano ?? undefined,
+    user,
+    sessoes,
+    iniciado,
+    sessao,
+    iniciarTreino,
+  })
 
-  const iniciarTimerSerie = (sIdx: number, duracaoSegundos: number) => {
-    if (timerSerieRef.current) clearInterval(timerSerieRef.current)
-    setTimerSerie({ sIdx, restando: duracaoSegundos })
-    timerSerieRef.current = window.setInterval(() => {
-      setTimerSerie((prev) => {
-        if (!prev || prev.restando <= 1) {
-          clearInterval(timerSerieRef.current!)
-          return null
-        }
-        return { ...prev, restando: prev.restando - 1 }
-      })
-    }, 1000)
-  }
-
-  const pararTimerSerie = () => {
-    if (timerSerieRef.current) clearInterval(timerSerieRef.current)
-    setTimerSerie(null)
-  }
-
-  useEffect(() => {
-    pararTimerSerie()
-  }, [exercicioAtualIndex])
-
-  // ─── Iniciar treino se não estiver ativo ───────────────────────────────────
-  useEffect(() => {
-    if (!plano || !user) return
-    // Se já há sessão ativa desse plano, continua
-    if (iniciado && sessao?.planoId === planoId) return
-    // Se há sessão de outro plano ativa, finaliza e começa nova
-    // Buscar última sessão desse plano para pré-preencher pesos
-    const ultimaSessao = sessoes
-      .filter(s => s.planoId === planoId && s.finalizadoEm)
-      .sort((a, b) => (b.finalizadoEm ?? 0) - (a.finalizadoEm ?? 0))[0]
-
-    const exerciciosNaSessao: ExercicioNaSessao[] = plano.exercicios.map((ex) => {
-      // Buscar pesos da última sessão para este exercício
-      const exUltimaSessao = ultimaSessao?.exercicios.find(e => e.exercicioId === ex.exercicioId)
-      return {
-        exercicioId: ex.exercicioId,
-        exercicioNome: ex.exercicio.nome,
-        gifUrl: ex.exercicio.gifUrl,
-        grupoMuscular: ex.exercicio.grupoMuscular,
-        descansoSegundos: ex.descansoSegundos,
-        ordem: ex.ordem,
-        notas: ex.notas,
-        instrucoes: ex.exercicio.instrucoes,
-        tipoSerie: ex.tipoSerie,
-        duracaoMetaSegundos: ex.duracaoMetaSegundos,
-        agrupamentoId: ex.agrupamentoId,
-        tipoAgrupamento: ex.tipoAgrupamento,
-        series: Array.from({ length: ex.series }, (_, i) => {
-          // Prioridade: seriesDetalhadas do plano > última sessão > pesoMeta > 0
-          // Usa || ao invés de ?? pois 0 significa "não definido"
-          const pesoPlano = ex.seriesDetalhadas?.[i]?.peso
-          const repsPlano = ex.seriesDetalhadas?.[i]?.repeticoes
-          const pesoSessao = exUltimaSessao?.series[i]?.peso
-          const repsSessao = exUltimaSessao?.series[i]?.repeticoes
-          return {
-            id: uuidv4(),
-            ordem: i,
-            repeticoes: repsPlano || repsSessao || ex.repeticoesMeta,
-            peso: pesoPlano || pesoSessao || (ex.pesoMeta ?? 0),
-            completada: false,
-          } as SerieRegistrada
-        }),
-      }
-    })
-    const novaSessao: SessaoDeTreino = {
-      id: uuidv4(),
-      userId: user.uid,
-      planoId: plano.id,
-      planoNome: plano.nome,
-      iniciadoEm: Date.now(),
-      exercicios: exerciciosNaSessao,
-    }
-    iniciarTreino(novaSessao)
-    solicitarPermissaoNotificacao()
-  }, [plano, user, planoId])
+  const { handleCompletarSerie } = useCompletarSerieTreino({
+    sessao,
+    exercicioAtualIndex,
+    recordes,
+    salvarPesosNoPlano,
+    marcarSerieCompletada,
+    atualizarSerie,
+    iniciarDescanso,
+    proximoExercicio,
+    exercicioAnterior,
+    pararDescanso,
+    cancelarNotificacaoDescanso,
+    descansoAcabouNaturalRef,
+    onPrDetected: () => {
+      setShowPrCelebration(true)
+      setShowConfetti(true)
+      navigator.vibrate?.([100, 50, 100, 50, 200])
+      setTimeout(() => {
+        setShowPrCelebration(false)
+        setShowConfetti(false)
+      }, 3000)
+    },
+    onWorkoutComplete: () => setShowConfirmFinalizar(true),
+  })
 
   // ─── Cronômetro geral ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -218,189 +145,10 @@ function TreinoAtivoPage() {
     return () => { if (descansoRef.current) clearInterval(descansoRef.current) }
   }, [cronometroDescansoAtivo, tickDescanso])
 
-  // ─── Ref para rastrear se descanso acabou naturalmente ──────────────────
-  const descansoAcabouNatural = useRef(false)
-
-  // ─── Notificação ao iniciar/finalizar descanso ─────────────────────────────
-  useEffect(() => {
-    if (cronometroDescansoAtivo && sessao) {
-      const ex = sessao.exercicios[exercicioAtualIndex]
-      descansoAcabouNatural.current = true
-
-      // Notificação de descanso em andamento
-      enviarNotificacaoTreino(
-        `⏱ Descanso – ${cronometroDescansoSegundos}s`,
-        `Próximo: ${ex?.exercicioNome ?? ''}`,
-      )
-
-      // Agenda notificação no SW para quando o descanso terminar
-      // (funciona mesmo com aba em background)
-      agendarNotificacaoDescanso(
-        cronometroDescansoSegundos,
-        ex?.exercicioNome,
-      )
-    }
-
-    if (!cronometroDescansoAtivo) {
-      // Se o descanso terminou naturalmente (não foi pulado)
-      if (descansoAcabouNatural.current) {
-        tocarAlertaDescanso()
-        vibrarDescansoFim()
-        descansoAcabouNatural.current = false
-      }
-      limparNotificacoesTreino()
-    }
-  }, [cronometroDescansoAtivo])
-
-  // ─── Listener SW: REST_ENDED (aba em background) ──────────────────────────
-  useEffect(() => {
-    return onSwMessage((msg) => {
-      if (msg?.type === 'REST_ENDED') {
-        tocarAlertaDescanso()
-        vibrarDescansoFim()
-      }
-    })
-  }, [])
-
-  // ─── Haptic feedback nos últimos 5s do descanso ────────────────────────────
-  useEffect(() => {
-    if (cronometroDescansoAtivo && cronometroDescansoSegundos > 0 && cronometroDescansoSegundos <= 5) {
-      navigator.vibrate?.(cronometroDescansoSegundos === 1 ? [150, 50, 150] : [80])
-    }
-  }, [cronometroDescansoSegundos, cronometroDescansoAtivo])
-
   const exercicioAtual = sessao?.exercicios[exercicioAtualIndex]
   const planoExercicio = plano?.exercicios.find(ex => ex.exercicioId === exercicioAtual?.exercicioId)
   const totalExercicios = sessao?.exercicios.length ?? 0
   const progresso = totalExercicios ? (exercicioAtualIndex / totalExercicios) * 100 : 0
-
-  const handleCompletarSerie = (serieIdx: number) => {
-    if (!exercicioAtual || !sessao) return
-    const serie = exercicioAtual.series[serieIdx]
-    const novaCompletada = !serie.completada
-
-    if (novaCompletada) {
-      marcarSerieCompletada(exercicioAtualIndex, serieIdx)
-
-      // Salvar pesos no plano ao completar série
-      setTimeout(() => salvarPesosNoPlano(), 0)
-
-      // PR de peso: mostra se recorde anterior > 0, peso atual > recorde, e peso atual > maior peso já celebrado neste exercício na sessão
-      const serieAtual = exercicioAtual.series[serieIdx]
-      const exId = exercicioAtual.exercicioId
-      const pesoCelebrado = prExibidoRef.current.get(exId) ?? 0
-      if (serieAtual.peso > pesoCelebrado) {
-        const prCheck = detectarNovoPR(
-          { ...serieAtual, completada: true },
-          exId,
-          recordes,
-        )
-        if (prCheck && prCheck.tipo === 'peso') {
-          prExibidoRef.current.set(exId, serieAtual.peso)
-          setShowPrCelebration(true)
-          setShowConfetti(true)
-          navigator.vibrate?.([100, 50, 100, 50, 200])
-          setTimeout(() => { setShowPrCelebration(false); setShowConfetti(false) }, 3000)
-        }
-      }
-
-      // Prepara audio context em evento de interação (necessário p/ iOS)
-      prepararAudio()
-
-      // Superset/group logic: skip rest if next exercise is in same group
-      const isInGroup = !!exercicioAtual.agrupamentoId
-      const groupExercises = isInGroup
-        ? sessao.exercicios
-            .map((ex, idx) => ({ ex, idx }))
-            .filter(({ ex }) => ex.agrupamentoId === exercicioAtual.agrupamentoId)
-        : []
-      const currentGroupPos = groupExercises.findIndex(g => g.idx === exercicioAtualIndex)
-      const nextInGroup = currentGroupPos >= 0 && currentGroupPos < groupExercises.length - 1
-        ? groupExercises[currentGroupPos + 1]
-        : null
-
-      // Verifica se todas as séries do exercício atual foram concluídas
-      const todasExercicioCompletas = exercicioAtual.series.every((s, i) =>
-        i === serieIdx ? true : s.completada
-      )
-
-      if (todasExercicioCompletas && isInGroup && nextInGroup) {
-        // Move to next exercise in group without rest
-        setTimeout(() => {
-          // Navigate to next exercise in group
-          const target = nextInGroup.idx
-          // Set directly via store to avoid step-by-step navigation
-          const diff = target - exercicioAtualIndex
-          for (let i = 0; i < diff; i++) proximoExercicio()
-        }, 600)
-      } else if (todasExercicioCompletas && isInGroup && !nextInGroup) {
-        // Last in group: rest then loop back to first in group or move on
-        prepararAudio()
-        iniciarDescanso(exercicioAtual.descansoSegundos)
-        // Check if all series in entire group are done
-        const allGroupDone = groupExercises.every(({ idx }) =>
-          sessao.exercicios[idx].series.every((s, i) =>
-            idx === exercicioAtualIndex ? (i === serieIdx ? true : s.completada) : s.completada
-          )
-        )
-        if (allGroupDone) {
-          // Move past the group
-          const lastGroupIdx = groupExercises[groupExercises.length - 1].idx
-          const isLastExercicio = lastGroupIdx === sessao.exercicios.length - 1
-          if (!isLastExercicio) {
-            setTimeout(() => {
-              const target = lastGroupIdx + 1
-              const diff = target - exercicioAtualIndex
-              for (let i = 0; i < diff; i++) proximoExercicio()
-            }, 800)
-          } else {
-            // Check if entire workout is done
-            const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) =>
-              ex.series.every((s, i) =>
-                eIdx === exercicioAtualIndex && i === serieIdx ? true : s.completada
-              )
-            )
-            if (todosTreinoCompleto) {
-              setTimeout(() => setShowConfirmFinalizar(true), 800)
-            }
-          }
-        } else {
-          // Go back to first exercise in group for next round
-          setTimeout(() => {
-            const target = groupExercises[0].idx
-            const diff = exercicioAtualIndex - target
-            for (let i = 0; i < diff; i++) exercicioAnterior()
-          }, 800)
-        }
-      } else {
-        // Normal (non-group) behavior
-        prepararAudio()
-        iniciarDescanso(exercicioAtual.descansoSegundos)
-
-        const isLastExercicio = exercicioAtualIndex === sessao.exercicios.length - 1
-        if (todasExercicioCompletas) {
-          if (!isLastExercicio) {
-            setTimeout(() => proximoExercicio(), 800)
-          } else {
-            const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) => {
-              if (eIdx === exercicioAtualIndex) {
-                return ex.series.every((s, i) => i === serieIdx ? true : s.completada)
-              }
-              return ex.series.every(s => s.completada)
-            })
-            if (todosTreinoCompleto) {
-              setTimeout(() => setShowConfirmFinalizar(true), 800)
-            }
-          }
-        }
-      }
-    } else {
-      atualizarSerie(exercicioAtualIndex, serieIdx, { completada: false })
-      descansoAcabouNatural.current = false
-      cancelarNotificacaoDescanso()
-      pararDescanso()
-    }
-  }
 
   const handleFinalizar = async () => {
     // Salvar pesos do exercício atual antes de finalizar
@@ -517,7 +265,7 @@ function TreinoAtivoPage() {
         <DescansoCard
           segundosRestantes={cronometroDescansoSegundos}
           onPular={() => {
-            descansoAcabouNatural.current = false
+            descansoAcabouNaturalRef.current = false
             cancelarNotificacaoDescanso()
             pararDescanso()
           }}

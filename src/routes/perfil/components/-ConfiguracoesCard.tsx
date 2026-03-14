@@ -23,7 +23,7 @@ export function ConfiguracoesCard({
   onExportClick,
 }: ConfiguracoesCardProps) {
   const Separator = () => (
-    <div className="mx-4 h-px bg-[var(--color-border)] opacity-20" />
+    <div className="mx-4 h-px bg-border opacity-20" />
   )
 
   return (
@@ -71,7 +71,7 @@ export function ConfiguracoesCard({
         className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2 rounded-xl transition-colors text-left"
         style={{ textDecoration: 'none' }}
       >
-        <div className="w-9 h-9 rounded-xl bg-[rgba(99,102,241,0.12)] flex items-center justify-center">
+        <div className="w-9 h-9 rounded-xl bg-accent-subtle flex items-center justify-center">
           <Ruler size={18} className="text-indigo-400" />
         </div>
         <div className="flex-1">
@@ -88,7 +88,7 @@ export function ConfiguracoesCard({
         className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2 rounded-xl transition-colors text-left"
         style={{ textDecoration: 'none' }}
       >
-        <div className="w-9 h-9 rounded-xl bg-[rgba(59,130,246,0.12)] flex items-center justify-center">
+        <div className="w-9 h-9 rounded-xl bg-accent-subtle flex items-center justify-center">
           <Calendar size={18} className="text-blue-400" />
         </div>
         <div className="flex-1">
@@ -126,7 +126,7 @@ export function ConfiguracoesCard({
         </div>
         <div
           className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-            notifPermitida ? 'bg-amber-400' : 'bg-[var(--color-border-strong)]'
+            notifPermitida ? 'bg-amber-400' : 'bg-border-strong'
           }`}
         >
           <div
@@ -154,7 +154,7 @@ export function ConfiguracoesCard({
         <ChevronRight size={16} className="text-text-subtle" />
       </button>
 
-      <div className="mx-4 h-px bg-[var(--color-border)]" />
+      <div className="mx-4 h-px bg-border" />
 
       <div className="flex items-center gap-3 px-4 py-3.5">
         <div className="w-9 h-9 rounded-xl bg-accent-subtle flex items-center justify-center">

@@ -1,24 +1,11 @@
 import { createFileRoute, useNavigate, useBlocker } from '@tanstack/react-router'
-import { useState, useRef } from 'react'
-import { v4 as uuidv4 } from 'uuid'
-import { usePlanos } from '../../hooks/usePlanos'
+import { useNovoPlano } from '../../hooks/useNovoPlano'
 import { Plus, Link2 } from 'lucide-react'
-import { toast } from 'sonner'
-import type { ExercicioNoPlano, TipoAgrupamento } from '../../types'
-import { CORES_PLANO, AGRUPAMENTO_CONFIG } from '../../types'
+import { v4 as uuidv4 } from 'uuid'
+import { AGRUPAMENTO_CONFIG } from '../../types'
 import { ExercicioPicker } from '../../components/common/ExercicioPicker'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragOverEvent,
-} from '@dnd-kit/core'
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { NovoPlanoHeader } from './components/-NovoPlanoHeader'
 import { PlanDetailsCard } from './components/-PlanDetailsCard'
 import { ExercicioNoPlanoCard } from './components/-ExercicioNoPlanoCard'
@@ -30,112 +17,46 @@ export const Route = createFileRoute('/treinos/novo')({
 })
 
 function NovoPlanoPage() {
+  const {
+    nome,
+    setNome,
+    descricao,
+    setDescricao,
+    exercicios,
+    saving,
+    showPicker,
+    setShowPicker,
+    corSelecionada,
+    setCorSelecionada,
+    selecionados,
+    setSelecionados,
+    showGroupMenu,
+    setShowGroupMenu,
+    salvouRef,
+    isDirty,
+    sensors,
+    criarAgrupamento,
+    removerDoAgrupamento,
+    toggleSelecionado,
+    adicionarExercicio,
+    removerExercicio,
+    atualizarExercicio,
+    handleDragOver,
+    salvar,
+  } = useNovoPlano()
   const navigate = useNavigate()
-  const { criarPlano, atualizarPlano } = usePlanos()
-  const [nome, setNome] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [exercicios, setExercicios] = useState<ExercicioNoPlano[]>([])
-  const [saving, setSaving] = useState(false)
-  const [showPicker, setShowPicker] = useState(false)
-  const [corSelecionada, setCorSelecionada] = useState(CORES_PLANO[0])
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
-  const [showGroupMenu, setShowGroupMenu] = useState(false)
-  const salvouRef = useRef(false)
 
-  const isDirty =
-    nome.trim() !== '' ||
-    descricao.trim() !== '' ||
-    exercicios.length > 0 ||
-    corSelecionada !== CORES_PLANO[0]
-
-  const criarAgrupamento = (tipo: TipoAgrupamento) => {
-    if (selecionados.size < 2) return
-    const agrupamentoId = uuidv4()
-    setExercicios(prev =>
-      prev.map(ex => (selecionados.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex))
-    )
-    setSelecionados(new Set())
-    setShowGroupMenu(false)
-  }
-
-  const removerDoAgrupamento = (exId: string) => {
-    setExercicios(prev =>
-      prev.map(ex => (ex.id === exId ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined } : ex))
-    )
-  }
-
-  const toggleSelecionado = (id: string) => {
-    setSelecionados(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
+  const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } =
+    useBlocker({
+      shouldBlockFn: () => isDirty && !salvouRef.current,
+      withResolver: true,
     })
-  }
-
-  const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } = useBlocker({
-    shouldBlockFn: () => isDirty && !salvouRef.current,
-    withResolver: true,
-  })
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
-
-  const adicionarExercicio = (ex: ExercicioNoPlano) => {
-    const seriesPadrao = Array(3).fill({ peso: 0, repeticoes: 10 })
-    setExercicios(prev => [...prev, { ...ex, seriesDetalhadas: seriesPadrao, ordem: prev.length }])
-  }
-
-  const removerExercicio = (id: string) => {
-    setExercicios(prev => prev.filter(e => e.id !== id))
-  }
-
-  const atualizarExercicio = (id: string, campo: Partial<ExercicioNoPlano>) => {
-    setExercicios(prev => prev.map(e => (e.id === id ? { ...e, ...campo } : e)))
-  }
-
-  const handleDragEnd = (_event: DragEndEvent) => {}
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event
-    if (over && active.id !== over.id) {
-      setExercicios(items => {
-        const oldIndex = items.findIndex(i => i.id === active.id)
-        const newIndex = items.findIndex(i => i.id === over.id)
-        return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({ ...ex, ordem: idx }))
-      })
-    }
-  }
-
-  const salvar = async () => {
-    if (!nome.trim()) return
-    setSaving(true)
-    try {
-      const plano = await criarPlano(nome.trim(), descricao.trim() || undefined)
-      await atualizarPlano({ ...plano, exercicios, cor: corSelecionada })
-      salvouRef.current = true
-      navigate({ to: '/treinos' })
-    } catch (err) {
-      console.error(err)
-      toast.error('Erro ao salvar plano')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleBack = () => {
-    if (isDirty) blockerProceed?.()
-    else navigate({ to: '/treinos' })
-  }
 
   return (
     <>
       <div className="page-container pt-4">
         <NovoPlanoHeader
-          onBack={handleBack}
+          onBack={() => navigate({ to: '/treinos' })}
           onSave={salvar}
           saving={saving}
           saveDisabled={!nome.trim()}
@@ -182,7 +103,6 @@ function NovoPlanoPage() {
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
           >
             <SortableContext items={exercicios.map(ex => ex.id)} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-2">
@@ -259,7 +179,7 @@ function NovoPlanoPage() {
 
       {showPicker && (
         <ExercicioPicker
-          onSelect={ex => {
+          onSelect={(ex) => {
             adicionarExercicio({
               id: uuidv4(),
               exercicioId: ex.id,
@@ -268,7 +188,6 @@ function NovoPlanoPage() {
               repeticoesMeta: 10,
               pesoMeta: 0,
               descansoSegundos: 60,
-              ordem: exercicios.length,
             })
             setShowPicker(false)
           }}
