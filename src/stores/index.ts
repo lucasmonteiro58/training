@@ -62,9 +62,13 @@ export const useHistoricoStore = create<HistoricoState>((set) => ({
   loading: true,
   setSessoes: (sessoes) => set({ sessoes }),
   addSessao: (sessao) =>
-    set((s) => ({
-      sessoes: [sessao, ...s.sessoes].sort((a, b) => b.iniciadoEm - a.iniciadoEm),
-    })),
+    set((s) => {
+      const exists = s.sessoes.some((x) => x.id === sessao.id)
+      const next = exists
+        ? s.sessoes.map((x) => (x.id === sessao.id ? sessao : x))
+        : [sessao, ...s.sessoes]
+      return { sessoes: next.sort((a, b) => b.iniciadoEm - a.iniciadoEm) }
+    }),
   removeSessao: (id) => set((s) => ({ sessoes: s.sessoes.filter((s2) => s2.id !== id) })),
   setLoading: (loading) => set({ loading }),
 }))

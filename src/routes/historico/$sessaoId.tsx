@@ -71,6 +71,11 @@ function SessaoDetalhePage() {
     setEditData(updated)
   }
 
+  const updateDuracao = (duracaoSegundos: number) => {
+    if (!editData) return
+    setEditData({ ...editData, duracaoSegundos })
+  }
+
   return (
     <div className="page-container pt-4">
       {/* Header */}
@@ -99,17 +104,42 @@ function SessaoDetalhePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
-        {[
-          { icon: Clock, label: 'Duração', value: displaySessao.duracaoSegundos ? formatarTempo(displaySessao.duracaoSegundos) : '–' },
-          { icon: Dumbbell, label: 'Exercícios', value: displaySessao.exercicios.length },
-          { icon: TrendingUp, label: 'Volume (kg)', value: displaySessao.volumeTotal ? Math.round(displaySessao.volumeTotal) : '–' },
-        ].map((stat, i) => (
-          <div key={i} className="card p-3 text-center">
-            <stat.icon size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
-            <p className="text-lg font-bold text-[var(--color-text)]">{stat.value}</p>
-            <p className="text-[10px] text-[var(--color-text-muted)]">{stat.label}</p>
-          </div>
-        ))}
+        <div className="card p-3 text-center">
+          <Clock size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
+          {editando && editData ? (
+            <div className="flex flex-col gap-1">
+              <input
+                type="number"
+                min={0}
+                className="w-full text-lg font-bold text-[var(--color-text)] bg-[var(--color-surface-2)] rounded-lg px-2 py-1 text-center"
+                value={editData.duracaoSegundos != null ? Math.round(editData.duracaoSegundos / 60) : ''}
+                onChange={(e) => {
+                  const min = e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0
+                  updateDuracao(min * 60)
+                }}
+                onFocus={(e) => e.target.select()}
+              />
+              <span className="text-[10px] text-[var(--color-text-muted)]">min</span>
+            </div>
+          ) : (
+            <p className="text-lg font-bold text-[var(--color-text)]">
+              {displaySessao.duracaoSegundos ? formatarTempo(displaySessao.duracaoSegundos) : '–'}
+            </p>
+          )}
+          <p className="text-[10px] text-[var(--color-text-muted)]">Duração</p>
+        </div>
+        <div className="card p-3 text-center">
+          <Dumbbell size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
+          <p className="text-lg font-bold text-[var(--color-text)]">{displaySessao.exercicios.length}</p>
+          <p className="text-[10px] text-[var(--color-text-muted)]">Exercícios</p>
+        </div>
+        <div className="card p-3 text-center">
+          <TrendingUp size={16} className="text-[var(--color-accent)] mx-auto mb-1" />
+          <p className="text-lg font-bold text-[var(--color-text)]">
+            {displaySessao.volumeTotal ? Math.round(displaySessao.volumeTotal) : '–'}
+          </p>
+          <p className="text-[10px] text-[var(--color-text-muted)]">Volume (kg)</p>
+        </div>
       </div>
 
       {/* Progresso geral */}
@@ -201,7 +231,20 @@ function SessaoDetalhePage() {
                   </>
                 )}
                 <span className="flex items-center justify-center">
-                  {seriesPRs[sIdx] ? (
+                  {editando ? (
+                    <button
+                      type="button"
+                      onClick={() => updateSerie(eIdx, sIdx, { completada: !s.completada })}
+                      className="p-0.5 rounded-full hover:bg-[var(--color-surface-2)] transition-colors"
+                      title={s.completada ? 'Marcar como não concluída' : 'Marcar como concluída'}
+                    >
+                      {s.completada ? (
+                        <CheckCircle2 size={15} className="text-[var(--color-success)]" />
+                      ) : (
+                        <Circle size={15} className="text-[var(--color-text-subtle)]" />
+                      )}
+                    </button>
+                  ) : seriesPRs[sIdx] ? (
                     <Trophy size={15} className="text-yellow-400" />
                   ) : s.completada ? (
                     <CheckCircle2 size={15} className="text-[var(--color-success)]" />
