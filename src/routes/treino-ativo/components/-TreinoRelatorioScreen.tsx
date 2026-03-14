@@ -20,7 +20,10 @@ export function TreinoRelatorioScreen({
 
   return (
     <div className="fixed inset-0 z-200 flex flex-col bg-bg overflow-y-auto">
-      <div className="flex justify-end px-4 pt-4 pb-2">
+      <div
+        className="flex justify-end px-4 pt-4 pb-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+      >
         <button
           type="button"
           onClick={() => navigate({ to: '/treinos' })}

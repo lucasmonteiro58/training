@@ -1,7 +1,6 @@
 import { useRef, useEffect } from 'react'
 import type { SessaoDeTreino } from '../types'
 import {
-  enviarNotificacaoTreino,
   limparNotificacoesTreino,
   agendarNotificacaoDescanso,
   tocarAlertaDescanso,
@@ -23,21 +22,22 @@ export function useNotificacoesDescanso({
   exercicioAtualIndex,
 }: UseNotificacoesDescansoParams) {
   const descansoAcabouNaturalRef = useRef(false)
+  const restEndAgendadoRef = useRef(false)
 
   useEffect(() => {
     if (cronometroDescansoAtivo && sessao) {
       const ex = sessao.exercicios[exercicioAtualIndex]
       descansoAcabouNaturalRef.current = true
 
-      enviarNotificacaoTreino(
-        `⏱ Descanso – ${cronometroDescansoSegundos}s`,
-        `Próximo: ${ex?.exercicioNome ?? ''}`,
-      )
-
-      agendarNotificacaoDescanso(cronometroDescansoSegundos, ex?.exercicioNome)
+      // Agenda uma única notificação para quando o descanso terminar (não a cada segundo)
+      if (!restEndAgendadoRef.current) {
+        restEndAgendadoRef.current = true
+        agendarNotificacaoDescanso(cronometroDescansoSegundos, ex?.exercicioNome)
+      }
     }
 
     if (!cronometroDescansoAtivo) {
+      restEndAgendadoRef.current = false
       if (descansoAcabouNaturalRef.current) {
         tocarAlertaDescanso()
         vibrarDescansoFim()
