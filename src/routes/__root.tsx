@@ -1,13 +1,13 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { BottomNav } from '../components/layout/BottomNav'
-import { useTreinoAtivoStore } from '../stores'
+import { useActiveWorkoutStore } from '../stores'
 import { registrarServiceWorker } from '../lib/notifications'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
 import { Toaster } from 'sonner'
 import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
 import { useAuth as useAuthHook } from '../hooks/useAuth'
-import { useProgressoTreinoSync } from '../hooks/useProgressoTreinoSync'
+import { useWorkoutProgressSync } from '../hooks/useProgressoTreinoSync'
 import appCss from '../styles.css?url'
 import { AuthLoadingScreen } from './__root/components/-AuthLoadingScreen'
 import { AutoEncerradoBanner } from './__root/components/-AutoEncerradoBanner'
@@ -63,9 +63,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { user, loading: loadingAuth } = useAuthHook()
-  const { iniciado, pausado, tickGeral } = useTreinoAtivoStore()
+  const { iniciado, pausado, tickGeral } = useActiveWorkoutStore()
 
-  useProgressoTreinoSync(user)
+  useWorkoutProgressSync(user)
 
   useEffect(() => {
     if (import.meta.env.DEV && 'serviceWorker' in navigator) {

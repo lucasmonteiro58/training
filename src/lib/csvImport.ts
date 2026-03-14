@@ -1,12 +1,12 @@
 import Papa from 'papaparse'
-import type { LinhaCsvTreino, ExercicioNoPlano, Exercicio } from '../types'
-import { GRUPOS_EN_PT } from '../types'
+import type { WorkoutCsvRow, ExerciseInPlan, Exercise } from '../types'
+import { GROUPS_EN_TO_PT } from '../types'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface PlanoImportado {
   id: string
   nome: string
-  exercicios: ExercicioNoPlano[]
+  exercicios: ExerciseInPlan[]
 }
 
 export interface ResultadoCsv {
@@ -19,18 +19,18 @@ export const CSV_TEMPLATE = `id,plano,nome_exercicio,grupo_muscular,series,repet
 Barbell_Curl,Treino A,Rosca Direta,Bíceps,3,12,20,60,,Sem roubar
 ,Treino B,Agachamento Livre,Quadríceps,4,8,100,120,Pés na largura dos ombros|Desça até 90 graus,Manter o core firme`
 
-export function parsearCsv(conteudo: string, exerciciosDb: Exercicio[] = []): ResultadoCsv {
+export function parsearCsv(conteudo: string, exerciciosDb: Exercise[] = []): ResultadoCsv {
   const resultado: ResultadoCsv = { planos: [], erros: [] }
 
   // Criar mapas para busca rápida por id e por nome (normalizado)
-  const dbPorId = new Map<string, Exercicio>()
-  const dbPorNome = new Map<string, Exercicio>()
+  const dbPorId = new Map<string, Exercise>()
+  const dbPorNome = new Map<string, Exercise>()
   for (const ex of exerciciosDb) {
     dbPorId.set(ex.id.toLowerCase(), ex)
     dbPorNome.set(ex.nome.toLowerCase().trim(), ex)
   }
 
-  const { data, errors } = Papa.parse<LinhaCsvTreino>(conteudo, {
+  const { data, errors } = Papa.parse<WorkoutCsvRow>(conteudo, {
     header: true,
     skipEmptyLines: true,
     transformHeader: (h) => h.trim().toLowerCase().replace(/ /g, '_'),
@@ -41,7 +41,7 @@ export function parsearCsv(conteudo: string, exerciciosDb: Exercicio[] = []): Re
     return resultado
   }
 
-  const planosMap = new Map<string, ExercicioNoPlano[]>()
+  const planosMap = new Map<string, ExerciseInPlan[]>()
   const planoNamesOrder: string[] = []
 
   data.forEach((linha, idx) => {
@@ -74,11 +74,11 @@ export function parsearCsv(conteudo: string, exerciciosDb: Exercicio[] = []): Re
     }))
 
     const grupoEn = linha.grupo_muscular?.trim() ?? ''
-    const grupoPt = GRUPOS_EN_PT[grupoEn.toLowerCase()] ?? (grupoEn || 'Outro')
+    const grupoPt = GROUPS_EN_TO_PT[grupoEn.toLowerCase()] ?? (grupoEn || 'Outro')
 
     // Tentar encontrar exercício existente no banco de dados por ID ou nome exato
     const csvId = linha.id?.trim()
-    let exercicioDb: Exercicio | undefined
+    let exercicioDb: Exercise | undefined
 
     if (csvId) {
       exercicioDb = dbPorId.get(csvId.toLowerCase())
@@ -87,7 +87,7 @@ export function parsearCsv(conteudo: string, exerciciosDb: Exercicio[] = []): Re
       exercicioDb = dbPorNome.get(linha.nome_exercicio.trim().toLowerCase())
     }
 
-    const exercicio: Exercicio = exercicioDb
+    const exercicio: Exercise = exercicioDb
       ? { ...exercicioDb } // usar exercício do banco com todas as informações (imagens, instruções, etc.)
       : {
           id: `csv-${uuidv4()}`,

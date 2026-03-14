@@ -1,4 +1,4 @@
-import type { SessaoDeTreino, SerieRegistrada } from '../types'
+import type { WorkoutSession, RecordedSet } from '../types'
 
 export interface RecordeExercicio {
   exercicioId: string
@@ -14,7 +14,7 @@ export interface RecordeExercicio {
 /**
  * Calcula os recordes de todos os exercícios a partir do histórico de sessões.
  */
-export function calcularRecordes(sessoes: SessaoDeTreino[]): Map<string, RecordeExercicio> {
+export function calcularRecordes(sessoes: WorkoutSession[]): Map<string, RecordeExercicio> {
   const map = new Map<string, RecordeExercicio>()
 
   for (const sessao of sessoes) {
@@ -67,7 +67,7 @@ export function calcularRecordes(sessoes: SessaoDeTreino[]): Map<string, Recorde
  * PR de peso só é retornado se já existir recorde anterior (maiorPeso > 0) — não mostra para "primeira vez".
  */
 export function detectarNovoPR(
-  serie: SerieRegistrada,
+  serie: RecordedSet,
   exercicioId: string,
   recordes: Map<string, RecordeExercicio>,
 ): { tipo: 'peso' | 'volume' | '1rm'; valor: number } | null {

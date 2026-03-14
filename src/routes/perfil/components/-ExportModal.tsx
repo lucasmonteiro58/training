@@ -1,11 +1,11 @@
 import { Download } from 'lucide-react'
-import type { SessaoDeTreino } from '../../../types'
-import type { PlanoDeTreino } from '../../../types'
+import type { WorkoutSession } from '../../../types'
+import type { WorkoutPlan } from '../../../types'
 import { exportarSessoesCSV, exportarSessoesJSON, exportarPlanosJSON } from '../../../lib/exportar'
 
 interface ExportModalProps {
-  sessoes: SessaoDeTreino[]
-  planos: PlanoDeTreino[]
+  sessoes: WorkoutSession[]
+  planos: WorkoutPlan[]
   onClose: () => void
   onExport: (message: string) => void
 }

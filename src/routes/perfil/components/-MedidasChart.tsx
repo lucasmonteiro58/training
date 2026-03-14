@@ -1,5 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { CAMPOS_MEDIDA } from '../../../types'
+import { MEASUREMENT_FIELDS } from '../../../types'
 
 interface MedidasChartProps {
   campoGrafico: string
@@ -8,7 +8,7 @@ interface MedidasChartProps {
 }
 
 export function MedidasChart({ campoGrafico, dados, onCampoChange }: MedidasChartProps) {
-  const campoAtual = CAMPOS_MEDIDA.find(c => c.key === campoGrafico)
+  const campoAtual = MEASUREMENT_FIELDS.find(c => c.key === campoGrafico)
 
   return (
     <div className="card p-4 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
@@ -19,7 +19,7 @@ export function MedidasChart({ campoGrafico, dados, onCampoChange }: MedidasChar
           onChange={e => onCampoChange(e.target.value)}
           className="text-xs bg-surface-2 text-text border border-border rounded-lg px-2 py-1"
         >
-          {CAMPOS_MEDIDA.map(c => (
+          {MEASUREMENT_FIELDS.map(c => (
             <option key={c.key} value={c.key}>
               {c.label} ({c.unidade})
             </option>

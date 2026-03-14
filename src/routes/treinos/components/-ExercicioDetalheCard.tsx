@@ -7,22 +7,22 @@ import {
   RefreshCw,
   Unlink,
 } from 'lucide-react'
-import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../../types'
-import { GRUPOS_MUSCULARES } from '../../../types'
+import type { ExerciseInPlan, PlanSet, SetType } from '../../../types'
+import { MUSCLE_GROUPS } from '../../../types'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useBuscaImagemGiphy } from '../../../hooks/useBuscaImagemGiphy'
+import { useGiphyImageSearch } from '../../../hooks/useBuscaImagemGiphy'
 
 export interface ExercicioDetalheCardProps {
-  ex: ExercicioNoPlano
+  ex: ExerciseInPlan
   editando: boolean
   isExpanded: boolean
   onToggleExpand: () => void
   onRemove: () => void
-  onUpdateSerie: (sIdx: number, campo: Partial<SeriePlano>) => void
+  onUpdateSerie: (sIdx: number, campo: Partial<PlanSet>) => void
   onUpdateDescanso: (segundos: number) => void
-  onUpdateTipoSerie: (tipo: TipoSerie) => void
-  onUpdateExercicio: (campos: Partial<ExercicioNoPlano['exercicio']>) => void
+  onUpdateSetType: (tipo: SetType) => void
+  onUpdateExercicio: (campos: Partial<ExerciseInPlan['exercicio']>) => void
   showSelect?: boolean
   isSelected?: boolean
   onToggleSelect?: () => void
@@ -37,7 +37,7 @@ export function ExercicioDetalheCard({
   onRemove,
   onUpdateSerie,
   onUpdateDescanso,
-  onUpdateTipoSerie,
+  onUpdateSetType,
   onUpdateExercicio,
   showSelect,
   isSelected,
@@ -50,7 +50,7 @@ export function ExercicioDetalheCard({
     imagensWeb,
     buscandoImagem,
     buscarImagem,
-  } = useBuscaImagemGiphy(ex.exercicio.nome)
+  } = useGiphyImageSearch(ex.exercicio.nome)
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: ex.id })
@@ -62,9 +62,9 @@ export function ExercicioDetalheCard({
   }
 
   const tipo = ex.tipoSerie ?? 'reps'
-  const ciclo: TipoSerie[] = ['reps', 'tempo', 'falha']
+  const ciclo: SetType[] = ['reps', 'tempo', 'falha']
   const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
-  const tipoLabels: Record<TipoSerie, string> = {
+  const tipoLabels: Record<SetType, string> = {
     reps: 'Reps',
     tempo: 'Min',
     falha: 'Falha ⚡',
@@ -196,7 +196,7 @@ export function ExercicioDetalheCard({
                 onUpdateExercicio({ grupoMuscular: e.target.value })
               }
             >
-              {GRUPOS_MUSCULARES.map((g) => (
+              {MUSCLE_GROUPS.map((g) => (
                 <option key={g} value={g}>
                   {g}
                 </option>
@@ -283,7 +283,7 @@ export function ExercicioDetalheCard({
               Modo
             </span>
             <button
-              onClick={() => onUpdateTipoSerie(proximo)}
+              onClick={() => onUpdateSetType(proximo)}
               className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-colors ${
                 tipo === 'reps'
                   ? 'text-text-muted border-border hover:text-accent hover:border-accent /50'

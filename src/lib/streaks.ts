@@ -1,4 +1,4 @@
-import type { SessaoDeTreino } from '../types'
+import type { WorkoutSession } from '../types'
 
 export interface StreakInfo {
   streakAtual: number      // dias consecutivos com treino
@@ -40,7 +40,7 @@ function gapSoDiasOpcionais(prev: Date, curr: Date, diasOpcionais: number[]): bo
  * @param diasOpcionais Dias da semana (0–6) em que não treinar não quebra o streak.
  */
 export function calcularStreaks(
-  sessoes: SessaoDeTreino[],
+  sessoes: WorkoutSession[],
   metaSemanal = 4,
   diasOpcionais: number[] = defaultDiasOpcionais
 ): StreakInfo {
@@ -120,13 +120,13 @@ export function calcularStreaks(
 /**
  * Calcula conquistas desbloqueadas.
  */
-export function calcularConquistas(sessoes: SessaoDeTreino[], streaks: StreakInfo): Conquista[] {
+export function calcularConquistas(sessoes: WorkoutSession[], streaks: StreakInfo): Conquista[] {
   const totalVolume = sessoes.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
 
   // Máximo de treinos em uma única semana (domingo–sábado)
   let maxTreinosNaSemana = 0
   let dataSemanaIncrivel: number | undefined
-  const porSemana = new Map<number, SessaoDeTreino[]>()
+  const porSemana = new Map<number, WorkoutSession[]>()
   for (const s of sessoes) {
     const d = new Date(s.iniciadoEm)
     d.setHours(0, 0, 0, 0)

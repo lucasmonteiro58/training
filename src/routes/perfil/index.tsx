@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '../../hooks/useAuth'
-import { useHistoricoStore, usePlanosStore } from '../../stores'
+import { useHistoryStore, usePlansStore } from '../../stores'
 import { getNotifAtivas, setNotifAtivas, solicitarPermissaoNotificacao } from '../../lib/notifications'
 import { LogOut } from 'lucide-react'
 import { useState, useMemo } from 'react'
@@ -30,8 +30,8 @@ export const Route = createFileRoute('/perfil/')({
 
 function PerfilPage() {
   const { user, logout } = useAuth()
-  const planos = usePlanosStore((s) => s.planos)
-  const sessoes = useHistoricoStore((s) => s.sessoes)
+  const planos = usePlansStore((s) => s.planos)
+  const sessoes = useHistoryStore((s) => s.sessoes)
   const [notifPermitida, setNotifPermitida] = useState(() => getNotifAtivas())
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)

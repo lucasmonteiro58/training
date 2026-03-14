@@ -1,12 +1,12 @@
 import Dexie, { type Table } from 'dexie'
-import type { PlanoDeTreino, SessaoDeTreino, Exercicio, MedidaCorporal } from '../../types'
+import type { WorkoutPlan, WorkoutSession, Exercise, BodyMeasurement } from '../../types'
 
 class TrainingDB extends Dexie {
-  planos!: Table<PlanoDeTreino>
-  sessoes!: Table<SessaoDeTreino>
-  exerciciosPersonalizados!: Table<Exercicio>
-  exerciciosCache!: Table<Exercicio>
-  medidas!: Table<MedidaCorporal>
+  planos!: Table<WorkoutPlan>
+  sessoes!: Table<WorkoutSession>
+  exerciciosPersonalizados!: Table<Exercise>
+  exerciciosCache!: Table<Exercise>
+  medidas!: Table<BodyMeasurement>
 
   constructor() {
     super('training-db')
@@ -39,7 +39,7 @@ export const localDB = new TrainingDB()
 // ============
 // Planos
 // ============
-export async function getPlanos(userId: string): Promise<PlanoDeTreino[]> {
+export async function getPlans(userId: string): Promise<WorkoutPlan[]> {
   return localDB.planos
     .where('userId')
     .equals(userId)
@@ -47,22 +47,22 @@ export async function getPlanos(userId: string): Promise<PlanoDeTreino[]> {
     .sortBy('updatedAt')
 }
 
-export async function getPlano(id: string): Promise<PlanoDeTreino | undefined> {
+export async function getPlan(id: string): Promise<WorkoutPlan | undefined> {
   return localDB.planos.get(id)
 }
 
-export async function salvarPlano(plano: PlanoDeTreino): Promise<void> {
+export async function savePlan(plano: WorkoutPlan): Promise<void> {
   await localDB.planos.put(plano)
 }
 
-export async function deletarPlano(id: string): Promise<void> {
+export async function deletePlan(id: string): Promise<void> {
   await localDB.planos.delete(id)
 }
 
 // ============
 // Sessões
 // ============
-export async function getSessoes(userId: string, limit = 50): Promise<SessaoDeTreino[]> {
+export async function getSessions(userId: string, limit = 50): Promise<WorkoutSession[]> {
   const all = await localDB.sessoes
     .where('userId')
     .equals(userId)
@@ -71,47 +71,47 @@ export async function getSessoes(userId: string, limit = 50): Promise<SessaoDeTr
   return all.slice(0, limit)
 }
 
-export async function getSessao(id: string): Promise<SessaoDeTreino | undefined> {
+export async function getSession(id: string): Promise<WorkoutSession | undefined> {
   return localDB.sessoes.get(id)
 }
 
-export async function salvarSessao(sessao: SessaoDeTreino): Promise<void> {
+export async function saveSession(sessao: WorkoutSession): Promise<void> {
   await localDB.sessoes.put(sessao)
 }
 
-export async function deletarSessao(id: string): Promise<void> {
+export async function deleteSession(id: string): Promise<void> {
   await localDB.sessoes.delete(id)
 }
 
 // ============
 // Exercícios personalizados
 // ============
-export async function getExerciciosPersonalizados(userId: string): Promise<Exercicio[]> {
+export async function getPersonalizedExercises(userId: string): Promise<Exercise[]> {
   return localDB.exerciciosPersonalizados
     .where('userId')
     .equals(userId)
     .toArray()
 }
 
-export async function salvarExercicioPersonalizado(ex: Exercicio): Promise<void> {
+export async function savePersonalizedExercise(ex: Exercise): Promise<void> {
   await localDB.exerciciosPersonalizados.put(ex)
 }
 
 // ============
 // Cache exercícios (free-exercise-db)
 // ============
-export async function getCachedExercicios(): Promise<Exercicio[]> {
+export async function getCachedExercises(): Promise<Exercise[]> {
   return localDB.exerciciosCache.toArray()
 }
 
-export async function setCachedExercicios(exercicios: Exercicio[]): Promise<void> {
+export async function setCachedExercises(exercicios: Exercise[]): Promise<void> {
   await localDB.exerciciosCache.bulkPut(exercicios)
 }
 
 // ============
 // Favoritos
 // ============
-export async function toggleFavoritoExercicio(exercicioId: string, favoritado: boolean): Promise<void> {
+export async function toggleExerciseFavorite(exercicioId: string, favoritado: boolean): Promise<void> {
   // Tenta atualizar no cache
   const cached = await localDB.exerciciosCache.get(exercicioId)
   if (cached) {
@@ -134,7 +134,7 @@ export async function getFavoritoIds(): Promise<Set<string>> {
 // ============
 // Medidas Corporais
 // ============
-export async function getMedidas(userId: string): Promise<MedidaCorporal[]> {
+export async function getMeasurements(userId: string): Promise<BodyMeasurement[]> {
   return localDB.medidas
     .where('userId')
     .equals(userId)
@@ -142,10 +142,10 @@ export async function getMedidas(userId: string): Promise<MedidaCorporal[]> {
     .sortBy('data')
 }
 
-export async function salvarMedida(medida: MedidaCorporal): Promise<void> {
+export async function saveMeasurement(medida: BodyMeasurement): Promise<void> {
   await localDB.medidas.put(medida)
 }
 
-export async function deletarMedida(id: string): Promise<void> {
+export async function deleteMeasurement(id: string): Promise<void> {
   await localDB.medidas.delete(id)
 }

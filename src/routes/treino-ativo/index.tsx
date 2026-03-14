@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useTreinoAtivoStore } from '../../stores'
+import { useActiveWorkoutStore } from '../../stores'
 import { Link } from '@tanstack/react-router'
 import { Play, Dumbbell } from 'lucide-react'
 
@@ -8,7 +8,7 @@ export const Route = createFileRoute('/treino-ativo/')({
 })
 
 function TreinoAtivoIndexPage() {
-  const { iniciado, sessao } = useTreinoAtivoStore()
+  const { iniciado, sessao } = useActiveWorkoutStore()
 
   if (iniciado && sessao) {
     return (

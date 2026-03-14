@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import type { PlanoImportado } from '../../../lib/csvImport'
-import type { ExercicioNoPlano } from '../../../types'
+import type { ExerciseInPlan } from '../../../types'
 import { ExercicioEditCard } from './-ExercicioEditCard'
 
 export type PlanoEditado = PlanoImportado & { collapsed: boolean }

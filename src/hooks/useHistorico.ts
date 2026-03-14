@@ -1,22 +1,22 @@
 import { useEffect, useCallback } from 'react'
-import { useHistoricoStore, useAuthStore } from '../stores'
-import { getSessoes, salvarSessao, deletarSessao } from '../lib/db/dexie'
-import { syncSessaoParaFirestore, deletarSessaoFirestore, subscribeToSessoes, fetchSessoes } from '../lib/firestore/sync'
-import type { SessaoDeTreino } from '../types'
+import { useHistoryStore, useAuthStore } from '../stores'
+import { getSessions, saveSession, deleteSession } from '../lib/db/dexie'
+import { syncSessionToFirestore, deleteSessionFromFirestore, subscribeToSessions, fetchSessions } from '../lib/firestore/sync'
+import type { WorkoutSession } from '../types'
 
-export function useHistorico() {
+export function useHistory() {
   const user = useAuthStore((s) => s.user)
-  const { sessoes, loading, setSessoes, addSessao, removeSessao, setLoading } = useHistoricoStore()
+  const { sessoes, loading, setSessoes, addSessao, removeSessao, setLoading } = useHistoryStore()
 
   useEffect(() => {
     if (!user) return
 
-    getSessoes(user.uid).then((local) => {
+    getSessions(user.uid).then((local) => {
       setSessoes(local)
       setLoading(false)
     })
 
-    const unsub = subscribeToSessoes(user.uid, (remote) => {
+    const unsub = subscribeToSessions(user.uid, (remote) => {
       setSessoes(remote)
       setLoading(false)
     })
@@ -25,26 +25,26 @@ export function useHistorico() {
   }, [user, setSessoes, setLoading])
 
   const salvarSessaoCompleta = useCallback(
-    async (sessao: SessaoDeTreino): Promise<void> => {
-      await salvarSessao(sessao)
+    async (sessao: WorkoutSession): Promise<void> => {
+      await saveSession(sessao)
       addSessao(sessao)
-      syncSessaoParaFirestore(sessao) // background
+      syncSessionToFirestore(sessao) // background
     },
     [addSessao]
   )
 
   const excluirSessao = useCallback(
     async (id: string): Promise<void> => {
-      await deletarSessao(id)
+      await deleteSession(id)
       removeSessao(id)
-      deletarSessaoFirestore(id) // background
+      deleteSessionFromFirestore(id) // background
     },
     [removeSessao]
   )
 
   const sincronizar = useCallback(async () => {
     if (!user) return
-    const remote = await fetchSessoes(user.uid)
+    const remote = await fetchSessions(user.uid)
     if (remote.length > 0) setSessoes(remote)
   }, [user, setSessoes])
 

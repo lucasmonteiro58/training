@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { ChevronDown, GripVertical, Plus, Trash2, RefreshCw, Unlink } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../../types'
+import type { ExerciseInPlan, PlanSet, SetType } from '../../../types'
 
-interface ExercicioNoPlanoCardProps {
-  exercicio: ExercicioNoPlano
-  onUpdate: (campo: Partial<ExercicioNoPlano>) => void
+interface ExerciseInPlanCardProps {
+  exercicio: ExerciseInPlan
+  onUpdate: (campo: Partial<ExerciseInPlan>) => void
   onRemove: () => void
   isSelected?: boolean
   onToggleSelect?: () => void
@@ -14,7 +14,7 @@ interface ExercicioNoPlanoCardProps {
   onRemoveFromGroup?: () => void
 }
 
-export function ExercicioNoPlanoCard({
+export function ExerciseInPlanCard({
   exercicio,
   onUpdate,
   onRemove,
@@ -22,7 +22,7 @@ export function ExercicioNoPlanoCard({
   onToggleSelect,
   showSelect,
   onRemoveFromGroup,
-}: ExercicioNoPlanoCardProps) {
+}: ExerciseInPlanCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [applyAll, setApplyAll] = useState<{
     field: 'peso' | 'repeticoes'
@@ -52,8 +52,8 @@ export function ExercicioNoPlanoCard({
     onUpdate({ series: novasSeries.length, seriesDetalhadas: novasSeries })
   }
 
-  const updateSerie = (idx: number, campo: Partial<SeriePlano>) => {
-    const novasSeries = series.map((s: SeriePlano, i: number) =>
+  const updateSerie = (idx: number, campo: Partial<PlanSet>) => {
+    const novasSeries = series.map((s: PlanSet, i: number) =>
       i === idx ? { ...s, ...campo } : s
     )
     onUpdate({ seriesDetalhadas: novasSeries })
@@ -67,10 +67,10 @@ export function ExercicioNoPlanoCard({
   }
 
   const tipo = exercicio.tipoSerie ?? 'reps'
-  const ciclo: TipoSerie[] = ['reps', 'tempo', 'falha']
+  const ciclo: SetType[] = ['reps', 'tempo', 'falha']
   const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
-  const labels: Record<TipoSerie, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
-  const nextLabels: Record<TipoSerie, string> = { reps: 'Min', tempo: 'Falha', falha: 'Reps' }
+  const labels: Record<SetType, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
+  const nextLabels: Record<SetType, string> = { reps: 'Min', tempo: 'Falha', falha: 'Reps' }
 
   return (
     <div
@@ -147,7 +147,7 @@ export function ExercicioNoPlanoCard({
             <button
               type="button"
               onClick={() => {
-                const updates: Partial<ExercicioNoPlano> = { tipoSerie: proximo }
+                const updates: Partial<ExerciseInPlan> = { tipoSerie: proximo }
                 if (proximo === 'tempo') {
                   updates.seriesDetalhadas = series.map(s => ({ ...s, repeticoes: 1 }))
                 }
@@ -248,7 +248,7 @@ export function ExercicioNoPlanoCard({
                   <button
                     type="button"
                     onClick={() => {
-                      const novasSeries = series.map((s: SeriePlano, i: number) =>
+                      const novasSeries = series.map((s: PlanSet, i: number) =>
                         i > applyAll.sIdx ? { ...s, [applyAll.field]: applyAll.value } : s
                       )
                       onUpdate({ seriesDetalhadas: novasSeries })
@@ -262,7 +262,7 @@ export function ExercicioNoPlanoCard({
                 <button
                   type="button"
                   onClick={() => {
-                    const novasSeries = series.map((s: SeriePlano) => ({
+                    const novasSeries = series.map((s: PlanSet) => ({
                       ...s,
                       [applyAll.field]: applyAll.value,
                     }))

@@ -1,9 +1,9 @@
 import { Trash2 } from 'lucide-react'
-import { CAMPOS_MEDIDA } from '../../../types'
-import type { MedidaCorporal } from '../../../types'
+import { MEASUREMENT_FIELDS } from '../../../types'
+import type { BodyMeasurement } from '../../../types'
 
 interface MedidaCardProps {
-  medida: MedidaCorporal
+  medida: BodyMeasurement
   onExcluir: () => void
 }
 
@@ -27,7 +27,7 @@ export function MedidaCard({ medida, onExcluir }: MedidaCardProps) {
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        {CAMPOS_MEDIDA.filter(c => (medida as Record<string, unknown>)[c.key] != null).map(c => (
+        {MEASUREMENT_FIELDS.filter(c => (medida as Record<string, unknown>)[c.key] != null).map(c => (
           <div key={c.key} className="bg-surface-2 rounded-lg px-2 py-1.5">
             <p className="text-[10px] text-text-muted uppercase">{c.label}</p>
             <p className="text-sm font-bold text-text">

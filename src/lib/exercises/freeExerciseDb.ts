@@ -1,6 +1,6 @@
-import { GRUPOS_EN_PT } from '../../types'
-import type { Exercicio } from '../../types'
-import { getCachedExercicios, setCachedExercicios } from '../db/dexie'
+import { GROUPS_EN_TO_PT } from '../../types'
+import type { Exercise } from '../../types'
+import { getCachedExercises, setCachedExercises } from '../db/dexie'
 
 // Dataset open-source: https://github.com/yuhonas/free-exercise-db
 const RAW_URL =
@@ -23,10 +23,10 @@ interface RawExercise {
 }
 
 function mapearGrupo(en: string): string {
-  return GRUPOS_EN_PT[en.toLowerCase()] ?? en
+  return GROUPS_EN_TO_PT[en.toLowerCase()] ?? en
 }
 
-function convertRawToExercicio(raw: RawExercise): Exercicio {
+function convertRawToExercicio(raw: RawExercise): Exercise {
   const primaryMuscle = raw.primaryMuscles?.[0] ?? raw.category ?? 'outro'
   const gifUrl =
     raw.images && raw.images.length > 0
@@ -47,14 +47,14 @@ function convertRawToExercicio(raw: RawExercise): Exercicio {
   }
 }
 
-let cachedExercicios: Exercicio[] | null = null
+let cachedExercicios: Exercise[] | null = null
 
-export async function carregarExercicios(): Promise<Exercicio[]> {
+export async function carregarExercicios(): Promise<Exercise[]> {
   // 1. Memória
   if (cachedExercicios) return cachedExercicios
 
   // 2. IndexedDB local
-  const dbCache = await getCachedExercicios()
+  const dbCache = await getCachedExercises()
   if (dbCache.length > 0) {
     cachedExercicios = dbCache
     return dbCache
@@ -67,7 +67,7 @@ export async function carregarExercicios(): Promise<Exercicio[]> {
     const raw: RawExercise[] = await resp.json()
     const exercicios = raw.map(convertRawToExercicio)
     cachedExercicios = exercicios
-    await setCachedExercicios(exercicios)
+    await setCachedExercises(exercicios)
     return exercicios
   } catch (err) {
     console.error('Erro ao carregar exercícios:', err)
@@ -76,10 +76,10 @@ export async function carregarExercicios(): Promise<Exercicio[]> {
 }
 
 export function buscarExercicios(
-  exercicios: Exercicio[],
+  exercicios: Exercise[],
   query: string,
   grupo?: string
-): Exercicio[] {
+): Exercise[] {
   const q = query.toLowerCase().trim()
   return exercicios.filter((ex) => {
     const matchQuery = !q || ex.nome.toLowerCase().includes(q) ||

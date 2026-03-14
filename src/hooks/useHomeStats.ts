@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { calcularStreaks } from '../lib/streaks'
-import { CORES_GRUPO } from '../types'
-import type { SessaoDeTreino } from '../types'
-import type { PlanoDeTreino } from '../types'
+import { GROUP_COLORS } from '../types'
+import type { WorkoutSession } from '../types'
+import type { WorkoutPlan } from '../types'
 
 interface UseHomeStatsParams {
-  sessoes: SessaoDeTreino[]
-  planosAtivos: PlanoDeTreino[]
+  sessoes: WorkoutSession[]
+  planosAtivos: WorkoutPlan[]
   metaSemanal: number
   diasOpcionais: number[]
   loading: boolean
@@ -76,7 +76,7 @@ export function useHomeStats({
       .map(([grupo, ultimo]) => ({
         grupo,
         dias: Math.floor((agora - ultimo) / 86400000),
-        cor: CORES_GRUPO[grupo] ?? '#6366f1',
+        cor: GROUP_COLORS[grupo] ?? '#6366f1',
       }))
       .filter((a) => a.dias >= 7)
       .sort((a, b) => b.dias - a.dias)

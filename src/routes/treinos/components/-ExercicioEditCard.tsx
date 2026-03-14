@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, Plus, Trash2, RefreshCw, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import type { ExercicioNoPlano, SeriePlano, TipoSerie } from '../../../types'
-import { GRUPOS_MUSCULARES } from '../../../types'
+import type { ExerciseInPlan, PlanSet, SetType } from '../../../types'
+import { MUSCLE_GROUPS } from '../../../types'
 
 interface ExercicioEditCardProps {
-  ex: ExercicioNoPlano
+  ex: ExerciseInPlan
   idx: number
   expanded: boolean
   onToggle: () => void
-  onUpdate: (fn: (e: ExercicioNoPlano) => ExercicioNoPlano) => void
+  onUpdate: (fn: (e: ExerciseInPlan) => ExerciseInPlan) => void
   onRemove: () => void
 }
 
@@ -61,12 +61,12 @@ export function ExercicioEditCard({
   }
 
   const series = ex.seriesDetalhadas ?? [{ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta }]
-  const tipo: TipoSerie = ex.tipoSerie ?? 'reps'
+  const tipo: SetType = ex.tipoSerie ?? 'reps'
 
   const setField = (field: string, value: unknown) =>
     onUpdate(e => ({ ...e, exercicio: { ...e.exercicio, [field]: value } }))
 
-  const updateSerie = (sIdx: number, campo: Partial<SeriePlano>) => {
+  const updateSerie = (sIdx: number, campo: Partial<PlanSet>) => {
     onUpdate(e => {
       const s = (e.seriesDetalhadas ?? []).map((sr, i) => (i === sIdx ? { ...sr, ...campo } : sr))
       return {
@@ -111,10 +111,10 @@ export function ExercicioEditCard({
       return { ...e, seriesDetalhadas: s, series: s.length, repeticoesMeta: s[0]?.repeticoes ?? 1 }
     })
 
-  const ciclo: TipoSerie[] = ['reps', 'tempo', 'falha']
+  const ciclo: SetType[] = ['reps', 'tempo', 'falha']
   const proximoTipo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
-  const labelTipo: Record<TipoSerie, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
-  const nextLabelTipo: Record<TipoSerie, string> = { reps: 'Min', tempo: 'Falha', falha: 'Reps' }
+  const labelTipo: Record<SetType, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
+  const nextLabelTipo: Record<SetType, string> = { reps: 'Min', tempo: 'Falha', falha: 'Reps' }
 
   return (
     <div className="card overflow-hidden">
@@ -156,7 +156,7 @@ export function ExercicioEditCard({
                 value={ex.exercicio.grupoMuscular}
                 onChange={e => setField('grupoMuscular', e.target.value)}
               >
-                {GRUPOS_MUSCULARES.map(g => (
+                {MUSCLE_GROUPS.map(g => (
                   <option key={g} value={g}>
                     {g}
                   </option>
@@ -281,7 +281,7 @@ export function ExercicioEditCard({
                 <button
                   type="button"
                   onClick={() => {
-                    const updates: Partial<ExercicioNoPlano> = { tipoSerie: proximoTipo }
+                    const updates: Partial<ExerciseInPlan> = { tipoSerie: proximoTipo }
                     if (proximoTipo === 'tempo')
                       updates.seriesDetalhadas = series.map(s => ({ ...s, repeticoes: 1 }))
                     onUpdate(e => ({ ...e, ...updates }))

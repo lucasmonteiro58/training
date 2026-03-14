@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate, useBlocker } from '@tanstack/react-router'
-import { useNovoPlano } from '../../hooks/useNovoPlano'
+import { useNewPlan } from '../../hooks/useNovoPlano'
 import { Plus, Link2 } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
-import { AGRUPAMENTO_CONFIG } from '../../types'
-import { ExercicioPicker } from '../../components/common/ExercicioPicker'
+import { GROUPING_CONFIG } from '../../types'
+import { ExercisePicker } from '../../components/common/ExercicioPicker'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { NovoPlanoHeader } from './components/-NovoPlanoHeader'
 import { PlanDetailsCard } from './components/-PlanDetailsCard'
-import { ExercicioNoPlanoCard } from './components/-ExercicioNoPlanoCard'
+import { ExerciseInPlanCard } from './components/-ExercicioNoPlanoCard'
 import { CancelarCriacaoModal } from './components/-CancelarCriacaoModal'
 import { GroupTypeModal } from './components/-GroupTypeModal'
 
@@ -43,7 +43,7 @@ function NovoPlanoPage() {
     atualizarExercicio,
     handleDragOver,
     salvar,
-  } = useNovoPlano()
+  } = useNewPlan()
   const navigate = useNavigate()
 
   const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } =
@@ -112,7 +112,7 @@ function NovoPlanoPage() {
                     if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
                       rendered.add(ex.agrupamentoId)
                       const groupExs = exercicios.filter(e => e.agrupamentoId === ex.agrupamentoId)
-                      const config = AGRUPAMENTO_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                      const config = GROUPING_CONFIG[ex.tipoAgrupamento ?? 'superset']
                       return (
                         <div
                           key={`group-${ex.agrupamentoId}`}
@@ -129,7 +129,7 @@ function NovoPlanoPage() {
                           </div>
                           <div className="flex flex-col gap-1">
                             {groupExs.map(gex => (
-                              <ExercicioNoPlanoCard
+                              <ExerciseInPlanCard
                                 key={gex.id}
                                 exercicio={gex}
                                 onUpdate={campo => atualizarExercicio(gex.id, campo)}
@@ -146,7 +146,7 @@ function NovoPlanoPage() {
                     }
                     if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
                     return (
-                      <ExercicioNoPlanoCard
+                      <ExerciseInPlanCard
                         key={ex.id}
                         exercicio={ex}
                         onUpdate={campo => atualizarExercicio(ex.id, campo)}
@@ -178,7 +178,7 @@ function NovoPlanoPage() {
       )}
 
       {showPicker && (
-        <ExercicioPicker
+        <ExercisePicker
           onSelect={(ex) => {
             adicionarExercicio({
               id: uuidv4(),

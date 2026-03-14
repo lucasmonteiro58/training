@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getConfigUsuario, salvarConfigUsuario } from '../lib/firestore/sync'
 import { toast } from 'sonner'
 
-export function useConfigUsuario(user: { uid: string } | null) {
+export function useUserConfig(user: { uid: string } | null) {
   const [metaSemanal, setMetaSemanal] = useState(() => {
     const saved = localStorage.getItem('metaSemanal')
     return saved ? parseInt(saved, 10) : 4

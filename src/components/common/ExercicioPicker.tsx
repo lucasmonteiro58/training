@@ -1,21 +1,21 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
-import type { Exercicio } from '../../types'
+import type { Exercise } from '../../types'
 import { Search, X, Plus, Heart } from 'lucide-react'
-import { getExerciciosPersonalizados, getFavoritoIds, toggleFavoritoExercicio } from '../../lib/db/dexie'
+import { getPersonalizedExercises, getFavoritoIds, toggleExerciseFavorite } from '../../lib/db/dexie'
 import { useAuthStore } from '../../stores'
-import { CriarExercicioModal } from './CriarExercicioModal'
+import { CriarExerciseModal } from './CriarExercicioModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
-interface ExercicioPickerProps {
-  onSelect: (ex: Exercicio) => void
+interface ExercisePickerProps {
+  onSelect: (ex: Exercise) => void
   onClose: () => void
 }
 
-export function ExercicioPicker({ onSelect, onClose }: ExercicioPickerProps) {
+export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
   const user = useAuthStore((s) => s.user)
-  const [exercicios, setExercicios] = useState<Exercicio[]>([])
-  const [filtrados, setFiltrados] = useState<Exercicio[]>([])
+  const [exercicios, setExercises] = useState<Exercise[]>([])
+  const [filtrados, setFiltrados] = useState<Exercise[]>([])
   const [query, setQuery] = useState('')
   const [grupo, setGrupo] = useState('')
   const [loading, setLoading] = useState(true)
@@ -28,12 +28,12 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPickerProps) {
   const carregarTudo = async () => {
     setLoading(true)
     const base = await carregarExercicios()
-    let custom: Exercicio[] = []
+    let custom: Exercise[] = []
     if (user) {
-      custom = await getExerciciosPersonalizados(user.uid)
+      custom = await getPersonalizedExercises(user.uid)
     }
     const todos = [...custom, ...base].sort((a, b) => a.nome.localeCompare(b.nome))
-    setExercicios(todos)
+    setExercises(todos)
     setFiltrados(todos)
     const favIds = await getFavoritoIds()
     setFavoritoIds(favIds)
@@ -71,7 +71,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPickerProps) {
   const handleToggleFavorito = async (e: React.MouseEvent, exId: string) => {
     e.stopPropagation()
     const novoValor = !favoritoIds.has(exId)
-    await toggleFavoritoExercicio(exId, novoValor)
+    await toggleExerciseFavorite(exId, novoValor)
     setFavoritoIds(prev => {
       const next = new Set(prev)
       if (novoValor) next.add(exId)
@@ -227,7 +227,7 @@ export function ExercicioPicker({ onSelect, onClose }: ExercicioPickerProps) {
       </div>
 
       {showCriar && (
-        <CriarExercicioModal
+        <CriarExerciseModal
           gruposExistentes={gruposUnicos}
           onClose={() => setShowCriar(false)}
           onSuccess={(ex) => {

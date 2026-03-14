@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { v4 as uuidv4 } from 'uuid'
-import { usePlanos } from './usePlanos'
+import { usePlans } from './usePlanos'
 import { toast } from 'sonner'
-import type { ExercicioNoPlano, TipoAgrupamento } from '../types'
-import { CORES_PLANO } from '../types'
+import type { ExerciseInPlan, GroupingType } from '../types'
+import { PLAN_COLORS } from '../types'
 import {
   useSensor,
   useSensors,
@@ -15,17 +15,17 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 
-export function useNovoPlano() {
+export function useNewPlan() {
   const navigate = useNavigate()
-  const { criarPlano, atualizarPlano } = usePlanos()
+  const { criarPlano, atualizarPlano } = usePlans()
   const salvouRef = useRef(false)
 
   const [nome, setNome] = useState('')
   const [descricao, setDescricao] = useState('')
-  const [exercicios, setExercicios] = useState<ExercicioNoPlano[]>([])
+  const [exercicios, setExercicios] = useState<ExerciseInPlan[]>([])
   const [saving, setSaving] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
-  const [corSelecionada, setCorSelecionada] = useState(CORES_PLANO[0])
+  const [corSelecionada, setCorSelecionada] = useState(PLAN_COLORS[0])
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [showGroupMenu, setShowGroupMenu] = useState(false)
 
@@ -33,7 +33,7 @@ export function useNovoPlano() {
     nome.trim() !== '' ||
     descricao.trim() !== '' ||
     exercicios.length > 0 ||
-    corSelecionada !== CORES_PLANO[0]
+    corSelecionada !== PLAN_COLORS[0]
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -45,7 +45,7 @@ export function useNovoPlano() {
     })
   )
 
-  const criarAgrupamento = useCallback((tipo: TipoAgrupamento) => {
+  const criarAgrupamento = useCallback((tipo: GroupingType) => {
     setExercicios((prev) => {
       if (selecionados.size < 2) return prev
       const agrupamentoId = uuidv4()
@@ -78,7 +78,7 @@ export function useNovoPlano() {
   }, [])
 
   const adicionarExercicio = useCallback(
-    (ex: Partial<ExercicioNoPlano> & { exercicio: any }) => {
+    (ex: Partial<ExerciseInPlan> & { exercicio: any }) => {
       const seriesPadrao = Array(3).fill({ peso: 0, repeticoes: 10 })
       setExercicios((prev) => [
         ...prev,
@@ -86,9 +86,9 @@ export function useNovoPlano() {
           ...ex,
           id: ex.id ?? uuidv4(),
           seriesDetalhadas:
-            (ex as ExercicioNoPlano).seriesDetalhadas ?? seriesPadrao,
+            (ex as ExerciseInPlan).seriesDetalhadas ?? seriesPadrao,
           ordem: ex.ordem ?? prev.length,
-        } as ExercicioNoPlano,
+        } as ExerciseInPlan,
       ])
     },
     []
@@ -99,7 +99,7 @@ export function useNovoPlano() {
   }, [])
 
   const atualizarExercicio = useCallback(
-    (id: string, campo: Partial<ExercicioNoPlano>) => {
+    (id: string, campo: Partial<ExerciseInPlan>) => {
       setExercicios((prev) =>
         prev.map((e) => (e.id === id ? { ...e, ...campo } : e))
       )

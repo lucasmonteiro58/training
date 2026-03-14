@@ -1,11 +1,11 @@
-import type { Exercicio } from '../../../types'
+import type { Exercise } from '../../../types'
 
-interface ExercicioDetailModalProps {
-  exercicio: Exercicio
+interface ExerciseDetailModalProps {
+  exercicio: Exercise
   onClose: () => void
 }
 
-export function ExercicioDetailModal({ exercicio, onClose }: ExercicioDetailModalProps) {
+export function ExerciseDetailModal({ exercicio, onClose }: ExerciseDetailModalProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>

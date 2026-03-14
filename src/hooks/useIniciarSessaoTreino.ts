@@ -1,19 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { solicitarPermissaoNotificacao } from '../lib/notifications'
-import type { PlanoDeTreino, SessaoDeTreino, SerieRegistrada, ExercicioNaSessao } from '../types'
+import type { WorkoutPlan, WorkoutSession, RecordedSet, ExerciseInSession } from '../types'
 
 interface UseIniciarSessaoTreinoParams {
   planoId: string
-  plano: PlanoDeTreino | undefined
+  plano: WorkoutPlan | undefined
   user: { uid: string } | null
-  sessoes: SessaoDeTreino[]
+  sessoes: WorkoutSession[]
   iniciado: boolean
-  sessao: SessaoDeTreino | null
-  iniciarTreino: (sessao: SessaoDeTreino) => void
+  sessao: WorkoutSession | null
+  iniciarTreino: (sessao: WorkoutSession) => void
 }
 
-export function useIniciarSessaoTreino({
+export function useStartWorkoutSession({
   planoId,
   plano,
   user,
@@ -42,7 +42,7 @@ export function useIniciarSessaoTreino({
       .filter((s) => s.planoId === planoId && s.finalizadoEm)
       .sort((a, b) => (b.finalizadoEm ?? 0) - (a.finalizadoEm ?? 0))[0]
 
-    const exerciciosNaSessao: ExercicioNaSessao[] = plano.exercicios.map((ex) => {
+    const exerciciosNaSessao: ExerciseInSession[] = plano.exercicios.map((ex) => {
       const exUltimaSessao = ultimaSessao?.exercicios.find(
         (e) => e.exercicioId === ex.exercicioId
       )
@@ -70,12 +70,12 @@ export function useIniciarSessaoTreino({
             repeticoes: repsPlano || repsSessao || ex.repeticoesMeta,
             peso: pesoPlano || pesoSessao || (ex.pesoMeta ?? 0),
             completada: false,
-          } as SerieRegistrada
+          } as RecordedSet
         }),
       }
     })
 
-    const novaSessao: SessaoDeTreino = {
+    const novaSessao: WorkoutSession = {
       id: uuidv4(),
       userId: user.uid,
       planoId: plano.id,

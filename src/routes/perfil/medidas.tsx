@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMedidas } from '../../hooks/useMedidas'
+import { useMeasurements } from '../../hooks/useMedidas'
 import { useAuthStore } from '../../stores'
-import { CAMPOS_MEDIDA } from '../../types'
-import type { MedidaCorporal } from '../../types'
+import { MEASUREMENT_FIELDS } from '../../types'
+import type { BodyMeasurement } from '../../types'
 import { useState, useMemo } from 'react'
 import { ChevronLeft, Ruler } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,7 +19,7 @@ export const Route = createFileRoute('/perfil/medidas')({
 function MedidasPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { medidas, loading, adicionar, remover } = useMedidas()
+  const { medidas, loading, adicionar, remover } = useMeasurements()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({})
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
@@ -27,18 +27,18 @@ function MedidasPage() {
 
   const handleSalvar = async () => {
     if (!user) return
-    const temAlgumValor = CAMPOS_MEDIDA.some(c => form[c.key] && Number(form[c.key]) > 0)
+    const temAlgumValor = MEASUREMENT_FIELDS.some(c => form[c.key] && Number(form[c.key]) > 0)
     if (!temAlgumValor) {
       toast.error('Preencha pelo menos uma medida.')
       return
     }
 
-    const medida: MedidaCorporal = {
+    const medida: BodyMeasurement = {
       id: crypto.randomUUID(),
       userId: user.uid,
       data: Date.now(),
     }
-    CAMPOS_MEDIDA.forEach(c => {
+    MEASUREMENT_FIELDS.forEach(c => {
       const v = parseFloat(form[c.key] || '')
       if (v > 0) (medida as unknown as Record<string, unknown>)[c.key] = v
     })
@@ -51,7 +51,7 @@ function MedidasPage() {
   }
 
   const dadosGrafico = useMemo(() => {
-    const campo = CAMPOS_MEDIDA.find(c => c.key === campoGrafico)
+    const campo = MEASUREMENT_FIELDS.find(c => c.key === campoGrafico)
     if (!campo) return []
     return [...medidas]
       .filter(m => (m as unknown as Record<string, unknown>)[campoGrafico] != null)

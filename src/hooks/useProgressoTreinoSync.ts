@@ -1,24 +1,24 @@
 import { useEffect } from 'react'
-import { useTreinoAtivoStore, useHistoricoStore } from '../stores'
+import { useActiveWorkoutStore, useHistoryStore } from '../stores'
 import { INATIVIDADE_AUTO_ENCERRAR_MS, calcularVolume } from '../stores'
 import {
-  subscribeToProgressoTreino,
-  limparProgressoTreinoFirestore,
+  subscribeToWorkoutProgress,
+  clearWorkoutProgressFromFirestore,
 } from '../lib/firestore/sync'
-import { useHistorico } from './useHistorico'
+import { useHistory } from './useHistorico'
 
-export function useProgressoTreinoSync(user: { uid: string } | null) {
-  const { salvarSessaoCompleta } = useHistorico()
-  const setSessaoAutoEncerrada = useHistoricoStore(
+export function useWorkoutProgressSync(user: { uid: string } | null) {
+  const { salvarSessaoCompleta } = useHistory()
+  const setSessaoAutoEncerrada = useHistoryStore(
     (s) => s.setSessaoAutoEncerrada
   )
 
   useEffect(() => {
     if (!user) return
 
-    const unsub = subscribeToProgressoTreino(user.uid, (dados) => {
-      const state = useTreinoAtivoStore.getState()
-      const historicoState = useHistoricoStore.getState()
+    const unsub = subscribeToWorkoutProgress(user.uid, (dados) => {
+      const state = useActiveWorkoutStore.getState()
+      const historicoState = useHistoryStore.getState()
 
       if (!dados || !dados.iniciado) {
         if (state.iniciado) state.limparLocal()
@@ -54,7 +54,7 @@ export function useProgressoTreinoSync(user: { uid: string } | null) {
           autoEncerrado: true,
         }
         salvarSessaoCompleta(finalizada).then(() => {
-          limparProgressoTreinoFirestore(user.uid)
+          clearWorkoutProgressFromFirestore(user.uid)
           state.limparLocal()
           setSessaoAutoEncerrada({
             sessao: finalizada,

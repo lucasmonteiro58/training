@@ -10,15 +10,15 @@ import {
   XCircle,
 } from 'lucide-react'
 import { formatarTempo } from '../../../lib/notifications'
-import { AGRUPAMENTO_CONFIG } from '../../../types'
-import type { ExercicioNaSessao } from '../../../types'
+import { GROUPING_CONFIG } from '../../../types'
+import type { ExerciseInSession } from '../../../types'
 
 interface TreinoAtivoHeaderProps {
   cronometroGeralSegundos: number
   pausado: boolean
   onPause: () => void
   onResume: () => void
-  exercicioAtual: ExercicioNaSessao
+  exercicioAtual: ExerciseInSession
   exercicioAtualIndex: number
   totalExercicios: number
   onPrev: () => void
@@ -115,11 +115,11 @@ export function TreinoAtivoHeader({
             <span
               className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
               style={{
-                color: AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.cor,
-                background: AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.corBg,
+                color: GROUPING_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.cor,
+                background: GROUPING_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.corBg,
               }}
             >
-              {AGRUPAMENTO_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label}
+              {GROUPING_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label}
             </span>
           )}
         </div>

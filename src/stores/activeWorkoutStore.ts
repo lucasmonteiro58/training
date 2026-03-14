@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { SessaoDeTreino } from '../types'
-import { syncProgressoTreinoParaFirestore, limparProgressoTreinoFirestore } from '../lib/firestore/sync'
-import type { SnapshotAutoEncerrado } from './historicoStore'
+import type { WorkoutSession } from '../types'
+import { syncWorkoutProgressToFirestore, clearWorkoutProgressFromFirestore } from '../lib/firestore/sync'
+import type { AutoClosedSnapshot } from './historyStore'
 
-export function calcularVolume(sessao: SessaoDeTreino): number {
+export function calcularVolume(sessao: WorkoutSession): number {
   return sessao.exercicios.reduce((total, ex) => {
     return (
       total +
@@ -17,8 +17,8 @@ export function calcularVolume(sessao: SessaoDeTreino): number {
 
 export const INATIVIDADE_AUTO_ENCERRAR_MS = 20 * 60 * 1000 // 20 minutos
 
-export interface TreinoAtivoStoreState {
-  sessao: SessaoDeTreino | null
+export interface ActiveWorkoutStoreState {
+  sessao: WorkoutSession | null
   exercicioAtualIndex: number
   serieAtualIndex: number
   cronometroGeralSegundos: number
@@ -30,8 +30,8 @@ export interface TreinoAtivoStoreState {
   ultimaPausaRecordada: number | null
   timestampDescansoFim: number | null
   ultimaSerieCompletada: { exercicioIdx: number; serieIdx: number } | null
-  iniciarTreino: (sessao: SessaoDeTreino) => void
-  finalizarTreino: () => SessaoDeTreino | null
+  iniciarTreino: (sessao: WorkoutSession) => void
+  finalizarTreino: () => WorkoutSession | null
   pausarTreino: () => void
   retomar: () => void
   proximoExercicio: () => void
@@ -49,7 +49,7 @@ export interface TreinoAtivoStoreState {
   tickDescanso: () => void
   atualizarCronometroGeral: (segundos: number) => void
   restaurarDeExterno: (dados: {
-    sessao: SessaoDeTreino
+    sessao: WorkoutSession
     exercicioAtualIndex: number
     serieAtualIndex: number
     pausado?: boolean
@@ -59,7 +59,7 @@ export interface TreinoAtivoStoreState {
     cronometroGeralSegundos?: number
   }) => void
   sincronizarEstadoExterno: (dados: {
-    sessao: SessaoDeTreino
+    sessao: WorkoutSession
     exercicioAtualIndex: number
     serieAtualIndex: number
     pausado: boolean
@@ -69,14 +69,14 @@ export interface TreinoAtivoStoreState {
   }) => void
   atualizarNotas: (notas: string) => void
   limparLocal: () => void
-  restaurarDeAutoEncerrado: (snapshot: SnapshotAutoEncerrado) => void
+  restaurarDeAutoEncerrado: (snapshot: AutoClosedSnapshot) => void
   heartbeat: () => void
-  restaurarDeHistorico: (sessao: SessaoDeTreino) => void
+  restaurarDeHistorico: (sessao: WorkoutSession) => void
 }
 
-const syncAtivo = (state: TreinoAtivoStoreState) => {
+const syncAtivo = (state: ActiveWorkoutStoreState) => {
   if (state.iniciado && state.sessao?.userId && state.sessao) {
-    syncProgressoTreinoParaFirestore(state.sessao.userId, {
+    syncWorkoutProgressToFirestore(state.sessao.userId, {
       sessao: state.sessao,
       exercicioAtualIndex: state.exercicioAtualIndex,
       serieAtualIndex: state.serieAtualIndex,
@@ -91,7 +91,7 @@ const syncAtivo = (state: TreinoAtivoStoreState) => {
   }
 }
 
-export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
+export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
   persist(
     (set, get) => ({
       sessao: null,
@@ -129,7 +129,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
         const { sessao, cronometroGeralSegundos } = get()
         if (!sessao) return null
         const userId = sessao.userId
-        const finalizada: SessaoDeTreino = {
+        const finalizada: WorkoutSession = {
           ...sessao,
           finalizadoEm: Date.now(),
           duracaoSegundos: cronometroGeralSegundos,
@@ -147,7 +147,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           timestampDescansoFim: null,
           ultimaSerieCompletada: null,
         })
-        if (userId) limparProgressoTreinoFirestore(userId)
+        if (userId) clearWorkoutProgressFromFirestore(userId)
         return finalizada
       },
 

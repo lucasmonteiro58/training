@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { usePlanos } from '../../hooks/usePlanos'
+import { usePlans } from '../../hooks/usePlanos'
 import { useState } from 'react'
 import {
   DndContext,
@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable'
-import type { PlanoDeTreino } from '../../types'
+import type { WorkoutPlan } from '../../types'
 import { TreinosHeader } from './components/-TreinosHeader'
 import { EmptyPlanos } from './components/-EmptyPlanos'
 import { PlanoSortableCard } from './components/-PlanoSortableCard'
@@ -34,12 +34,12 @@ function TreinosPage() {
     arquivarPlano,
     desarquivarPlano,
     reordenarPlanos,
-  } = usePlanos()
+  } = usePlans()
   const [deletando, setDeletando] = useState<string | null>(null)
   const [processando, setProcessando] = useState<string | null>(null)
   const [mostrarArquivados, setMostrarArquivados] = useState(false)
   const [reordenando, setReordenando] = useState(false)
-  const [ordemLocal, setOrdemLocal] = useState<PlanoDeTreino[]>([])
+  const [ordemLocal, setOrdemLocal] = useState<WorkoutPlan[]>([])
 
   const listaOrdenada = reordenando ? ordemLocal : planosAtivos
 

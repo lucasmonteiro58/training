@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useRef, useEffect } from 'react'
 import { parsearCsv } from '../../lib/csvImport'
-import { usePlanos } from '../../hooks/usePlanos'
+import { usePlans } from '../../hooks/usePlanos'
 import { useAuthStore } from '../../stores'
-import { salvarExercicioPersonalizado } from '../../lib/db/dexie'
-import { syncExercicioParaFirestore } from '../../lib/firestore/sync'
+import { savePersonalizedExercise } from '../../lib/db/dexie'
+import { syncExerciseToFirestore } from '../../lib/firestore/sync'
 import { carregarExercicios } from '../../lib/exercises/freeExerciseDb'
 import { toast } from 'sonner'
-import type { Exercicio } from '../../types'
+import type { Exercise } from '../../types'
 import { X } from 'lucide-react'
 import type { PlanoEditado } from './components/-PlanoEditCard'
 import { PlanoEditCard } from './components/-PlanoEditCard'
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/treinos/importar')({
 
 function ImportarCsvPage() {
   const navigate = useNavigate()
-  const { criarPlano, atualizarPlano } = usePlanos()
+  const { criarPlano, atualizarPlano } = usePlans()
   const user = useAuthStore(s => s.user)
   const inputRef = useRef<HTMLInputElement>(null)
   const [planos, setPlanos] = useState<PlanoEditado[] | null>(null)
@@ -74,8 +74,8 @@ function ImportarCsvPage() {
           planoData.exercicios.map(async ex => {
             if (ex.exercicio.personalizado === false) return ex
             const exFinal = { ...ex.exercicio, userId: user.uid }
-            await salvarExercicioPersonalizado(exFinal)
-            syncExercicioParaFirestore(exFinal)
+            await savePersonalizedExercise(exFinal)
+            syncExerciseToFirestore(exFinal)
             return { ...ex, exercicio: exFinal }
           })
         )

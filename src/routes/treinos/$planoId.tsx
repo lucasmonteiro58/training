@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate, Link, useBlocker } from '@tanstack/react-router'
 import { useState } from 'react'
-import { usePlanos } from '../../hooks/usePlanos'
-import { useEdicaoPlano } from '../../hooks/useEdicaoPlano'
+import { usePlans } from '../../hooks/usePlanos'
+import { usePlanEdit } from '../../hooks/useEdicaoPlano'
 import { ArrowLeft, Dumbbell, Play, Edit2, Plus, Clock, Trash2, XCircle, Copy, Link2 } from 'lucide-react'
-import type { TipoAgrupamento } from '../../types'
-import { AGRUPAMENTO_CONFIG } from '../../types'
-import { ExercicioPicker } from '../../components/common/ExercicioPicker'
+import type { GroupingType } from '../../types'
+import { GROUPING_CONFIG } from '../../types'
+import { ExercisePicker } from '../../components/common/ExercicioPicker'
 import { ExercicioDetalheCard } from './components/-ExercicioDetalheCard'
 import { toast } from 'sonner'
-import { useIniciarTreino } from '../../hooks/useIniciarTreino'
+import { useStartWorkout } from '../../hooks/useIniciarTreino'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
@@ -19,12 +19,12 @@ export const Route = createFileRoute('/treinos/$planoId')({
 function PlanoDetalheComponent() {
   const { planoId } = Route.useParams()
   const navigate = useNavigate()
-  const { planos, atualizarPlano, excluirPlano, clonarPlano } = usePlanos()
+  const { planos, atualizarPlano, excluirPlano, clonarPlano } = usePlans()
   const plano = planos.find((p) => p.id === planoId)
   const [showPicker, setShowPicker] = useState(false)
-  const { handleIniciar, modal: modalInicio } = useIniciarTreino()
+  const { handleIniciar, modal: modalInicio } = useStartWorkout()
 
-  const edicao = useEdicaoPlano(plano, atualizarPlano)
+  const edicao = usePlanEdit(plano, atualizarPlano)
   const {
     editando,
     nome,
@@ -153,7 +153,7 @@ function PlanoDetalheComponent() {
                       if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
                         rendered.add(ex.agrupamentoId)
                         const groupExs = exerciciosEdit.filter(e => e.agrupamentoId === ex.agrupamentoId)
-                        const config = AGRUPAMENTO_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                        const config = GROUPING_CONFIG[ex.tipoAgrupamento ?? 'superset']
                         return (
                           <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
                             <div className="flex items-center justify-between px-2 py-1.5">
@@ -215,7 +215,7 @@ function PlanoDetalheComponent() {
                   if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
                     rendered.add(ex.agrupamentoId)
                     const groupExs = plano.exercicios.filter(e => e.agrupamentoId === ex.agrupamentoId)
-                    const config = AGRUPAMENTO_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                    const config = GROUPING_CONFIG[ex.tipoAgrupamento ?? 'superset']
                     return (
                       <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
                         <div className="px-2 py-1.5">
@@ -281,7 +281,7 @@ function PlanoDetalheComponent() {
       </div>
 
       {showPicker && (
-        <ExercicioPicker onSelect={(ex) => { adicionarEx(ex); setShowPicker(false) }} onClose={() => setShowPicker(false)} />
+        <ExercisePicker onSelect={(ex) => { adicionarEx(ex); setShowPicker(false) }} onClose={() => setShowPicker(false)} />
       )}
 
       {showGroupMenu && (
@@ -289,7 +289,7 @@ function PlanoDetalheComponent() {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-text mb-4">Tipo de Agrupamento</h2>
             <div className="flex flex-col gap-2">
-              {(Object.entries(AGRUPAMENTO_CONFIG) as [TipoAgrupamento, typeof AGRUPAMENTO_CONFIG[string]][]).map(([tipo, config]) => (
+              {(Object.entries(GROUPING_CONFIG) as [GroupingType, typeof GROUPING_CONFIG[string]][]).map(([tipo, config]) => (
                 <button
                   key={tipo}
                   onClick={() => criarAgrupamento(tipo)}

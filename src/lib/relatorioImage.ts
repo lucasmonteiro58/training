@@ -1,7 +1,7 @@
-import type { SessaoDeTreino } from '../types'
+import type { WorkoutSession } from '../types'
 import { formatarTempo } from './notifications'
 
-export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | null> {
+export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | null> {
   const W = 1080
   const PAD = 72
   const PALETTE = ['#6366f1', '#a78bfa', '#38bdf8', '#f59e0b', '#f472b6', '#22c55e']

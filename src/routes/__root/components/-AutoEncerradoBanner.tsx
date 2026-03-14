@@ -1,14 +1,14 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useHistoricoStore } from '../../../stores'
-import { useHistorico } from '../../../hooks/useHistorico'
-import { useTreinoAtivoStore } from '../../../stores'
+import { useHistoryStore } from '../../../stores'
+import { useHistory } from '../../../hooks/useHistorico'
+import { useActiveWorkoutStore } from '../../../stores'
 
 export function AutoEncerradoBanner() {
   const navigate = useNavigate()
-  const sessaoAutoEncerrada = useHistoricoStore(s => s.sessaoAutoEncerrada)
-  const setSessaoAutoEncerrada = useHistoricoStore(s => s.setSessaoAutoEncerrada)
-  const { excluirSessao } = useHistorico()
-  const restaurarDeAutoEncerrado = useTreinoAtivoStore(s => s.restaurarDeAutoEncerrado)
+  const sessaoAutoEncerrada = useHistoryStore(s => s.sessaoAutoEncerrada)
+  const setSessaoAutoEncerrada = useHistoryStore(s => s.setSessaoAutoEncerrada)
+  const { excluirSessao } = useHistory()
+  const restaurarDeAutoEncerrado = useActiveWorkoutStore(s => s.restaurarDeAutoEncerrado)
 
   if (!sessaoAutoEncerrada) return null
 

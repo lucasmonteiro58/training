@@ -1,13 +1,13 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { formatarTempo } from '../../../lib/notifications'
 import { Clock, Dumbbell, TrendingUp, ChevronRight, Trash2, RotateCcw, TimerOff } from 'lucide-react'
-import type { SessaoDeTreino } from '../../../types'
+import type { WorkoutSession } from '../../../types'
 
 interface SessaoCardProps {
-  sessao: SessaoDeTreino
+  sessao: WorkoutSession
   index: number
   onExcluir: (id: string) => void
-  onRetornar: (sessao: SessaoDeTreino) => void
+  onRetornar: (sessao: WorkoutSession) => void
 }
 
 export function SessaoCard({ sessao, index, onExcluir, onRetornar }: SessaoCardProps) {

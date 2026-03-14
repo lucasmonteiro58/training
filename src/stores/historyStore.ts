@@ -1,26 +1,26 @@
 import { create } from 'zustand'
-import type { SessaoDeTreino } from '../types'
+import type { WorkoutSession } from '../types'
 
-export interface SnapshotAutoEncerrado {
-  sessao: SessaoDeTreino
+export interface AutoClosedSnapshot {
+  sessao: WorkoutSession
   exercicioAtualIndex: number
   serieAtualIndex: number
   cronometroGeralSegundos: number
 }
 
-export interface HistoricoState {
-  sessoes: SessaoDeTreino[]
+export interface HistoryState {
+  sessoes: WorkoutSession[]
   loading: boolean
   /** Preenchido quando um treino foi encerrado automaticamente por inatividade (20 min) */
-  sessaoAutoEncerrada: SnapshotAutoEncerrado | null
-  setSessoes: (sessoes: SessaoDeTreino[]) => void
-  addSessao: (sessao: SessaoDeTreino) => void
+  sessaoAutoEncerrada: AutoClosedSnapshot | null
+  setSessoes: (sessoes: WorkoutSession[]) => void
+  addSessao: (sessao: WorkoutSession) => void
   removeSessao: (id: string) => void
   setLoading: (v: boolean) => void
-  setSessaoAutoEncerrada: (snapshot: SnapshotAutoEncerrado | null) => void
+  setSessaoAutoEncerrada: (snapshot: AutoClosedSnapshot | null) => void
 }
 
-export const useHistoricoStore = create<HistoricoState>(set => ({
+export const useHistoryStore = create<HistoryState>(set => ({
   sessoes: [],
   loading: true,
   sessaoAutoEncerrada: null,

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useHistoricoStore } from '../../stores'
+import { useHistoryStore } from '../../stores'
 import { useState, useMemo } from 'react'
 import { TrendingUp } from 'lucide-react'
 import { EvolucaoHeader } from './components/-EvolucaoHeader'
@@ -12,7 +12,7 @@ export const Route = createFileRoute('/perfil/evolucao')({
 })
 
 function EvolucaoPage() {
-  const sessoes = useHistoricoStore(s => s.sessoes)
+  const sessoes = useHistoryStore(s => s.sessoes)
   const navigate = useNavigate()
   const [tab, setTab] = useState<EvolucaoTabId>('exercicios')
 

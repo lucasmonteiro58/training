@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { CAMPOS_MEDIDA } from '../../../types'
+import { MEASUREMENT_FIELDS } from '../../../types'
 
 interface NovaMedidaModalProps {
   form: Record<string, string>
@@ -20,7 +20,7 @@ export function NovaMedidaModal({ form, onFormChange, onSalvar, onClose }: NovaM
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
-          {CAMPOS_MEDIDA.map(c => (
+          {MEASUREMENT_FIELDS.map(c => (
             <div key={c.key}>
               <label className="text-xs text-text-muted mb-1 block">
                 {c.label} ({c.unidade})

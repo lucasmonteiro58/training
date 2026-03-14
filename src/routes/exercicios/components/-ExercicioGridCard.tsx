@@ -1,14 +1,14 @@
 import { Heart } from 'lucide-react'
-import type { Exercicio } from '../../../types'
+import type { Exercise } from '../../../types'
 
-interface ExercicioGridCardProps {
-  ex: Exercicio
+interface ExerciseGridCardProps {
+  ex: Exercise
   isFavorito: boolean
   onSelect: () => void
   onToggleFavorito: (e: React.MouseEvent) => void
 }
 
-export function ExercicioGridCard({ ex, isFavorito, onSelect, onToggleFavorito }: ExercicioGridCardProps) {
+export function ExerciseGridCard({ ex, isFavorito, onSelect, onToggleFavorito }: ExerciseGridCardProps) {
   return (
     <button
       type="button"

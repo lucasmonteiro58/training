@@ -1,13 +1,13 @@
 import { useState, useCallback } from 'react'
-import type { SessaoDeTreino } from '../types'
+import type { WorkoutSession } from '../types'
 import { toast } from 'sonner'
 
-export function useEdicaoSessao(
-  sessao: SessaoDeTreino | undefined,
-  salvarSessaoCompleta: (sessao: SessaoDeTreino) => Promise<void>
+export function useSessionEdit(
+  sessao: WorkoutSession | undefined,
+  salvarSessaoCompleta: (sessao: WorkoutSession) => Promise<void>
 ) {
   const [editando, setEditando] = useState(false)
-  const [editData, setEditData] = useState<SessaoDeTreino | null>(null)
+  const [editData, setEditData] = useState<WorkoutSession | null>(null)
 
   const displaySessao = editando && editData ? editData : sessao ?? null
 

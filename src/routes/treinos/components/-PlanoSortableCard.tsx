@@ -2,11 +2,11 @@ import { Link } from '@tanstack/react-router'
 import { Dumbbell, Play, Archive, GripVertical } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useIniciarTreino } from '../../../hooks/useIniciarTreino'
-import type { PlanoDeTreino } from '../../../types'
+import { useStartWorkout } from '../../../hooks/useIniciarTreino'
+import type { WorkoutPlan } from '../../../types'
 
 interface PlanoSortableCardProps {
-  plano: PlanoDeTreino
+  plano: WorkoutPlan
   reordenando: boolean
   processando: string | null
   onArchive: (id: string) => void
@@ -20,7 +20,7 @@ export function PlanoSortableCard({
 }: PlanoSortableCardProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: plano.id })
-  const { handleIniciar, modal } = useIniciarTreino()
+  const { handleIniciar, modal } = useStartWorkout()
 
   const style = {
     transform: CSS.Transform.toString(transform),

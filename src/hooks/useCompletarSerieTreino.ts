@@ -1,11 +1,11 @@
 import { useRef, useCallback } from 'react'
 import { prepararAudio } from '../lib/notifications'
 import { detectarNovoPR } from '../lib/records'
-import type { SessaoDeTreino } from '../types'
+import type { WorkoutSession } from '../types'
 import type { RecordeExercicio } from '../lib/records'
 
 interface UseCompletarSerieTreinoParams {
-  sessao: SessaoDeTreino | null
+  sessao: WorkoutSession | null
   exercicioAtualIndex: number
   recordes: Map<string, RecordeExercicio>
   salvarPesosNoPlano: (exIdx?: number) => void
@@ -25,7 +25,7 @@ interface UseCompletarSerieTreinoParams {
   onWorkoutComplete?: () => void
 }
 
-export function useCompletarSerieTreino({
+export function useCompleteWorkoutSet({
   sessao,
   exercicioAtualIndex,
   recordes,

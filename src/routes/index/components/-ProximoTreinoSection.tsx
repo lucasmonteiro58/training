@@ -1,5 +1,5 @@
 import { Zap, Play } from 'lucide-react'
-import { useIniciarTreino } from '../../../hooks/useIniciarTreino'
+import { useStartWorkout } from '../../../hooks/useIniciarTreino'
 
 interface ProximoTreinoSectionProps {
   proximoPlano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] }
@@ -10,7 +10,7 @@ export function ProximoTreinoSection({
   proximoPlano,
   ultimaSessao,
 }: ProximoTreinoSectionProps) {
-  const { handleIniciar, modal } = useIniciarTreino()
+  const { handleIniciar, modal } = useStartWorkout()
 
   return (
     <>

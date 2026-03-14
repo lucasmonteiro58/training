@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { Search, X, RefreshCw } from 'lucide-react'
-import type { Exercicio } from '../../types'
-import { GRUPOS_MUSCULARES } from '../../types'
-import { salvarExercicioPersonalizado } from '../../lib/db/dexie'
-import { syncExercicioParaFirestore } from '../../lib/firestore/sync'
+import type { Exercise } from '../../types'
+import { MUSCLE_GROUPS } from '../../types'
+import { savePersonalizedExercise } from '../../lib/db/dexie'
+import { syncExerciseToFirestore } from '../../lib/firestore/sync'
 import { useAuthStore } from '../../stores'
 import { toast } from 'sonner'
 import {
@@ -17,16 +17,16 @@ import {
   SelectSeparator,
 } from '../ui/select'
 
-interface CriarExercicioModalProps {
+interface CriarExerciseModalProps {
   onClose: () => void
-  onSuccess: (ex: Exercicio) => void
+  onSuccess: (ex: Exercise) => void
   gruposExistentes?: string[]
 }
 
-export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRUPOS_MUSCULARES }: CriarExercicioModalProps) {
+export function CriarExerciseModal({ onClose, onSuccess, gruposExistentes = MUSCLE_GROUPS }: CriarExerciseModalProps) {
   const user = useAuthStore((s) => s.user)
   const [nome, setNome] = useState('')
-  const [grupoSelecionado, setGrupoSelecionado] = useState<string>(GRUPOS_MUSCULARES[0])
+  const [grupoSelecionado, setGrupoSelecionado] = useState<string>(MUSCLE_GROUPS[0])
   const [isNovoGrupo, setIsNovoGrupo] = useState(false)
   const [novoGrupoTexto, setNovoGrupoTexto] = useState('')
   const [equipamento, setEquipamento] = useState('')
@@ -78,7 +78,7 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
 
     const instrucoesArray = instrucoesTexto.split('\n').map(l => l.trim()).filter(Boolean)
 
-    const novoExercicio: Exercicio = {
+    const novoExercise: Exercise = {
       id: `custom-${uuidv4()}`,
       nome: nome.trim(),
       grupoMuscular: grupoFinal,
@@ -89,10 +89,10 @@ export function CriarExercicioModal({ onClose, onSuccess, gruposExistentes = GRU
       userId: user.uid,
     }
 
-    await salvarExercicioPersonalizado(novoExercicio)
-    syncExercicioParaFirestore(novoExercicio)
+    await savePersonalizedExercise(novoExercise)
+    syncExerciseToFirestore(novoExercise)
 
-    onSuccess(novoExercicio)
+    onSuccess(novoExercise)
   }
 
   return (

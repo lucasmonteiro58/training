@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 
-export function useBuscaImagemGiphy(initialTermo: string) {
+export function useGiphyImageSearch(initialTermo: string) {
   const [termoBusca, setTermoBusca] = useState(initialTermo)
   const [imagensWeb, setImagensWeb] = useState<string[]>([])
   const [buscandoImagem, setBuscandoImagem] = useState(false)

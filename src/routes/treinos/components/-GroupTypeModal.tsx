@@ -1,13 +1,13 @@
 import { Link2 } from 'lucide-react'
-import type { TipoAgrupamento } from '../../../types'
-import { AGRUPAMENTO_CONFIG } from '../../../types'
+import type { GroupingType } from '../../../types'
+import { GROUPING_CONFIG } from '../../../types'
 
 interface GroupTypeModalProps {
-  onSelect: (tipo: TipoAgrupamento) => void
+  onSelect: (tipo: GroupingType) => void
   onClose: () => void
 }
 
-const DESCRICOES: Record<TipoAgrupamento, string> = {
+const DESCRICOES: Record<GroupingType, string> = {
   superset: 'Executa exercícios alternados sem descanso',
   dropset: 'Reduz peso progressivamente sem pausa',
   giantset: 'Circuito de 3+ exercícios sem descanso',
@@ -19,7 +19,7 @@ export function GroupTypeModal({ onSelect, onClose }: GroupTypeModalProps) {
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-text mb-4">Tipo de Agrupamento</h2>
         <div className="flex flex-col gap-2">
-          {(Object.entries(AGRUPAMENTO_CONFIG) as [TipoAgrupamento, (typeof AGRUPAMENTO_CONFIG)[TipoAgrupamento]][]).map(
+          {(Object.entries(GROUPING_CONFIG) as [GroupingType, (typeof GROUPING_CONFIG)[GroupingType]][]).map(
             ([tipo, config]) => (
               <button
                 key={tipo}

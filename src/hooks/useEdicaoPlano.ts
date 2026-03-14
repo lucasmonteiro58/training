@@ -10,20 +10,20 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import type {
-  PlanoDeTreino,
-  ExercicioNoPlano,
-  SeriePlano,
-  TipoSerie,
-  TipoAgrupamento,
+  WorkoutPlan,
+  ExerciseInPlan,
+  PlanSet,
+  SetType,
+  GroupingType,
 } from '../types'
 
-export function useEdicaoPlano(
-  plano: PlanoDeTreino | undefined,
-  atualizarPlano: (plano: PlanoDeTreino) => Promise<void>
+export function usePlanEdit(
+  plano: WorkoutPlan | undefined,
+  atualizarPlano: (plano: WorkoutPlan) => Promise<void>
 ) {
   const [editando, setEditando] = useState(false)
   const [nome, setNome] = useState(plano?.nome ?? '')
-  const [exerciciosEdit, setExerciciosEdit] = useState<ExercicioNoPlano[]>(
+  const [exerciciosEdit, setExerciciosEdit] = useState<ExerciseInPlan[]>(
     plano?.exercicios ?? []
   )
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
@@ -86,7 +86,7 @@ export function useEdicaoPlano(
   }, [])
 
   const atualizarSerieEdit = useCallback(
-    (exId: string, sIdx: number, campo: Partial<SeriePlano>) => {
+    (exId: string, sIdx: number, campo: Partial<PlanSet>) => {
       setExerciciosEdit((prev) =>
         prev.map((ex) => {
           if (ex.id !== exId) return ex
@@ -107,7 +107,7 @@ export function useEdicaoPlano(
   )
 
   const atualizarExercicioEdit = useCallback(
-    (exId: string, campos: Partial<ExercicioNoPlano['exercicio']>) => {
+    (exId: string, campos: Partial<ExerciseInPlan['exercicio']>) => {
       setExerciciosEdit((prev) =>
         prev.map((ex) =>
           ex.id === exId
@@ -127,7 +127,7 @@ export function useEdicaoPlano(
     )
   }, [])
 
-  const atualizarTipoSerieEdit = useCallback((exId: string, tipo: TipoSerie) => {
+  const atualizarTipoSerieEdit = useCallback((exId: string, tipo: SetType) => {
     setExerciciosEdit((prev) =>
       prev.map((ex) => {
         if (ex.id !== exId) return ex
@@ -167,7 +167,7 @@ export function useEdicaoPlano(
     })
   }, [])
 
-  const criarAgrupamento = useCallback((tipo: TipoAgrupamento) => {
+  const criarAgrupamento = useCallback((tipo: GroupingType) => {
     if (selecionados.size < 2) return
     const agrupamentoId = uuidv4()
     const sel = selecionados

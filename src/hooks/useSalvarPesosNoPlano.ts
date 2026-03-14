@@ -1,11 +1,11 @@
 import { useRef, useEffect, useCallback } from 'react'
-import type { PlanoDeTreino, SessaoDeTreino } from '../types'
+import type { WorkoutPlan, WorkoutSession } from '../types'
 
-export function useSalvarPesosNoPlano(
-  plano: PlanoDeTreino | undefined,
-  sessao: SessaoDeTreino | null,
+export function useSaveWeightsToPlan(
+  plano: WorkoutPlan | undefined,
+  sessao: WorkoutSession | null,
   exercicioAtualIndex: number,
-  atualizarPlano: (plano: PlanoDeTreino) => Promise<void>,
+  atualizarPlano: (plano: WorkoutPlan) => Promise<void>,
   onExerciseChange?: () => void
 ) {
   const prevExIdxRef = useRef(exercicioAtualIndex)

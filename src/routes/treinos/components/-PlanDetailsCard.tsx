@@ -1,4 +1,4 @@
-import { CORES_PLANO } from '../../../types'
+import { PLAN_COLORS } from '../../../types'
 
 interface PlanDetailsCardProps {
   nome: string
@@ -45,7 +45,7 @@ export function PlanDetailsCard({
         <div>
           <label className="text-xs text-text-muted font-medium mb-1.5 block">COR</label>
           <div className="flex gap-2 flex-wrap">
-            {CORES_PLANO.map(cor => (
+            {PLAN_COLORS.map(cor => (
               <button
                 key={cor}
                 type="button"

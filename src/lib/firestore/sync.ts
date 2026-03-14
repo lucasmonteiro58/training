@@ -25,8 +25,8 @@ function stripUndefined<T>(obj: T): T {
   return obj
 }
 import { db } from '../firebase'
-import { salvarPlano, salvarSessao, salvarExercicioPersonalizado, salvarMedida } from '../db/dexie'
-import type { PlanoDeTreino, SessaoDeTreino, Exercicio, MedidaCorporal } from '../../types'
+import { savePlan, saveSession, savePersonalizedExercise, saveMeasurement } from '../db/dexie'
+import type { WorkoutPlan, WorkoutSession, Exercise, BodyMeasurement } from '../../types'
 import { incrementSync, decrementSync, enqueueWrite } from '../syncQueue'
 
 // Helper: tenta escrita online, senão enfileira
@@ -51,12 +51,12 @@ async function writeOrQueue(
 // ============================
 // Planos
 // ============================
-export async function syncPlanoParaFirestore(plano: PlanoDeTreino): Promise<void> {
+export async function syncPlanToFirestore(plano: WorkoutPlan): Promise<void> {
   incrementSync()
   try {
     const data = stripUndefined({ ...plano, syncedAt: Date.now() })
     await writeOrQueue('planos', plano.id, 'set', data as Record<string, unknown>)
-    await salvarPlano({ ...plano, syncedAt: Date.now() })
+    await savePlan({ ...plano, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar plano:', err)
     await enqueueWrite('planos', plano.id, 'set', stripUndefined({ ...plano, syncedAt: Date.now() }) as Record<string, unknown>)
@@ -65,7 +65,7 @@ export async function syncPlanoParaFirestore(plano: PlanoDeTreino): Promise<void
   }
 }
 
-export async function deletarPlanoFirestore(id: string): Promise<void> {
+export async function deletePlanFromFirestore(id: string): Promise<void> {
   incrementSync()
   try {
     await writeOrQueue('planos', id, 'delete')
@@ -77,9 +77,9 @@ export async function deletarPlanoFirestore(id: string): Promise<void> {
   }
 }
 
-export function subscribeToPlanos(
+export function subscribeToPlans(
   userId: string,
-  callback: (planos: PlanoDeTreino[]) => void
+  callback: (planos: WorkoutPlan[]) => void
 ): () => void {
   const q = query(
     collection(db, 'planos'),
@@ -90,11 +90,11 @@ export function subscribeToPlanos(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const planos: PlanoDeTreino[] = []
+      const planos: WorkoutPlan[] = []
       snapshot.forEach((d) => {
-        const data = d.data() as PlanoDeTreino
+        const data = d.data() as WorkoutPlan
         planos.push(data)
-        salvarPlano(data)
+        savePlan(data)
       })
       callback(planos)
     },
@@ -113,12 +113,12 @@ export function subscribeToPlanos(
 // ============================
 // Sessões
 // ============================
-export async function syncSessaoParaFirestore(sessao: SessaoDeTreino): Promise<void> {
+export async function syncSessionToFirestore(sessao: WorkoutSession): Promise<void> {
   incrementSync()
   try {
     const data = stripUndefined({ ...sessao, syncedAt: Date.now() })
     await writeOrQueue('sessoes', sessao.id, 'set', data as Record<string, unknown>)
-    await salvarSessao({ ...sessao, syncedAt: Date.now() })
+    await saveSession({ ...sessao, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar sessão:', err)
     await enqueueWrite('sessoes', sessao.id, 'set', stripUndefined({ ...sessao, syncedAt: Date.now() }) as Record<string, unknown>)
@@ -127,7 +127,7 @@ export async function syncSessaoParaFirestore(sessao: SessaoDeTreino): Promise<v
   }
 }
 
-export async function deletarSessaoFirestore(id: string): Promise<void> {
+export async function deleteSessionFromFirestore(id: string): Promise<void> {
   incrementSync()
   try {
     await writeOrQueue('sessoes', id, 'delete')
@@ -139,9 +139,9 @@ export async function deletarSessaoFirestore(id: string): Promise<void> {
   }
 }
 
-export function subscribeToSessoes(
+export function subscribeToSessions(
   userId: string,
-  callback: (sessoes: SessaoDeTreino[]) => void,
+  callback: (sessoes: WorkoutSession[]) => void,
   limitN = 50
 ): () => void {
   const q = query(
@@ -154,11 +154,11 @@ export function subscribeToSessoes(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const sessoes: SessaoDeTreino[] = []
+      const sessoes: WorkoutSession[] = []
       snapshot.forEach((d) => {
-        const data = d.data() as SessaoDeTreino
+        const data = d.data() as WorkoutSession
         sessoes.push(data)
-        salvarSessao(data)
+        saveSession(data)
       })
       callback(sessoes)
     },
@@ -177,7 +177,7 @@ export function subscribeToSessoes(
 // ============================
 // Progresso em Tempo Real (Treino Ativo)
 // ============================
-export async function syncProgressoTreinoParaFirestore(
+export async function syncWorkoutProgressToFirestore(
   userId: string,
   dados: any
 ): Promise<void> {
@@ -189,7 +189,7 @@ export async function syncProgressoTreinoParaFirestore(
   }
 }
 
-export function subscribeToProgressoTreino(
+export function subscribeToWorkoutProgress(
   userId: string,
   callback: (dados: any) => void
 ): () => void {
@@ -213,7 +213,7 @@ export function subscribeToProgressoTreino(
   )
 }
 
-export async function limparProgressoTreinoFirestore(userId: string): Promise<void> {
+export async function clearWorkoutProgressFromFirestore(userId: string): Promise<void> {
   try {
     await deleteDoc(doc(db, 'ativo', userId))
   } catch (err) {
@@ -254,7 +254,7 @@ export async function salvarConfigUsuario(
 }
 
 // Busca inicial de planos (para sync manual)
-export async function fetchPlanos(userId: string): Promise<PlanoDeTreino[]> {
+export async function fetchPlans(userId: string): Promise<WorkoutPlan[]> {
   try {
     const q = query(
       collection(db, 'planos'),
@@ -262,11 +262,11 @@ export async function fetchPlanos(userId: string): Promise<PlanoDeTreino[]> {
       orderBy('updatedAt', 'desc')
     )
     const snapshot = await getDocs(q)
-    const planos: PlanoDeTreino[] = []
+    const planos: WorkoutPlan[] = []
     snapshot.forEach((d) => {
-      const data = d.data() as PlanoDeTreino
+      const data = d.data() as WorkoutPlan
       planos.push(data)
-      salvarPlano(data)
+      savePlan(data)
     })
     return planos
   } catch {
@@ -275,7 +275,7 @@ export async function fetchPlanos(userId: string): Promise<PlanoDeTreino[]> {
 }
 
 // Busca inicial de sessões (para carregar dados offline rapidamente)
-export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoDeTreino[]> {
+export async function fetchSessions(userId: string, limitN = 50): Promise<WorkoutSession[]> {
   try {
     const q = query(
       collection(db, 'sessoes'),
@@ -284,9 +284,9 @@ export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoD
       limit(limitN)
     )
     const snapshot = await getDocs(q)
-    const sessoes: SessaoDeTreino[] = []
+    const sessoes: WorkoutSession[] = []
     snapshot.forEach((d) => {
-      sessoes.push(d.data() as SessaoDeTreino)
+      sessoes.push(d.data() as WorkoutSession)
     })
     return sessoes
   } catch {
@@ -297,12 +297,12 @@ export async function fetchSessoes(userId: string, limitN = 50): Promise<SessaoD
 // ============================
 // Exercícios Personalizados
 // ============================
-export async function syncExercicioParaFirestore(exercicio: Exercicio): Promise<void> {
+export async function syncExerciseToFirestore(exercicio: Exercise): Promise<void> {
   incrementSync()
   try {
     const data = { ...exercicio, syncedAt: Date.now() }
     await writeOrQueue('exercicios', exercicio.id, 'set', data as Record<string, unknown>)
-    await salvarExercicioPersonalizado({ ...exercicio, syncedAt: Date.now() } as any)
+    await savePersonalizedExercise({ ...exercicio, syncedAt: Date.now() } as any)
   } catch (err) {
     console.error('Erro ao sincronizar exercicios:', err)
     await enqueueWrite('exercicios', exercicio.id, 'set', { ...exercicio, syncedAt: Date.now() } as Record<string, unknown>)
@@ -311,9 +311,9 @@ export async function syncExercicioParaFirestore(exercicio: Exercicio): Promise<
   }
 }
 
-export function subscribeToExercicios(
+export function subscribeToExercises(
   userId: string,
-  callback: (exercicios: Exercicio[]) => void
+  callback: (exercicios: Exercise[]) => void
 ): () => void {
   const q = query(
     collection(db, 'exercicios'),
@@ -323,11 +323,11 @@ export function subscribeToExercicios(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const exercicios: Exercicio[] = []
+      const exercicios: Exercise[] = []
       snapshot.forEach((d) => {
-        const data = d.data() as Exercicio
+        const data = d.data() as Exercise
         exercicios.push(data)
-        salvarExercicioPersonalizado(data)
+        savePersonalizedExercise(data)
       })
       callback(exercicios)
     },
@@ -342,7 +342,7 @@ export function subscribeToExercicios(
 // ============================
 // Medidas Corporais
 // ============================
-export async function syncMedidaParaFirestore(medida: MedidaCorporal): Promise<void> {
+export async function syncMeasurementToFirestore(medida: BodyMeasurement): Promise<void> {
   incrementSync()
   try {
     const data = stripUndefined({ ...medida, syncedAt: Date.now() })
@@ -355,7 +355,7 @@ export async function syncMedidaParaFirestore(medida: MedidaCorporal): Promise<v
   }
 }
 
-export async function deletarMedidaFirestore(id: string): Promise<void> {
+export async function deleteMeasurementFromFirestore(id: string): Promise<void> {
   incrementSync()
   try {
     await writeOrQueue('medidas', id, 'delete')
@@ -367,9 +367,9 @@ export async function deletarMedidaFirestore(id: string): Promise<void> {
   }
 }
 
-export function subscribeToMedidas(
+export function subscribeToMeasurements(
   userId: string,
-  callback: (medidas: MedidaCorporal[]) => void
+  callback: (medidas: BodyMeasurement[]) => void
 ): () => void {
   const q = query(
     collection(db, 'medidas'),
@@ -380,11 +380,11 @@ export function subscribeToMedidas(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const medidas: MedidaCorporal[] = []
+      const medidas: BodyMeasurement[] = []
       snapshot.forEach((d) => {
-        const data = d.data() as MedidaCorporal
+        const data = d.data() as BodyMeasurement
         medidas.push(data)
-        salvarMedida(data)
+        saveMeasurement(data)
       })
       callback(medidas)
     },

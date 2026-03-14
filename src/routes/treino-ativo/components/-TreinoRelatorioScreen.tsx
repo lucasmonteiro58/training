@@ -1,13 +1,13 @@
 import { useNavigate } from '@tanstack/react-router'
 import { X, Trophy, Share2 } from 'lucide-react'
 import { formatarTempo } from '../../../lib/notifications'
-import type { SessaoDeTreino } from '../../../types'
+import type { WorkoutSession } from '../../../types'
 
 interface TreinoRelatorioScreenProps {
-  relatorio: SessaoDeTreino
+  relatorio: WorkoutSession
   gerandoImagem: boolean
   copiado: boolean
-  onCompartilhar: (s: SessaoDeTreino) => void
+  onCompartilhar: (s: WorkoutSession) => void
 }
 
 export function TreinoRelatorioScreen({

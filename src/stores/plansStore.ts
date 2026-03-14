@@ -1,17 +1,17 @@
 import { create } from 'zustand'
-import type { PlanoDeTreino } from '../types'
+import type { WorkoutPlan } from '../types'
 
-export interface PlanosState {
-  planos: PlanoDeTreino[]
+export interface PlansState {
+  planos: WorkoutPlan[]
   loading: boolean
-  setPlanos: (planos: PlanoDeTreino[]) => void
-  addPlano: (plano: PlanoDeTreino) => void
-  updatePlano: (plano: PlanoDeTreino) => void
+  setPlanos: (planos: WorkoutPlan[]) => void
+  addPlano: (plano: WorkoutPlan) => void
+  updatePlano: (plano: WorkoutPlan) => void
   removePlano: (id: string) => void
   setLoading: (v: boolean) => void
 }
 
-export const usePlanosStore = create<PlanosState>(set => ({
+export const usePlansStore = create<PlansState>(set => ({
   planos: [],
   loading: true,
   setPlanos: planos => set({ planos }),

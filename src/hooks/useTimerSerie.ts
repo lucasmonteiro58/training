@@ -5,7 +5,7 @@ export interface TimerSerieState {
   restando: number
 }
 
-export function useTimerSerie(resetWhenExerciseIndexChanges?: number) {
+export function useSetTimer(resetWhenExerciseIndexChanges?: number) {
   const [timerSerie, setTimerSerie] = useState<TimerSerieState | null>(null)
   const timerSerieRef = useRef<number | null>(null)
 

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useTreinoAtivoStore } from '../stores'
+import { useActiveWorkoutStore } from '../stores'
 import { AlertTriangle, Play } from 'lucide-react'
 
-export function useIniciarTreino() {
+export function useStartWorkout() {
   const navigate = useNavigate()
-  const treinoAtivo = useTreinoAtivoStore((s) => s.iniciado)
-  const sessao = useTreinoAtivoStore((s) => s.sessao)
+  const treinoAtivo = useActiveWorkoutStore((s) => s.iniciado)
+  const sessao = useActiveWorkoutStore((s) => s.sessao)
   const [pendingId, setPendingId] = useState<string | null>(null)
 
   const handleIniciar = (planoId: string) => {

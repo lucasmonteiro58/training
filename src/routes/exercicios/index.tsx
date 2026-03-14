@@ -1,28 +1,28 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
-import type { Exercicio } from '../../types'
-import { getExerciciosPersonalizados, toggleFavoritoExercicio, getFavoritoIds } from '../../lib/db/dexie'
+import type { Exercise } from '../../types'
+import { getPersonalizedExercises, toggleExerciseFavorite, getFavoritoIds } from '../../lib/db/dexie'
 import { useAuthStore } from '../../stores'
-import { CriarExercicioModal } from '../../components/common/CriarExercicioModal'
+import { CriarExerciseModal } from '../../components/common/CriarExercicioModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Calculadora1RM } from '../../components/ui/Calculadora1RM'
 import { ExerciciosToolbar } from './components/-ExerciciosToolbar'
-import { ExercicioGridCard } from './components/-ExercicioGridCard'
+import { ExerciseGridCard } from './components/-ExercicioGridCard'
 import { EmptyExercicios } from './components/-EmptyExercicios'
-import { ExercicioDetailModal } from './components/-ExercicioDetailModal'
+import { ExerciseDetailModal } from './components/-ExercicioDetailModal'
 
 export const Route = createFileRoute('/exercicios/')({
-  component: ExerciciosPage,
+  component: ExercisesPage,
 })
 
-function ExerciciosPage() {
-  const [exercicios, setExercicios] = useState<Exercicio[]>([])
-  const [filtrados, setFiltrados] = useState<Exercicio[]>([])
+function ExercisesPage() {
+  const [exercicios, setExercises] = useState<Exercise[]>([])
+  const [filtrados, setFiltrados] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [grupo, setGrupo] = useState('')
-  const [selecionado, setSelecionado] = useState<Exercicio | null>(null)
+  const [selecionado, setSelecionado] = useState<Exercise | null>(null)
   const [showCriar, setShowCriar] = useState(false)
   const [show1RM, setShow1RM] = useState(false)
   const [favoritoIds, setFavoritoIds] = useState<Set<string>>(new Set())
@@ -34,12 +34,12 @@ function ExerciciosPage() {
   const carregarTudo = async () => {
     setLoading(true)
     const base = await carregarExercicios()
-    let custom: Exercicio[] = []
+    let custom: Exercise[] = []
     if (user) {
-      custom = await getExerciciosPersonalizados(user.uid)
+      custom = await getPersonalizedExercises(user.uid)
     }
     const todos = [...custom, ...base].sort((a, b) => a.nome.localeCompare(b.nome))
-    setExercicios(todos)
+    setExercises(todos)
     setFiltrados(todos)
     const favIds = await getFavoritoIds()
     setFavoritoIds(favIds)
@@ -64,7 +64,7 @@ function ExerciciosPage() {
   }, [exercicios])
 
   const rows = useMemo(() => {
-    const r: Exercicio[][] = []
+    const r: Exercise[][] = []
     for (let i = 0; i < filtrados.length; i += 2) {
       r.push(filtrados.slice(i, i + 2))
     }
@@ -85,7 +85,7 @@ function ExerciciosPage() {
   const handleToggleFavorito = async (e: React.MouseEvent, exId: string) => {
     e.stopPropagation()
     const novoValor = !favoritoIds.has(exId)
-    await toggleFavoritoExercicio(exId, novoValor)
+    await toggleExerciseFavorite(exId, novoValor)
     setFavoritoIds(prev => {
       const next = new Set(prev)
       if (novoValor) next.add(exId)
@@ -149,7 +149,7 @@ function ExerciciosPage() {
                   }}
                 >
                   {rows[virtualRow.index].map((ex) => (
-                    <ExercicioGridCard
+                    <ExerciseGridCard
                       key={ex.id}
                       ex={ex}
                       isFavorito={favoritoIds.has(ex.id)}
@@ -165,11 +165,11 @@ function ExerciciosPage() {
       </div>
 
       {selecionado && (
-        <ExercicioDetailModal exercicio={selecionado} onClose={() => setSelecionado(null)} />
+        <ExerciseDetailModal exercicio={selecionado} onClose={() => setSelecionado(null)} />
       )}
 
       {showCriar && (
-        <CriarExercicioModal
+        <CriarExerciseModal
           gruposExistentes={gruposUnicos}
           onClose={() => setShowCriar(false)}
           onSuccess={(ex) => {

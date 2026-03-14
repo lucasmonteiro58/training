@@ -1,13 +1,13 @@
 import { Link } from '@tanstack/react-router'
 import { Dumbbell, Play } from 'lucide-react'
-import { useIniciarTreino } from '../../../hooks/useIniciarTreino'
+import { useStartWorkout } from '../../../hooks/useIniciarTreino'
 
 interface PlanoCardProps {
   plano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] }
 }
 
 export function PlanoCard({ plano }: PlanoCardProps) {
-  const { handleIniciar, modal } = useIniciarTreino()
+  const { handleIniciar, modal } = useStartWorkout()
 
   return (
     <>

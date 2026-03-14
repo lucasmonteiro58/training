@@ -1,25 +1,25 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthStore } from '../stores'
-import { getMedidas, salvarMedida, deletarMedida } from '../lib/db/dexie'
-import { syncMedidaParaFirestore, deletarMedidaFirestore, subscribeToMedidas } from '../lib/firestore/sync'
-import type { MedidaCorporal } from '../types'
+import { getMeasurements, saveMeasurement, deleteMeasurement } from '../lib/db/dexie'
+import { syncMeasurementToFirestore, deleteMeasurementFromFirestore, subscribeToMeasurements } from '../lib/firestore/sync'
+import type { BodyMeasurement } from '../types'
 
-export function useMedidas() {
+export function useMeasurements() {
   const user = useAuthStore((s) => s.user)
-  const [medidas, setMedidas] = useState<MedidaCorporal[]>([])
+  const [medidas, setMedidas] = useState<BodyMeasurement[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
 
     // Load local first
-    getMedidas(user.uid).then((local) => {
+    getMeasurements(user.uid).then((local) => {
       setMedidas(local)
       setLoading(false)
     })
 
     // Subscribe to Firestore for real-time sync
-    const unsub = subscribeToMedidas(user.uid, (remote) => {
+    const unsub = subscribeToMeasurements(user.uid, (remote) => {
       setMedidas(remote)
       setLoading(false)
     })
@@ -28,19 +28,19 @@ export function useMedidas() {
   }, [user])
 
   const adicionar = useCallback(
-    async (medida: MedidaCorporal) => {
-      await salvarMedida(medida)
+    async (medida: BodyMeasurement) => {
+      await saveMeasurement(medida)
       setMedidas(prev => [medida, ...prev].sort((a, b) => b.data - a.data))
-      syncMedidaParaFirestore(medida) // background
+      syncMeasurementToFirestore(medida) // background
     },
     []
   )
 
   const remover = useCallback(
     async (id: string) => {
-      await deletarMedida(id)
+      await deleteMeasurement(id)
       setMedidas(prev => prev.filter(m => m.id !== id))
-      deletarMedidaFirestore(id) // background
+      deleteMeasurementFromFirestore(id) // background
     },
     []
   )

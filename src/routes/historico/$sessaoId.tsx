@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useHistorico } from '../../hooks/useHistorico'
-import { useHistoricoStore, useTreinoAtivoStore } from '../../stores'
+import { useHistory } from '../../hooks/useHistorico'
+import { useHistoryStore, useActiveWorkoutStore } from '../../stores'
 import { calcularRecordes } from '../../lib/records'
-import { useEdicaoSessao } from '../../hooks/useEdicaoSessao'
+import { useSessionEdit } from '../../hooks/useEdicaoSessao'
 import { useMemo } from 'react'
 import { SessaoDetalheHeader } from './components/-SessaoDetalheHeader'
 import { SessaoStats } from './components/-SessaoStats'
@@ -18,14 +18,14 @@ export const Route = createFileRoute('/historico/$sessaoId')({
 function SessaoDetalhePage() {
   const { sessaoId } = Route.useParams()
   const navigate = useNavigate()
-  const { sessoes, salvarSessaoCompleta } = useHistorico()
-  const allSessoes = useHistoricoStore((s) => s.sessoes)
+  const { sessoes, salvarSessaoCompleta } = useHistory()
+  const allSessoes = useHistoryStore((s) => s.sessoes)
   const sessao = sessoes.find((s) => s.id === sessaoId)
-  const restaurarDeHistorico = useTreinoAtivoStore(
+  const restaurarDeHistorico = useActiveWorkoutStore(
     (s) => s.restaurarDeHistorico
   )
 
-  const edicao = useEdicaoSessao(sessao, salvarSessaoCompleta)
+  const edicao = useSessionEdit(sessao, salvarSessaoCompleta)
   const {
     editando,
     editData,

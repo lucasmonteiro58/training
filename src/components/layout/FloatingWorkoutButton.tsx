@@ -1,17 +1,17 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { useTreinoAtivoStore } from '../../stores'
+import { useActiveWorkoutStore } from '../../stores'
 import { Clock } from 'lucide-react'
 import { formatarTempo } from '../../lib/notifications'
 
 export function FloatingWorkoutButton() {
   const location = useLocation()
-  const iniciado = useTreinoAtivoStore((s) => s.iniciado)
-  const pausado = useTreinoAtivoStore((s) => s.pausado)
-  const sessao = useTreinoAtivoStore((s) => s.sessao)
-  const exercicioAtualIndex = useTreinoAtivoStore((s) => s.exercicioAtualIndex)
-  const cronometroGeralSegundos = useTreinoAtivoStore((s) => s.cronometroGeralSegundos)
-  const tickGeral = useTreinoAtivoStore((s) => s.tickGeral)
+  const iniciado = useActiveWorkoutStore((s) => s.iniciado)
+  const pausado = useActiveWorkoutStore((s) => s.pausado)
+  const sessao = useActiveWorkoutStore((s) => s.sessao)
+  const exercicioAtualIndex = useActiveWorkoutStore((s) => s.exercicioAtualIndex)
+  const cronometroGeralSegundos = useActiveWorkoutStore((s) => s.cronometroGeralSegundos)
+  const tickGeral = useActiveWorkoutStore((s) => s.tickGeral)
 
   // Atualiza o tempo globalmente enquanto houver treino
   useEffect(() => {

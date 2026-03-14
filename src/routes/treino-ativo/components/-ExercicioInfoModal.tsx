@@ -1,10 +1,10 @@
 import { XCircle, Search, ExternalLink } from 'lucide-react'
-import type { ExercicioNaSessao } from '../../../types'
-import type { ExercicioNoPlano } from '../../../types'
+import type { ExerciseInSession } from '../../../types'
+import type { ExerciseInPlan } from '../../../types'
 
 interface ExercicioInfoModalProps {
-  exercicio: ExercicioNaSessao
-  exercicioPlano?: ExercicioNoPlano
+  exercicio: ExerciseInSession
+  exercicioPlano?: ExerciseInPlan
   onClose: () => void
 }
 

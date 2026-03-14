@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuthStore } from '../stores'
-import { useHistorico } from '../hooks/useHistorico'
-import { usePlanos } from '../hooks/usePlanos'
-import { useTreinoAtivoStore } from '../stores'
+import { useHistory } from '../hooks/useHistorico'
+import { usePlans } from '../hooks/usePlanos'
+import { useActiveWorkoutStore } from '../stores'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import { useConfigUsuario } from '../hooks/useConfigUsuario'
+import { useUserConfig } from '../hooks/useConfigUsuario'
 import { useHomeStats } from '../hooks/useHomeStats'
 import { HomeHeader } from './index/components/-HomeHeader'
 import { PullToRefreshIndicator } from './index/components/-PullToRefreshIndicator'
@@ -27,23 +27,23 @@ const DIAS_DA_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 function HomePage() {
   const user = useAuthStore((s) => s.user)
-  const { planosAtivos, loading, sincronizar: sincronizarPlanos } = usePlanos()
+  const { planosAtivos, loading, sincronizar: sincronizarPlanos } = usePlans()
   const { sessoes, loading: loadingSessoes, sincronizar: sincronizarSessoes } =
-    useHistorico()
+    useHistory()
   const [sincronizando, setSincronizando] = useState(false)
   const [showEditMeta, setShowEditMeta] = useState(false)
   const [metaInput, setMetaInput] = useState('4')
 
-  const treinoAtivo = useTreinoAtivoStore((s) => s.iniciado)
-  const sessaoAtiva = useTreinoAtivoStore((s) => s.sessao)
-  const exercicioAtualIndex = useTreinoAtivoStore((s) => s.exercicioAtualIndex)
-  const pausado = useTreinoAtivoStore((s) => s.pausado)
-  const cronometroGeralSegundos = useTreinoAtivoStore(
+  const treinoAtivo = useActiveWorkoutStore((s) => s.iniciado)
+  const sessaoAtiva = useActiveWorkoutStore((s) => s.sessao)
+  const exercicioAtualIndex = useActiveWorkoutStore((s) => s.exercicioAtualIndex)
+  const pausado = useActiveWorkoutStore((s) => s.pausado)
+  const cronometroGeralSegundos = useActiveWorkoutStore(
     (s) => s.cronometroGeralSegundos
   )
 
   const { metaSemanal, diasOpcionais, handleSaveMeta } =
-    useConfigUsuario(user)
+    useUserConfig(user)
 
   const {
     pullDistance,

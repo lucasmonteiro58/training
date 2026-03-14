@@ -1,19 +1,19 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState, useMemo } from 'react'
-import { usePlanos } from '../../hooks/usePlanos'
-import { useHistorico } from '../../hooks/useHistorico'
-import { useAuthStore, useTreinoAtivoStore, useHistoricoStore } from '../../stores'
+import { usePlans } from '../../hooks/usePlanos'
+import { useHistory } from '../../hooks/useHistorico'
+import { useAuthStore, useActiveWorkoutStore, useHistoryStore } from '../../stores'
 import {
   limparNotificacoesTreino,
   cancelarNotificacaoDescanso,
   formatarTempo,
 } from '../../lib/notifications'
-import { useTimerSerie } from '../../hooks/useTimerSerie'
-import { useNotificacoesDescanso } from '../../hooks/useNotificacoesDescanso'
-import { useSalvarPesosNoPlano } from '../../hooks/useSalvarPesosNoPlano'
-import { useIniciarSessaoTreino } from '../../hooks/useIniciarSessaoTreino'
-import { useCompletarSerieTreino } from '../../hooks/useCompletarSerieTreino'
-import type { SessaoDeTreino } from '../../types'
+import { useSetTimer } from '../../hooks/useTimerSerie'
+import { useRestNotifications } from '../../hooks/useNotificacoesDescanso'
+import { useSaveWeightsToPlan } from '../../hooks/useSalvarPesosNoPlano'
+import { useStartWorkoutSession } from '../../hooks/useIniciarSessaoTreino'
+import { useCompleteWorkoutSet } from '../../hooks/useCompletarSerieTreino'
+import type { WorkoutSession } from '../../types'
 import { toast } from 'sonner'
 import { calcular1RM } from '../../lib/calculadora1rm'
 import { calcularRecordes } from '../../lib/records'
@@ -37,13 +37,13 @@ function TreinoAtivoPage() {
   const { planoId } = Route.useParams()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { planos, atualizarPlano } = usePlanos()
-  const { salvarSessaoCompleta } = useHistorico()
+  const { planos, atualizarPlano } = usePlans()
+  const { salvarSessaoCompleta } = useHistory()
   const plano = planos.find((p) => p.id === planoId)
-  const sessoes = useHistoricoStore((s) => s.sessoes)
+  const sessoes = useHistoryStore((s) => s.sessoes)
   const recordes = useMemo(() => calcularRecordes(sessoes), [sessoes])
 
-  const store = useTreinoAtivoStore()
+  const store = useActiveWorkoutStore()
   const {
     sessao, exercicioAtualIndex, cronometroGeralSegundos,
     cronometroDescansoSegundos, cronometroDescansoAtivo,
@@ -59,7 +59,7 @@ function TreinoAtivoPage() {
   const descansoRef = useRef<number | null>(null)
 
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
-  const { salvarPesosNoPlano } = useSalvarPesosNoPlano(
+  const { salvarPesosNoPlano } = useSaveWeightsToPlan(
     plano ?? undefined,
     sessao,
     exercicioAtualIndex,
@@ -67,8 +67,8 @@ function TreinoAtivoPage() {
     () => setApplyAll(null)
   )
 
-  const { timerSerie, iniciarTimerSerie, pararTimerSerie } = useTimerSerie(exercicioAtualIndex)
-  const { descansoAcabouNaturalRef } = useNotificacoesDescanso({
+  const { timerSerie, iniciarTimerSerie, pararTimerSerie } = useSetTimer(exercicioAtualIndex)
+  const { descansoAcabouNaturalRef } = useRestNotifications({
     cronometroDescansoAtivo,
     cronometroDescansoSegundos,
     sessao,
@@ -85,7 +85,7 @@ function TreinoAtivoPage() {
   const [finalizando, setFinalizando] = useState(false)
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
   const [showConfirmCancelar, setShowConfirmCancelar] = useState(false)
-  const [relatorio, setRelatorio] = useState<SessaoDeTreino | null>(null)
+  const [relatorio, setRelatorio] = useState<WorkoutSession | null>(null)
   const [copiado, setCopiado] = useState(false)
   const [gerandoImagem, setGerandoImagem] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
@@ -94,7 +94,7 @@ function TreinoAtivoPage() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPrCelebration, setShowPrCelebration] = useState(false)
 
-  useIniciarSessaoTreino({
+  useStartWorkoutSession({
     planoId,
     plano: plano ?? undefined,
     user,
@@ -104,7 +104,7 @@ function TreinoAtivoPage() {
     iniciarTreino,
   })
 
-  const { handleCompletarSerie } = useCompletarSerieTreino({
+  const { handleCompletarSerie } = useCompleteWorkoutSet({
     sessao,
     exercicioAtualIndex,
     recordes,
@@ -169,7 +169,7 @@ function TreinoAtivoPage() {
     setFinalizando(false)
   }
 
-  const handleCompartilhar = async (s: SessaoDeTreino) => {
+  const handleCompartilhar = async (s: WorkoutSession) => {
     setGerandoImagem(true)
     try {
       const blob = await gerarImagemRelatorio(s)

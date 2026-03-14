@@ -1,8 +1,8 @@
 import { Archive, ArchiveRestore, ChevronRight, Trash2 } from 'lucide-react'
-import type { PlanoDeTreino } from '../../../types'
+import type { WorkoutPlan } from '../../../types'
 
 interface PlanosArquivadosSectionProps {
-  planos: PlanoDeTreino[]
+  planos: WorkoutPlan[]
   expandido: boolean
   processando: string | null
   deletando: string | null

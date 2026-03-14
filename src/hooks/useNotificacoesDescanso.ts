@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import type { SessaoDeTreino } from '../types'
+import type { WorkoutSession } from '../types'
 import {
   limparNotificacoesTreino,
   agendarNotificacaoDescanso,
@@ -11,11 +11,11 @@ import {
 interface UseNotificacoesDescansoParams {
   cronometroDescansoAtivo: boolean
   cronometroDescansoSegundos: number
-  sessao: SessaoDeTreino | null
+  sessao: WorkoutSession | null
   exercicioAtualIndex: number
 }
 
-export function useNotificacoesDescanso({
+export function useRestNotifications({
   cronometroDescansoAtivo,
   cronometroDescansoSegundos,
   sessao,

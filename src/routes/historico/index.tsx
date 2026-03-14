@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useHistorico } from '../../hooks/useHistorico'
-import { useTreinoAtivoStore } from '../../stores'
+import { useHistory } from '../../hooks/useHistorico'
+import { useActiveWorkoutStore } from '../../stores'
 import { useMemo, useState } from 'react'
 import { HistoricoHeader } from './components/-HistoricoHeader'
 import { HistoricoFiltros, type Periodo } from './components/-HistoricoFiltros'
@@ -15,8 +15,8 @@ export const Route = createFileRoute('/historico/')({
 
 function HistoricoPage() {
   const navigate = useNavigate()
-  const { sessoes, loading, excluirSessao } = useHistorico()
-  const restaurarDeHistorico = useTreinoAtivoStore(s => s.restaurarDeHistorico)
+  const { sessoes, loading, excluirSessao } = useHistory()
+  const restaurarDeHistorico = useActiveWorkoutStore(s => s.restaurarDeHistorico)
   const [confirmExcluir, setConfirmExcluir] = useState<string | null>(null)
   const [filtroPlano, setFiltroPlano] = useState<string>('todos')
   const [filtroPeriodo, setFiltroPeriodo] = useState<Periodo>('todos')

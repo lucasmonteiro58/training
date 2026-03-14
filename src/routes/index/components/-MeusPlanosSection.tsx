@@ -1,10 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
-import type { PlanoDeTreino } from '../../../types'
+import type { WorkoutPlan } from '../../../types'
 import { PlanoCard } from './-PlanoCard'
 
 interface MeusPlanosSectionProps {
-  planos: PlanoDeTreino[]
+  planos: WorkoutPlan[]
   carregando: boolean
 }
 
