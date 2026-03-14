@@ -93,6 +93,8 @@ export interface SessaoDeTreino {
   notas?: string
   volumeTotal?: number // soma de (peso x reps) de todas as séries
   syncedAt?: number
+  /** true quando o treino foi encerrado automaticamente por inatividade (20 min) */
+  autoEncerrado?: boolean
 }
 
 // Stats calculados do histórico

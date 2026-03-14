@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useHistorico } from '../../hooks/useHistorico'
-import { useHistoricoStore } from '../../stores'
+import { useHistoricoStore, useTreinoAtivoStore } from '../../stores'
 import { formatarTempo } from '../../lib/notifications'
 import { calcularRecordes } from '../../lib/records'
-import { ArrowLeft, Clock, Dumbbell, TrendingUp, CheckCircle2, Circle, Edit2, Trophy, Save } from 'lucide-react'
+import { ArrowLeft, Clock, Dumbbell, TrendingUp, CheckCircle2, Circle, Edit2, Trophy, Save, RotateCcw } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import type { SessaoDeTreino } from '../../types'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ function SessaoDetalhePage() {
   const { sessoes, salvarSessaoCompleta } = useHistorico()
   const allSessoes = useHistoricoStore(s => s.sessoes)
   const sessao = sessoes.find((s) => s.id === sessaoId)
+  const restaurarDeHistorico = useTreinoAtivoStore(s => s.restaurarDeHistorico)
   const [editando, setEditando] = useState(false)
   const [editData, setEditData] = useState<SessaoDeTreino | null>(null)
 
@@ -151,6 +152,20 @@ function SessaoDetalhePage() {
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${totalSeries ? (seriesOk / totalSeries) * 100 : 0}%` }} />
         </div>
+      </div>
+
+      {/* Retornar como treino ativo */}
+      <div className="mb-5 animate-fade-up" style={{ animationDelay: '110ms' }}>
+        <button
+          type="button"
+          onClick={() => {
+            restaurarDeHistorico(displaySessao)
+            navigate({ to: '/treino-ativo/$planoId', params: { planoId: displaySessao.planoId } })
+          }}
+          className="w-full py-3 rounded-xl flex items-center justify-center gap-2 bg-[var(--color-accent)]/15 text-[var(--color-accent)] font-semibold text-sm"
+        >
+          <RotateCcw size={16} /> Retornar como treino ativo
+        </button>
       </div>
 
       {/* Notas do treino */}

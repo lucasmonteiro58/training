@@ -1,9 +1,9 @@
-import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { BottomNav } from '../components/layout/BottomNav'
-import { useTreinoAtivoStore } from '../stores'
+import { useTreinoAtivoStore, useHistoricoStore, INATIVIDADE_AUTO_ENCERRAR_MS, calcularVolume } from '../stores'
 import { registrarServiceWorker } from '../lib/notifications'
-import { subscribeToProgressoTreino } from '../lib/firestore/sync'
+import { subscribeToProgressoTreino, limparProgressoTreinoFirestore } from '../lib/firestore/sync'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
 import { Toaster, toast } from 'sonner'
 import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
@@ -59,25 +59,55 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 }
 
 import { useAuth as useAuthHook } from '../hooks/useAuth'
+import { useHistorico } from '../hooks/useHistorico'
 
 function RootComponent() {
   const { user, loading: loadingAuth } = useAuthHook()
-  const { iniciado, iniciarTreino, pausado, tickGeral } = useTreinoAtivoStore()
+  const { iniciado, pausado, tickGeral } = useTreinoAtivoStore()
+  const { salvarSessaoCompleta } = useHistorico()
+  const setSessaoAutoEncerrada = useHistoricoStore((s) => s.setSessaoAutoEncerrada)
 
   useEffect(() => {
     registrarServiceWorker()
   }, [])
 
-  // Sincronizar treino ativo de outros dispositivos
+  // Sincronizar treino ativo + auto-encerrar por inatividade (20 min sem interação/vista)
   useEffect(() => {
     if (!user) return
 
     const unsub = subscribeToProgressoTreino(user.uid, (dados) => {
       const state = useTreinoAtivoStore.getState()
+      const historicoState = useHistoricoStore.getState()
 
       // Treino encerrado em outro dispositivo → limpa local
       if (!dados || !dados.iniciado) {
         if (state.iniciado) state.limparLocal()
+        return
+      }
+
+      // Inatividade: sem interação/vista nos últimos 20 min → encerra e oferece "Retornar"
+      const updatedAt = (dados as { updatedAt?: number }).updatedAt
+      if (updatedAt && Date.now() - updatedAt > INATIVIDADE_AUTO_ENCERRAR_MS) {
+        if (historicoState.sessaoAutoEncerrada?.sessao.id === dados.sessao?.id) return
+        const sessao = dados.sessao
+        if (!sessao) return
+        const finalizada = {
+          ...sessao,
+          finalizadoEm: Date.now(),
+          duracaoSegundos: (dados as { cronometroGeralSegundos?: number }).cronometroGeralSegundos ?? 0,
+          volumeTotal: calcularVolume(sessao),
+          autoEncerrado: true,
+        }
+        salvarSessaoCompleta(finalizada).then(() => {
+          limparProgressoTreinoFirestore(user.uid)
+          state.limparLocal()
+          setSessaoAutoEncerrada({
+            sessao: finalizada,
+            exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
+            serieAtualIndex: dados.serieAtualIndex ?? 0,
+            cronometroGeralSegundos: (dados as { cronometroGeralSegundos?: number }).cronometroGeralSegundos ?? 0,
+          })
+        })
         return
       }
 
@@ -92,7 +122,7 @@ function RootComponent() {
     })
 
     return unsub
-  }, [user])
+  }, [user, salvarSessaoCompleta, setSessaoAutoEncerrada])
 
   // Global timer tick while training is active and not paused
   useEffect(() => {
@@ -121,6 +151,7 @@ function RootComponent() {
   return (
     <div className="flex flex-col min-h-dvh bg-[var(--color-bg)] relative overflow-x-hidden">
       <SyncIndicator />
+      <AutoEncerradoBanner />
       <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top,0)]">
         <div className="pt-4 py-2">
           <Outlet />
@@ -138,6 +169,47 @@ function RootComponent() {
       <PWAInstallPrompt />
       <FloatingWorkoutButton />
       <BottomNav />
+    </div>
+  )
+}
+
+// ============================================================
+// Banner: treino encerrado por inatividade (20 min)
+// ============================================================
+function AutoEncerradoBanner() {
+  const navigate = useNavigate()
+  const sessaoAutoEncerrada = useHistoricoStore((s) => s.sessaoAutoEncerrada)
+  const setSessaoAutoEncerrada = useHistoricoStore((s) => s.setSessaoAutoEncerrada)
+  const { excluirSessao } = useHistorico()
+  const restaurarDeAutoEncerrado = useTreinoAtivoStore((s) => s.restaurarDeAutoEncerrado)
+
+  if (!sessaoAutoEncerrada) return null
+
+  const handleRetornar = () => {
+    excluirSessao(sessaoAutoEncerrada.sessao.id)
+    restaurarDeAutoEncerrado(sessaoAutoEncerrada)
+    setSessaoAutoEncerrada(null)
+    navigate({ to: '/treino-ativo/$planoId', params: { planoId: sessaoAutoEncerrada.sessao.planoId } })
+  }
+
+  const handleFechar = () => {
+    setSessaoAutoEncerrada(null)
+  }
+
+  return (
+    <div className="mx-4 mt-2 mb-1 p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 animate-scale-in">
+      <p className="text-sm font-semibold text-amber-200 mb-1">Treino encerrado por inatividade</p>
+      <p className="text-xs text-[var(--color-text-muted)] mb-3">
+        Não houve interação nos últimos 20 minutos. Você pode retornar ao treino ou continuar depois.
+      </p>
+      <div className="flex gap-2">
+        <button onClick={handleRetornar} className="btn-primary py-2 px-4 text-sm flex-1">
+          Retornar ao treino
+        </button>
+        <button onClick={handleFechar} className="btn-ghost py-2 px-4 text-sm">
+          Fechar
+        </button>
+      </div>
     </div>
   )
 }

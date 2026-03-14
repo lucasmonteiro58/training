@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useHistorico } from '../../hooks/useHistorico'
-import { usePlanosStore } from '../../stores'
+import { usePlanosStore, useTreinoAtivoStore } from '../../stores'
 import { formatarTempo } from '../../lib/notifications'
-import { History, Dumbbell, Clock, TrendingUp, ChevronRight, Trash2, Filter, X, ArrowLeft } from 'lucide-react'
+import { History, Dumbbell, Clock, TrendingUp, ChevronRight, Trash2, Filter, X, ArrowLeft, RotateCcw } from 'lucide-react'
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { useMemo, useState } from 'react'
 
@@ -16,6 +16,7 @@ function HistoricoPage() {
   const navigate = useNavigate()
   const { sessoes, loading, excluirSessao } = useHistorico()
   const planos = usePlanosStore(s => s.planos)
+  const restaurarDeHistorico = useTreinoAtivoStore(s => s.restaurarDeHistorico)
   const [confirmExcluir, setConfirmExcluir] = useState<string | null>(null)
   const [filtroPlano, setFiltroPlano] = useState<string>('todos')
   const [filtroPeriodo, setFiltroPeriodo] = useState<Periodo>('todos')
@@ -222,11 +223,23 @@ function HistoricoPage() {
                     </div>
                   )}
                 </div>
-                <Link to="/historico/$sessaoId" params={{ sessaoId: sessao.id }} style={{ textDecoration: 'none' }}>
-                  <button className="btn-ghost w-full py-2 text-xs border border-[var(--color-border)] rounded-xl flex items-center justify-center gap-1">
-                    Ver detalhes <ChevronRight size={13} />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      restaurarDeHistorico(sessao)
+                      navigate({ to: '/treino-ativo/$planoId', params: { planoId: sessao.planoId } })
+                    }}
+                    className="flex-1 py-2 text-xs rounded-xl flex items-center justify-center gap-1 bg-[var(--color-accent)]/15 text-[var(--color-accent)] font-medium"
+                  >
+                    <RotateCcw size={13} /> Retornar
                   </button>
-                </Link>
+                  <Link to="/historico/$sessaoId" params={{ sessaoId: sessao.id }} style={{ textDecoration: 'none' }} className="flex-1">
+                    <button className="btn-ghost w-full py-2 text-xs border border-[var(--color-border)] rounded-xl flex items-center justify-center gap-1">
+                      Detalhes <ChevronRight size={13} />
+                    </button>
+                  </Link>
+                </div>
               </div>
             )
           })}

@@ -65,7 +65,7 @@ function TreinoAtivoPage() {
     proximoExercicio, exercicioAnterior, atualizarSerie,
     marcarSerieCompletada, desfazerUltimaSerie,
     iniciarDescanso, pararDescanso, tickGeral, tickDescanso,
-    atualizarNotas, limparLocal,
+    atualizarNotas, limparLocal, heartbeat,
   } = store
 
   const timerRef = useRef<number | null>(null)
@@ -106,6 +106,13 @@ function TreinoAtivoPage() {
     }
     setApplyAll(null)
   }, [exercicioAtualIndex])
+
+  // Heartbeat: atualiza Firestore a cada 1 min para não encerrar por inatividade (20 min)
+  useEffect(() => {
+    if (!iniciado || !sessao) return
+    const id = setInterval(heartbeat, 60 * 1000)
+    return () => clearInterval(id)
+  }, [iniciado, sessao, heartbeat])
 
   const [finalizando, setFinalizando] = useState(false)
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)

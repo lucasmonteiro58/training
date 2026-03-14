@@ -45,21 +45,33 @@ export const usePlanosStore = create<PlanosState>((set) => ({
   setLoading: (loading) => set({ loading }),
 }))
 
+// Snapshot do treino no momento do auto-encerramento (para opção "Retornar")
+export interface SnapshotAutoEncerrado {
+  sessao: SessaoDeTreino
+  exercicioAtualIndex: number
+  serieAtualIndex: number
+  cronometroGeralSegundos: number
+}
+
 // ============================================================
 // Histórico / Sessões Store
 // ============================================================
 interface HistoricoState {
   sessoes: SessaoDeTreino[]
   loading: boolean
+  /** Preenchido quando um treino foi encerrado automaticamente por inatividade (20 min) */
+  sessaoAutoEncerrada: SnapshotAutoEncerrado | null
   setSessoes: (sessoes: SessaoDeTreino[]) => void
   addSessao: (sessao: SessaoDeTreino) => void
   removeSessao: (id: string) => void
   setLoading: (v: boolean) => void
+  setSessaoAutoEncerrada: (snapshot: SnapshotAutoEncerrado | null) => void
 }
 
 export const useHistoricoStore = create<HistoricoState>((set) => ({
   sessoes: [],
   loading: true,
+  sessaoAutoEncerrada: null,
   setSessoes: (sessoes) => set({ sessoes }),
   addSessao: (sessao) =>
     set((s) => {
@@ -71,6 +83,7 @@ export const useHistoricoStore = create<HistoricoState>((set) => ({
     }),
   removeSessao: (id) => set((s) => ({ sessoes: s.sessoes.filter((s2) => s2.id !== id) })),
   setLoading: (loading) => set({ loading }),
+  setSessaoAutoEncerrada: (sessaoAutoEncerrada) => set({ sessaoAutoEncerrada }),
 }))
 
 // ============================================================
@@ -114,10 +127,11 @@ export interface TreinoAtivoStoreState {
     sessao: SessaoDeTreino
     exercicioAtualIndex: number
     serieAtualIndex: number
-    pausado: boolean
+    pausado?: boolean
     tempoPausadoTotal?: number
     ultimaPausaRecordada?: number | null
     timestampDescansoFim?: number | null
+    cronometroGeralSegundos?: number
   }) => void
   sincronizarEstadoExterno: (dados: {
     sessao: SessaoDeTreino
@@ -130,7 +144,15 @@ export interface TreinoAtivoStoreState {
   }) => void
   atualizarNotas: (notas: string) => void
   limparLocal: () => void
+  /** Restaura um treino que foi auto-encerrado (coloca de volta como ativo e sincroniza) */
+  restaurarDeAutoEncerrado: (snapshot: SnapshotAutoEncerrado) => void
+  /** Atualiza updatedAt no Firestore (heartbeat para não encerrar por inatividade) */
+  heartbeat: () => void
+  /** Coloca uma sessão do histórico de volta como treino ativo (para continuar/editando) */
+  restaurarDeHistorico: (sessao: SessaoDeTreino) => void
 }
+
+export const INATIVIDADE_AUTO_ENCERRAR_MS = 20 * 60 * 1000 // 20 minutos
 
 const syncAtivo = (state: TreinoAtivoStoreState) => {
   if (state.iniciado && state.sessao?.userId && state.sessao) {
@@ -143,6 +165,8 @@ const syncAtivo = (state: TreinoAtivoStoreState) => {
       tempoPausadoTotal: state.tempoPausadoTotal,
       ultimaPausaRecordada: state.ultimaPausaRecordada,
       timestampDescansoFim: state.timestampDescansoFim,
+      cronometroGeralSegundos: state.cronometroGeralSegundos,
+      updatedAt: Date.now(),
     })
   }
 }
@@ -371,7 +395,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           timestampDescansoFim: dados.timestampDescansoFim ?? null,
           cronometroDescansoAtivo: dados.timestampDescansoFim != null && dados.timestampDescansoFim > Date.now(),
           iniciado: true,
-          cronometroGeralSegundos: 0,
+          cronometroGeralSegundos: dados.cronometroGeralSegundos ?? 0,
           cronometroDescansoSegundos: 0,
         }),
 
@@ -409,6 +433,63 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
           timestampDescansoFim: null,
           ultimaSerieCompletada: null,
         }),
+
+      restaurarDeAutoEncerrado: (snapshot) => {
+        const duracaoMs = snapshot.cronometroGeralSegundos * 1000
+        const sessaoAtiva = {
+          ...snapshot.sessao,
+          finalizadoEm: undefined,
+          duracaoSegundos: undefined,
+          autoEncerrado: undefined,
+          iniciadoEm: Date.now() - duracaoMs,
+        }
+        set({
+          sessao: sessaoAtiva,
+          exercicioAtualIndex: snapshot.exercicioAtualIndex,
+          serieAtualIndex: snapshot.serieAtualIndex,
+          cronometroGeralSegundos: snapshot.cronometroGeralSegundos,
+          cronometroDescansoSegundos: 0,
+          cronometroDescansoAtivo: false,
+          pausado: false,
+          tempoPausadoTotal: 0,
+          ultimaPausaRecordada: null,
+          timestampDescansoFim: null,
+          ultimaSerieCompletada: null,
+          iniciado: true,
+        })
+        syncAtivo(get())
+      },
+
+      heartbeat: () => {
+        syncAtivo(get())
+      },
+
+      restaurarDeHistorico: (sessao) => {
+        const duracaoSegundos = sessao.duracaoSegundos ?? 0
+        const duracaoMs = duracaoSegundos * 1000
+        const sessaoAtiva = {
+          ...sessao,
+          finalizadoEm: undefined,
+          duracaoSegundos: undefined,
+          autoEncerrado: undefined,
+          iniciadoEm: Date.now() - duracaoMs,
+        }
+        set({
+          sessao: sessaoAtiva,
+          exercicioAtualIndex: 0,
+          serieAtualIndex: 0,
+          cronometroGeralSegundos: duracaoSegundos,
+          cronometroDescansoSegundos: 0,
+          cronometroDescansoAtivo: false,
+          pausado: false,
+          tempoPausadoTotal: 0,
+          ultimaPausaRecordada: null,
+          timestampDescansoFim: null,
+          ultimaSerieCompletada: null,
+          iniciado: true,
+        })
+        syncAtivo(get())
+      },
     }),
     {
       name: 'training-treino-ativo',
@@ -427,7 +508,7 @@ export const useTreinoAtivoStore = create<TreinoAtivoStoreState>()(
   )
 )
 
-function calcularVolume(sessao: SessaoDeTreino): number {
+export function calcularVolume(sessao: SessaoDeTreino): number {
   return sessao.exercicios.reduce((total, ex) => {
     return (
       total +
