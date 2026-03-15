@@ -39,11 +39,11 @@ export function NewMeasurementModal({ form, onFormChange, onSave, onClose }: New
         </div>
 
         <div className="mb-4">
-          <label className="text-xs text-text-muted mb-1 block">Notas (opcional)</label>
+          <label className="text-xs text-text-muted mb-1 block">Notes (optional)</label>
           <textarea
-            placeholder="Observações..."
-            value={form.notas ?? ''}
-            onChange={e => onFormChange({ ...form, notas: e.target.value })}
+            placeholder="Observations..."
+            value={form.notes ?? ''}
+            onChange={e => onFormChange({ ...form, notes: e.target.value })}
             className="input-field w-full text-sm resize-none"
             rows={2}
           />

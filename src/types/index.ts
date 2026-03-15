@@ -242,25 +242,25 @@ export const GROUPING_CONFIG: Record<string, { label: string; cor: string; corBg
 export interface BodyMeasurement {
   id: string
   userId: string
-  data: number // timestamp
-  peso?: number // kg
-  gordura?: number // % bf
-  braco?: number // cm
-  peito?: number
-  cintura?: number
-  quadril?: number
-  coxa?: number
-  panturrilha?: number
-  notas?: string
+  date: number // timestamp
+  weight?: number // kg
+  bodyFat?: number // %
+  arm?: number // cm
+  chest?: number
+  waist?: number
+  hip?: number
+  thigh?: number
+  calf?: number
+  notes?: string
 }
 
 export const MEASUREMENT_FIELDS: { key: keyof BodyMeasurement; label: string; unidade: string }[] = [
-  { key: 'peso', label: 'Peso', unidade: 'kg' },
-  { key: 'gordura', label: 'Gordura Corporal', unidade: '%' },
-  { key: 'braco', label: 'Braço', unidade: 'cm' },
-  { key: 'peito', label: 'Peito', unidade: 'cm' },
-  { key: 'cintura', label: 'Cintura', unidade: 'cm' },
-  { key: 'quadril', label: 'Quadril', unidade: 'cm' },
-  { key: 'coxa', label: 'Coxa', unidade: 'cm' },
-  { key: 'panturrilha', label: 'Panturrilha', unidade: 'cm' },
+  { key: 'weight', label: 'Weight', unidade: 'kg' },
+  { key: 'bodyFat', label: 'Body Fat', unidade: '%' },
+  { key: 'arm', label: 'Arm', unidade: 'cm' },
+  { key: 'chest', label: 'Chest', unidade: 'cm' },
+  { key: 'waist', label: 'Waist', unidade: 'cm' },
+  { key: 'hip', label: 'Hip', unidade: 'cm' },
+  { key: 'thigh', label: 'Thigh', unidade: 'cm' },
+  { key: 'calf', label: 'Calf', unidade: 'cm' },
 ]

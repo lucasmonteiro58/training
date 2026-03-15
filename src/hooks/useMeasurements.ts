@@ -28,7 +28,7 @@ export function useMeasurements() {
   const add = useCallback(
     async (measurement: BodyMeasurement) => {
       await saveMeasurement(measurement)
-      setMeasurements(prev => [measurement, ...prev].sort((a, b) => b.data - a.data))
+      setMeasurements(prev => [measurement, ...prev].sort((a, b) => b.date - a.date))
       syncMeasurementToFirestore(measurement)
     },
     []

@@ -12,7 +12,7 @@ export function MeasurementCard({ measurement, onDelete }: MeasurementCardProps)
     <div className="card p-4">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm font-semibold text-text">
-          {new Date(measurement.data).toLocaleDateString('pt-BR', {
+          {new Date(measurement.date).toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',
@@ -37,8 +37,8 @@ export function MeasurementCard({ measurement, onDelete }: MeasurementCardProps)
           </div>
         ))}
       </div>
-      {measurement.notas && (
-        <p className="text-xs text-text-muted mt-2 italic">📝 {measurement.notas}</p>
+      {measurement.notes && (
+        <p className="text-xs text-text-muted mt-2 italic">📝 {measurement.notes}</p>
       )}
     </div>
   )

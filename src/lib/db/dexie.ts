@@ -18,6 +18,62 @@ class TrainingDB extends Dexie {
       measurements: 'id, userId, data',
       syncQueue: '++id, createdAt',
     })
+    this.version(2)
+      .stores({
+        plans: 'id, userId, updatedAt, syncedAt',
+        sessions: 'id, userId, planId, startedAt, finishedAt, syncedAt',
+        customExercises: 'id, userId, muscleGroup',
+        exerciseCache: 'id, muscleGroup, name',
+        measurements: 'id, userId, date',
+        syncQueue: '++id, createdAt',
+      })
+      .upgrade((tx) => {
+        return tx
+          .table('measurements')
+          .toCollection()
+          .modify((m: Record<string, unknown>) => {
+            if ('data' in m) {
+              m.date = m.data
+              delete m.data
+            }
+            if ('peso' in m) {
+              m.weight = m.peso
+              delete m.peso
+            }
+            if ('gordura' in m) {
+              m.bodyFat = m.gordura
+              delete m.gordura
+            }
+            if ('braco' in m) {
+              m.arm = m.braco
+              delete m.braco
+            }
+            if ('peito' in m) {
+              m.chest = m.peito
+              delete m.peito
+            }
+            if ('cintura' in m) {
+              m.waist = m.cintura
+              delete m.cintura
+            }
+            if ('quadril' in m) {
+              m.hip = m.quadril
+              delete m.quadril
+            }
+            if ('coxa' in m) {
+              m.thigh = m.coxa
+              delete m.coxa
+            }
+            if ('panturrilha' in m) {
+              m.calf = m.panturrilha
+              delete m.panturrilha
+            }
+            if ('notas' in m) {
+              m.notes = m.notas
+              delete m.notas
+            }
+          })
+      })
   }
 }
 
@@ -124,7 +180,7 @@ export async function getMeasurements(userId: string): Promise<BodyMeasurement[]
     .where('userId')
     .equals(userId)
     .reverse()
-    .sortBy('data')
+    .sortBy('date')
 }
 
 export async function saveMeasurement(measurement: BodyMeasurement): Promise<void> {

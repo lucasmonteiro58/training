@@ -339,8 +339,25 @@ export function subscribeToExercises(
 }
 
 // ============================
-// Medidas Corporais
+// Body measurements
 // ============================
+function normalizeMeasurement(raw: Record<string, unknown>): BodyMeasurement {
+  return {
+    id: raw.id as string,
+    userId: raw.userId as string,
+    date: (raw.date ?? raw.data ?? 0) as number,
+    weight: (raw.weight ?? raw.peso) as number | undefined,
+    bodyFat: (raw.bodyFat ?? raw.gordura) as number | undefined,
+    arm: (raw.arm ?? raw.braco) as number | undefined,
+    chest: (raw.chest ?? raw.peito) as number | undefined,
+    waist: (raw.waist ?? raw.cintura) as number | undefined,
+    hip: (raw.hip ?? raw.quadril) as number | undefined,
+    thigh: (raw.thigh ?? raw.coxa) as number | undefined,
+    calf: (raw.calf ?? raw.panturrilha) as number | undefined,
+    notes: (raw.notes ?? raw.notas) as string | undefined,
+  }
+}
+
 export async function syncMeasurementToFirestore(measurement: BodyMeasurement): Promise<void> {
   incrementSync()
   try {
@@ -372,8 +389,7 @@ export function subscribeToMeasurements(
 ): () => void {
   const q = query(
     collection(db, 'measurements'),
-    where('userId', '==', userId),
-    orderBy('data', 'desc')
+    where('userId', '==', userId)
   )
 
   const unsubscribe = onSnapshot(
@@ -381,10 +397,11 @@ export function subscribeToMeasurements(
     (snapshot) => {
       const measurements: BodyMeasurement[] = []
       snapshot.forEach((d) => {
-        const data = d.data() as BodyMeasurement
+        const data = normalizeMeasurement(d.data() as Record<string, unknown>)
         measurements.push(data)
         saveMeasurement(data)
       })
+      measurements.sort((a, b) => b.date - a.date)
       callback(measurements)
     },
     (err) => {

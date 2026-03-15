@@ -23,7 +23,7 @@ function MeasurementsPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({})
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [chartField, setChartField] = useState<string>('peso')
+  const [chartField, setChartField] = useState<string>('weight')
 
   const handleSave = async () => {
     if (!user) return
@@ -36,13 +36,13 @@ function MeasurementsPage() {
     const measurement: BodyMeasurement = {
       id: crypto.randomUUID(),
       userId: user.uid,
-      data: Date.now(),
+      date: Date.now(),
     }
     MEASUREMENT_FIELDS.forEach(c => {
       const v = parseFloat(form[c.key] || '')
       if (v > 0) (measurement as unknown as Record<string, unknown>)[c.key] = v
     })
-    if (form.notas?.trim()) measurement.notas = form.notas.trim()
+    if (form.notes?.trim()) measurement.notes = form.notes.trim()
 
     await add(measurement)
     setForm({})
@@ -55,9 +55,9 @@ function MeasurementsPage() {
     if (!field) return []
     return [...measurements]
       .filter(m => (m as unknown as Record<string, unknown>)[chartField] != null)
-      .sort((a, b) => a.data - b.data)
+      .sort((a, b) => a.date - b.date)
       .map(m => ({
-        data: new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        data: new Date(m.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         valor: (m as unknown as Record<string, unknown>)[chartField] as number,
       }))
   }, [measurements, chartField])
