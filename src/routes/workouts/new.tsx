@@ -131,8 +131,8 @@ function NewPlanPage() {
                             {groupExs.map(gex => (
                               <ExerciseInPlanCard
                                 key={gex.id}
-                                exercicio={gex}
-                                onUpdate={campo => updateExercise(gex.id, campo)}
+                                exercise={gex}
+                                onUpdate={field => updateExercise(gex.id, field)}
                                 onRemove={() => removeExercise(gex.id)}
                                 isSelected={selected.has(gex.id)}
                                 onToggleSelect={() => toggleSelected(gex.id)}
@@ -148,8 +148,8 @@ function NewPlanPage() {
                     return (
                       <ExerciseInPlanCard
                         key={ex.id}
-                        exercicio={ex}
-                        onUpdate={campo => updateExercise(ex.id, campo)}
+                        exercise={ex}
+                        onUpdate={field => updateExercise(ex.id, field)}
                         onRemove={() => removeExercise(ex.id)}
                         isSelected={selected.has(ex.id)}
                         onToggleSelect={() => toggleSelected(ex.id)}

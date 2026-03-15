@@ -8,7 +8,7 @@ interface SessionDetailHeaderProps {
   autoClosed?: boolean
   /** Timestamp (startedAt) for date edit; when editing, allows changing */
   startedAt?: number
-  /** Timestamp (finishedAt) para exibir hora de fim */
+  /** Timestamp (finishedAt) to show end time */
   finishedAt?: number
   onStartedAtChange?: (timestamp: number) => void
   onBack: () => void

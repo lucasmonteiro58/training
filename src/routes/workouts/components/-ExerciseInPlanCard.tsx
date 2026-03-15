@@ -5,8 +5,8 @@ import { CSS } from '@dnd-kit/utilities'
 import type { ExerciseInPlan, PlanSet, SetType } from '../../../types'
 
 interface ExerciseInPlanCardProps {
-  exercicio: ExerciseInPlan
-  onUpdate: (campo: Partial<ExerciseInPlan>) => void
+  exercise: ExerciseInPlan
+  onUpdate: (field: Partial<ExerciseInPlan>) => void
   onRemove: () => void
   isSelected?: boolean
   onToggleSelect?: () => void
@@ -15,7 +15,7 @@ interface ExerciseInPlanCardProps {
 }
 
 export function ExerciseInPlanCard({
-  exercicio,
+  exercise,
   onUpdate,
   onRemove,
   isSelected,
@@ -25,12 +25,12 @@ export function ExerciseInPlanCard({
 }: ExerciseInPlanCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [applyAll, setApplyAll] = useState<{
-    field: 'peso' | 'repeticoes'
+    field: 'weight' | 'reps'
     sIdx: number
     value: number
   } | null>(null)
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
-    useSortable({ id: exercicio.id })
+    useSortable({ id: exercise.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -38,39 +38,39 @@ export function ExerciseInPlanCard({
     zIndex: isDragging ? 50 : undefined,
   }
 
-  const series = exercicio.setsDetail || []
+  const series = exercise.setsDetail || []
 
-  const addSerie = () => {
-    const ultima = series[series.length - 1]
-    const nova = ultima ? { ...ultima } : { weight: 0, reps: 10 }
-    const novasSeries = [...series, nova]
-    onUpdate({ series: novasSeries.length, setsDetail: novasSeries })
+  const addSet = () => {
+    const last = series[series.length - 1]
+    const newRow = last ? { ...last } : { weight: 0, reps: 10 }
+    const newSeries = [...series, newRow]
+    onUpdate({ series: newSeries.length, setsDetail: newSeries })
   }
 
-  const removeSerie = (idx: number) => {
-    const novasSeries = series.filter((_, i: number) => i !== idx)
-    onUpdate({ series: novasSeries.length, setsDetail: novasSeries })
+  const removeSet = (idx: number) => {
+    const newSeries = series.filter((_, i: number) => i !== idx)
+    onUpdate({ series: newSeries.length, setsDetail: newSeries })
   }
 
-  const updateSerie = (idx: number, campo: Partial<PlanSet>) => {
-    const novasSeries = series.map((s: PlanSet, i: number) =>
-      i === idx ? { ...s, ...campo } : s
+  const updateSet = (idx: number, field: Partial<PlanSet>) => {
+    const newSeries = series.map((s: PlanSet, i: number) =>
+      i === idx ? { ...s, ...field } : s
     )
-    onUpdate({ setsDetail: novasSeries })
+    onUpdate({ setsDetail: newSeries })
     if (series.length > 1) {
-      if ('peso' in campo && campo.peso !== undefined) {
-        setApplyAll({ field: 'peso', sIdx: idx, value: campo.peso as number })
-      } else if ('repeticoes' in campo && campo.repeticoes !== undefined) {
-        setApplyAll({ field: 'repeticoes', sIdx: idx, value: campo.repeticoes as number })
+      if ('weight' in field && field.weight !== undefined) {
+        setApplyAll({ field: 'weight', sIdx: idx, value: field.weight })
+      } else if ('reps' in field && field.reps !== undefined) {
+        setApplyAll({ field: 'reps', sIdx: idx, value: field.reps })
       }
     }
   }
 
-  const tipo = exercicio.setType ?? 'reps'
-  const ciclo: SetType[] = ['reps', 'tempo', 'falha']
-  const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
-  const labels: Record<SetType, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
-  const nextLabels: Record<SetType, string> = { reps: 'Min', tempo: 'Falha', falha: 'Reps' }
+  const setType = exercise.setType ?? 'reps'
+  const cycle: SetType[] = ['reps', 'tempo', 'falha']
+  const nextType = cycle[(cycle.indexOf(setType) + 1) % cycle.length]
+  const labels: Record<SetType, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FAIL ⚡' }
+  const nextLabels: Record<SetType, string> = { reps: 'Min', tempo: 'Fail', falha: 'Reps' }
 
   return (
     <div
@@ -87,7 +87,7 @@ export function ExerciseInPlanCard({
         >
           <GripVertical size={16} className="text-text-subtle shrink-0" />
         </div>
-        {showSelect && !exercicio.groupingId && (
+        {showSelect && !exercise.groupingId && (
           <button
             type="button"
             onClick={e => {
@@ -101,7 +101,7 @@ export function ExerciseInPlanCard({
             {isSelected && <span className="text-xs">✓</span>}
           </button>
         )}
-        {exercicio.groupingId && onRemoveFromGroup && (
+        {exercise.groupingId && onRemoveFromGroup && (
           <button
             type="button"
             onClick={e => {
@@ -109,15 +109,15 @@ export function ExerciseInPlanCard({
               onRemoveFromGroup()
             }}
             className="p-1 rounded-lg hover:bg-surface-2 text-text-subtle shrink-0"
-            title="Remover do agrupamento"
+            title="Remove from group"
           >
             <Unlink size={14} />
           </button>
         )}
-        {exercicio.exercise.gifUrl ? (
+        {exercise.exercise.gifUrl ? (
           <img
-            src={exercicio.exercise.gifUrl}
-            alt={exercicio.exercise.name}
+            src={exercise.exercise.gifUrl}
+            alt={exercise.exercise.name}
             className="w-10 h-10 rounded-lg object-cover bg-surface-2"
           />
         ) : (
@@ -126,9 +126,9 @@ export function ExerciseInPlanCard({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-text font-semibold text-sm truncate">{exercicio.exercise.name}</p>
+          <p className="text-text font-semibold text-sm truncate">{exercise.exercise.name}</p>
           <p className="text-text-muted text-xs">
-            {series.length} séries {series.length > 0 && `(Meta: ${series[0].reps} reps)`}
+            {series.length} sets {series.length > 0 && `(Target: ${series[0].reps} reps)`}
           </p>
         </div>
         <button type="button" onClick={() => setExpanded(e => !e)} className="btn-ghost p-2">
@@ -147,21 +147,21 @@ export function ExerciseInPlanCard({
             <button
               type="button"
               onClick={() => {
-                const updates: Partial<ExerciseInPlan> = { setType: proximo }
-                if (proximo === 'tempo') {
+                const updates: Partial<ExerciseInPlan> = { setType: nextType }
+                if (nextType === 'tempo') {
                   updates.setsDetail = series.map(s => ({ ...s, reps: 1 }))
                 }
                 onUpdate(updates)
                 setApplyAll(null)
               }}
-              title={`Mudar para: ${nextLabels[tipo]}`}
+              title={`Switch to: ${nextLabels[setType]}`}
               className={`flex items-center justify-center gap-1 rounded-md border px-1.5 py-0.5 transition-colors ${
-                tipo === 'reps'
+                setType === 'reps'
                   ? 'text-text-muted border-border hover:text-accent hover:border-accent /50'
                   : 'text-accent border-accent /40 bg-accent/10'
               }`}
             >
-              {labels[tipo]}
+              {labels[setType]}
               <RefreshCw size={8} className="opacity-60" />
             </button>
             <span />
@@ -179,7 +179,7 @@ export function ExerciseInPlanCard({
                   className="set-input h-9! py-0! text-sm!"
                   value={s.weight === 0 ? '' : s.weight}
                   onChange={e =>
-                    updateSerie(i, { weight: e.target.value === '' ? 0 : parseFloat(e.target.value) })
+                    updateSet(i, { weight: e.target.value === '' ? 0 : parseFloat(e.target.value) })
                   }
                   onFocus={e => e.target.select()}
                   placeholder="0"
@@ -188,7 +188,7 @@ export function ExerciseInPlanCard({
                   type="number"
                   className="set-input h-9! py-0! text-sm!"
                   value={
-                    tipo === 'tempo'
+                    setType === 'tempo'
                       ? s.reps === 0
                         ? ''
                         : s.reps
@@ -197,22 +197,22 @@ export function ExerciseInPlanCard({
                         : s.reps
                   }
                   onChange={e =>
-                    updateSerie(i, {
+                    updateSet(i, {
                       reps:
                         e.target.value === ''
                           ? 0
-                          : tipo === 'tempo'
+                          : setType === 'tempo'
                             ? parseFloat(e.target.value)
                             : parseInt(e.target.value, 10),
                     })
                   }
                   onFocus={e => e.target.select()}
-                  placeholder={tipo === 'falha' ? 'Falha' : tipo === 'tempo' ? '0.0' : '0'}
-                  step={tipo === 'tempo' ? '0.5' : '1'}
+                  placeholder={setType === 'falha' ? 'Fail' : setType === 'tempo' ? '0.0' : '0'}
+                  step={setType === 'tempo' ? '0.5' : '1'}
                 />
                 <button
                   type="button"
-                  onClick={() => removeSerie(i)}
+                  onClick={() => removeSet(i)}
                   className="btn-ghost p-1.5 text-text-subtle hover:text-danger"
                 >
                   <Trash2 size={14} />
@@ -225,15 +225,15 @@ export function ExerciseInPlanCard({
             <div className="bg-accent/10 border border-accent /20 rounded-xl px-3 py-2.5">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-text-muted">
-                  Repetir{' '}
+                  Repeat{' '}
                   <strong className="text-text">
-                    {applyAll.field === 'peso'
+                    {applyAll.field === 'weight'
                       ? `${applyAll.value} kg`
-                      : applyAll.field === 'repeticoes' && (exercicio.setType ?? 'reps') === 'tempo'
+                      : applyAll.field === 'reps' && (exercise.setType ?? 'reps') === 'tempo'
                         ? `${applyAll.value} min`
                         : `${applyAll.value} reps`}
                   </strong>{' '}
-                  em:
+                  to:
                 </p>
                 <button
                   type="button"
@@ -248,30 +248,30 @@ export function ExerciseInPlanCard({
                   <button
                     type="button"
                     onClick={() => {
-                      const novasSeries = series.map((s: PlanSet, i: number) =>
+                      const newSeries = series.map((s: PlanSet, i: number) =>
                         i > applyAll.sIdx ? { ...s, [applyAll.field]: applyAll.value } : s
                       )
-                      onUpdate({ setsDetail: novasSeries })
+                      onUpdate({ setsDetail: newSeries })
                       setApplyAll(null)
                     }}
                     className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent /20"
                   >
-                    ↓ Seguintes
+                    ↓ Below
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => {
-                    const novasSeries = series.map((s: PlanSet) => ({
+                    const newSeries = series.map((s: PlanSet) => ({
                       ...s,
                       [applyAll.field]: applyAll.value,
                     }))
-                    onUpdate({ setsDetail: novasSeries })
+                    onUpdate({ setsDetail: newSeries })
                     setApplyAll(null)
                   }}
                   className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-accent"
                 >
-                  Todas
+                  All
                 </button>
               </div>
             </div>
@@ -279,33 +279,33 @@ export function ExerciseInPlanCard({
 
           <button
             type="button"
-            onClick={addSerie}
+            onClick={addSet}
             className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-accent hover:bg-accent/5 rounded-lg border border-dashed border-accent /20 transition-colors"
           >
             <Plus size={14} />
-            Adicionar Série
+            Add Set
           </button>
 
           <div className="pt-2">
             <label className="text-[10px] text-text-subtle font-bold uppercase block mb-1.5 pl-1">
-              OBSERVAÇÕES DO EXERCÍCIO
+              EXERCISE NOTES
             </label>
             <textarea
               className="input h-16 text-sm resize-none py-2"
-              placeholder="Dica: manter cotovelos fechados..."
-              value={exercicio.notes || ''}
+              placeholder="Tip: keep elbows close..."
+              value={exercise.notes || ''}
               onChange={e => onUpdate({ notes: e.target.value })}
             />
           </div>
 
           <div className="pt-1">
             <label className="text-[10px] text-text-subtle font-bold uppercase block mb-1.5 pl-1">
-              Descanso (segundos)
+              Rest (seconds)
             </label>
             <input
               type="number"
               className="input h-10 text-sm"
-              value={exercicio.restSeconds}
+              value={exercise.restSeconds}
               onChange={e => onUpdate({ restSeconds: parseInt(e.target.value) || 0 })}
             />
           </div>
