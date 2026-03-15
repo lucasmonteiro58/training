@@ -71,10 +71,14 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
       }
 
       // Só restaura do Firestore quando não temos sessão local (ex.: abriu em outra aba).
-      // Se já temos treino ativo local, não sobrescrever — senão dados antigos do Firestore
-      // apagariam séries, pesos e concluídos que o usuário acabou de marcar.
+      // Não restaurar se a sessão vinda do Firestore tiver exercícios sem séries (0/0),
+      // para não sobrescrever e deixar useStartWorkoutSession criar a sessão a partir do plano.
       if (!state.started) {
-        state.restoreFromExternal(data as Parameters<typeof state.restoreFromExternal>[0])
+        const session = (data as { session?: { exercises?: { sets?: unknown[] }[] } }).session ?? (data as { sessao?: { exercises?: { sets?: unknown[] }[] } }).sessao
+        const hasValidSets = session?.exercises?.length && session.exercises.every((ex) => (ex.sets?.length ?? 0) > 0)
+        if (hasValidSets) {
+          state.restoreFromExternal(data as Parameters<typeof state.restoreFromExternal>[0])
+        }
       }
     })
 

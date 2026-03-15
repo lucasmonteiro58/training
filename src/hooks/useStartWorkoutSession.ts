@@ -43,6 +43,8 @@ export function useStartWorkoutSession({
 
     const exercisesInSession: ExerciseInSession[] = plan.exercises.map((ex) => {
       const exLastSession = lastSession?.exercises.find((e) => e.exerciseId === ex.exerciseId)
+      const numSets = ex.series ?? ex.setsDetail?.length ?? 1
+      const seriesCount = Math.max(1, Number(numSets) || 0)
       return {
         exerciseId: ex.exerciseId,
         exerciseName: ex.exercise.name,
@@ -56,7 +58,7 @@ export function useStartWorkoutSession({
         targetDurationSeconds: ex.targetDurationSeconds,
         groupingId: ex.groupingId,
         groupingType: ex.groupingType,
-        sets: Array.from({ length: ex.series }, (_, i) => {
+        sets: Array.from({ length: seriesCount }, (_, i) => {
           const weightPlan = ex.setsDetail?.[i]?.weight
           const repsPlan = ex.setsDetail?.[i]?.reps
           const weightSession = exLastSession?.sets[i]?.weight
