@@ -15,8 +15,8 @@ export const Route = createFileRoute('/history/')({
 
 function HistoricoPage() {
   const navigate = useNavigate()
-  const { sessoes, loading, excluirSessao } = useHistory()
-  const restaurarDeHistorico = useActiveWorkoutStore(s => s.restaurarDeHistorico)
+  const { sessions, loading, deleteSessionById } = useHistory()
+  const restoreFromHistory = useActiveWorkoutStore(s => s.restoreFromHistory)
   const [confirmExcluir, setConfirmExcluir] = useState<string | null>(null)
   const [filtroPlano, setFiltroPlano] = useState<string>('todos')
   const [filtroPeriodo, setFiltroPeriodo] = useState<Periodo>('todos')
@@ -24,12 +24,12 @@ function HistoricoPage() {
 
   const sessoesNomes = useMemo(() => {
     const nomes = new Set<string>()
-    sessoes.forEach(s => nomes.add(s.planoNome))
+    sessions.forEach(s => nomes.add(s.planoNome))
     return Array.from(nomes).sort()
-  }, [sessoes])
+  }, [sessions])
 
   const sessoesFiltradas = useMemo(() => {
-    let resultado = sessoes
+    let resultado = sessions
     if (filtroPlano !== 'todos') {
       resultado = resultado.filter(s => s.planoNome === filtroPlano)
     }
@@ -40,7 +40,7 @@ function HistoricoPage() {
       resultado = resultado.filter(s => s.iniciadoEm >= limite)
     }
     return resultado
-  }, [sessoes, filtroPlano, filtroPeriodo])
+  }, [sessions, filtroPlano, filtroPeriodo])
 
   const filtroAtivo = filtroPlano !== 'todos' || filtroPeriodo !== 'todos'
 
@@ -66,7 +66,7 @@ function HistoricoPage() {
   return (
     <div className="page-container pt-6">
       <HistoryHeader
-        hasSessoes={sessoes.length > 0}
+        hasSessoes={sessions.length > 0}
         filtroAtivo={filtroAtivo}
         onVoltar={() => navigate({ to: '/profile' })}
         onToggleFiltros={() => setShowFiltros(v => !v)}
@@ -105,7 +105,7 @@ function HistoricoPage() {
               sessao={sessao}
               index={idx}
               onExcluir={setConfirmExcluir}
-              onRetornar={restaurarDeHistorico}
+              onRetornar={restoreFromHistory}
             />
           ))}
         </div>
@@ -114,7 +114,7 @@ function HistoricoPage() {
       {confirmExcluir && (
         <ConfirmDeleteModal
           onConfirm={() => {
-            excluirSessao(confirmExcluir)
+            deleteSessionById(confirmExcluir)
             setConfirmExcluir(null)
           }}
           onCancel={() => setConfirmExcluir(null)}

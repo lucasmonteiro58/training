@@ -19,7 +19,7 @@ export const Route = createFileRoute('/profile/measurements')({
 function MedidasPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { medidas, loading, adicionar, remover } = useMeasurements()
+  const { measurements, loading, add, remove } = useMeasurements()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({})
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
@@ -44,7 +44,7 @@ function MedidasPage() {
     })
     if (form.notas?.trim()) medida.notas = form.notas.trim()
 
-    await adicionar(medida)
+    await add(medida)
     setForm({})
     setShowForm(false)
     toast.success('Medida registrada!')
@@ -53,14 +53,14 @@ function MedidasPage() {
   const dadosGrafico = useMemo(() => {
     const campo = MEASUREMENT_FIELDS.find(c => c.key === campoGrafico)
     if (!campo) return []
-    return [...medidas]
+    return [...measurements]
       .filter(m => (m as unknown as Record<string, unknown>)[campoGrafico] != null)
       .sort((a, b) => a.data - b.data)
       .map(m => ({
         data: new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         valor: (m as unknown as Record<string, unknown>)[campoGrafico] as number,
       }))
-  }, [medidas, campoGrafico])
+  }, [measurements, campoGrafico])
 
   if (loading) {
     return (
@@ -87,7 +87,7 @@ function MedidasPage() {
         onNova={() => setShowForm(true)}
       />
 
-      {medidas.length >= 1 && (
+      {measurements.length >= 1 && (
         <MeasurementsChart
           campoGrafico={campoGrafico}
           dados={dadosGrafico}
@@ -95,7 +95,7 @@ function MedidasPage() {
         />
       )}
 
-      {medidas.length === 0 ? (
+      {measurements.length === 0 ? (
         <div className="card p-8 text-center animate-fade-up">
           <Ruler size={40} className="text-text-subtle mx-auto mb-3" />
           <p className="text-text-muted text-sm">Nenhuma medida registrada ainda.</p>
@@ -105,7 +105,7 @@ function MedidasPage() {
         </div>
       ) : (
         <div className="space-y-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
-          {medidas.map(m => (
+          {measurements.map(m => (
             <MeasurementCard
               key={m.id}
               medida={m}
@@ -127,7 +127,7 @@ function MedidasPage() {
       {confirmDelete && (
         <ConfirmDeleteMeasurementModal
           onConfirm={async () => {
-            await remover(confirmDelete)
+            await remove(confirmDelete)
             setConfirmDelete(null)
             toast.success('Medida excluída.')
           }}

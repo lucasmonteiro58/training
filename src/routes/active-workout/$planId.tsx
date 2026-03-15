@@ -37,50 +37,50 @@ function TreinoAtivoPage() {
   const { planId } = Route.useParams()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { planos, atualizarPlano } = usePlans()
-  const { salvarSessaoCompleta } = useHistory()
-  const plano = planos.find((p) => p.id === planId)
-  const sessoes = useHistoryStore((s) => s.sessoes)
-  const recordes = useMemo(() => calcularRecordes(sessoes), [sessoes])
+  const { plans, updatePlanById } = usePlans()
+  const { saveSessionComplete } = useHistory()
+  const plan = plans.find((p) => p.id === planId)
+  const sessions = useHistoryStore((s) => s.sessions)
+  const recordes = useMemo(() => calcularRecordes(sessions), [sessions])
 
   const store = useActiveWorkoutStore()
   const {
-    sessao, exercicioAtualIndex, cronometroGeralSegundos,
-    cronometroDescansoSegundos, cronometroDescansoAtivo,
-    pausado, iniciado,
-    iniciarTreino, finalizarTreino, pausarTreino, retomar,
-    proximoExercicio, exercicioAnterior, atualizarSerie,
-    marcarSerieCompletada,
-    iniciarDescanso, pararDescanso, tickGeral, tickDescanso,
-    atualizarNotas, limparLocal, heartbeat,
+    session, currentExerciseIndex, totalTimerSeconds,
+    restTimerSeconds, restTimerActive,
+    paused, started,
+    startWorkout, finishWorkout, pauseWorkout, resume,
+    nextExercise, previousExercise, updateSet,
+    markSetCompleted,
+    startRest, stopRest, tickTotal, tickRest,
+    updateNotes, clearLocal, heartbeat,
   } = store
 
   const timerRef = useRef<number | null>(null)
   const descansoRef = useRef<number | null>(null)
 
   const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
-  const { salvarPesosNoPlano } = useSaveWeightsToPlan(
-    plano ?? undefined,
-    sessao,
-    exercicioAtualIndex,
-    atualizarPlano,
+  const { saveWeightsToPlan } = useSaveWeightsToPlan(
+    plan ?? undefined,
+    session,
+    currentExerciseIndex,
+    updatePlanById,
     () => setApplyAll(null)
   )
 
-  const { timerSerie, iniciarTimerSerie, pararTimerSerie } = useSetTimer(exercicioAtualIndex)
-  const { descansoAcabouNaturalRef } = useRestNotifications({
-    cronometroDescansoAtivo,
-    cronometroDescansoSegundos,
-    sessao,
-    exercicioAtualIndex,
+  const { timerSerie, iniciarTimerSerie, pararTimerSerie } = useSetTimer(currentExerciseIndex)
+  const { restEndedNaturalRef } = useRestNotifications({
+    restTimerActive,
+    restTimerSeconds,
+    session,
+    currentExerciseIndex,
   })
 
   // Heartbeat: atualiza Firestore a cada 1 min para não encerrar por inatividade (20 min)
   useEffect(() => {
-    if (!iniciado || !sessao) return
+    if (!started || !session) return
     const id = setInterval(heartbeat, 60 * 1000)
     return () => clearInterval(id)
-  }, [iniciado, sessao, heartbeat])
+  }, [started, session, heartbeat])
 
   const [finalizando, setFinalizando] = useState(false)
   const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
@@ -96,27 +96,27 @@ function TreinoAtivoPage() {
 
   useStartWorkoutSession({
     planId,
-    plano: plano ?? undefined,
+    plano: plan ?? undefined,
     user,
-    sessoes,
-    iniciado,
-    sessao,
-    iniciarTreino,
+    sessions,
+    iniciado: started,
+    sessao: session,
+    iniciarTreino: startWorkout,
   })
 
-  const { handleCompletarSerie } = useCompleteWorkoutSet({
-    sessao,
-    exercicioAtualIndex,
+  const { handleCompleteSet } = useCompleteWorkoutSet({
+    session,
+    currentExerciseIndex,
     recordes,
-    salvarPesosNoPlano,
-    marcarSerieCompletada,
-    atualizarSerie,
-    iniciarDescanso,
-    proximoExercicio,
-    exercicioAnterior,
-    pararDescanso,
-    cancelarNotificacaoDescanso,
-    descansoAcabouNaturalRef,
+    saveWeightsToPlan,
+    markSetCompleted,
+    updateSet,
+    startRest,
+    nextExercise,
+    previousExercise,
+    stopRest,
+    cancelRestNotification: cancelarNotificacaoDescanso,
+    restEndedNaturalRef,
     onPrDetected: () => {
       setShowPrCelebration(true)
       setShowConfetti(true)
@@ -131,34 +131,34 @@ function TreinoAtivoPage() {
 
   // ─── Cronômetro geral ──────────────────────────────────────────────────────
   useEffect(() => {
-    timerRef.current = window.setInterval(() => { tickGeral() }, 1000)
+    timerRef.current = window.setInterval(() => { tickTotal() }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [tickGeral])
+  }, [tickTotal])
 
   // ─── Cronômetro de descanso ────────────────────────────────────────────────
   useEffect(() => {
-    if (!cronometroDescansoAtivo) {
+    if (!restTimerActive) {
       if (descansoRef.current) clearInterval(descansoRef.current)
       return
     }
-    descansoRef.current = window.setInterval(() => { tickDescanso() }, 1000)
+    descansoRef.current = window.setInterval(() => { tickRest() }, 1000)
     return () => { if (descansoRef.current) clearInterval(descansoRef.current) }
-  }, [cronometroDescansoAtivo, tickDescanso])
+  }, [restTimerActive, tickRest])
 
-  const exercicioAtual = sessao?.exercicios[exercicioAtualIndex]
-  const planoExercicio = plano?.exercicios.find(ex => ex.exercicioId === exercicioAtual?.exercicioId)
-  const totalExercicios = sessao?.exercicios.length ?? 0
-  const progresso = totalExercicios ? (exercicioAtualIndex / totalExercicios) * 100 : 0
+  const exercicioAtual = session?.exercicios[currentExerciseIndex]
+  const planExercise = plan?.exercicios.find(ex => ex.exercicioId === exercicioAtual?.exercicioId)
+  const totalExercicios = session?.exercicios.length ?? 0
+  const progresso = totalExercicios ? (currentExerciseIndex / totalExercicios) * 100 : 0
 
   const handleFinalizar = async () => {
     // Salvar pesos do exercício atual antes de finalizar
-    salvarPesosNoPlano()
+    saveWeightsToPlan()
     setFinalizando(true)
-    const sessaoFinalizada = finalizarTreino()
+    const sessaoFinalizada = finishWorkout()
     cancelarNotificacaoDescanso()
     limparNotificacoesTreino()
     if (sessaoFinalizada) {
-      await salvarSessaoCompleta(sessaoFinalizada)
+      await saveSessionComplete(sessaoFinalizada)
       setShowConfirmFinalizar(false)
       setShowConfetti(true)
       setRelatorio(sessaoFinalizada)
@@ -211,7 +211,7 @@ function TreinoAtivoPage() {
     )
   }
 
-  if (!plano || !sessao || !exercicioAtual) {
+  if (!plan || !session || !exercicioAtual) {
     return (
       <div className="page-container pt-6 text-center">
         <p className="text-text-muted">Carregando treino...</p>
@@ -226,20 +226,20 @@ function TreinoAtivoPage() {
       <Confetti active={showConfetti} />
       {showPrCelebration && <PRCelebrationOverlay />}
       <ActiveWorkoutHeader
-        cronometroGeralSegundos={cronometroGeralSegundos}
-        pausado={pausado}
-        onPause={pausarTreino}
-        onResume={retomar}
+        cronometroGeralSegundos={totalTimerSeconds}
+        pausado={paused}
+        onPause={pauseWorkout}
+        onResume={resume}
         exercicioAtual={exercicioAtual}
-        exercicioAtualIndex={exercicioAtualIndex}
+        exercicioAtualIndex={currentExerciseIndex}
         totalExercicios={totalExercicios}
-        onPrev={exercicioAnterior}
-        onNext={proximoExercicio}
-        onNotas={() => { setNotasTemp(sessao?.notas ?? ''); setShowNotas(true) }}
+        onPrev={previousExercise}
+        onNext={nextExercise}
+        onNotas={() => { setNotasTemp(session?.notas ?? ''); setShowNotas(true) }}
         onFinalizar={() => setShowConfirmFinalizar(true)}
         onClose={() => navigate({ to: '/workouts' })}
         onInfo={() => setShowInfo(true)}
-        hasNotas={!!sessao?.notas}
+        hasNotas={!!session?.notas}
         finalizando={finalizando}
         progresso={progresso}
       />
@@ -261,13 +261,13 @@ function TreinoAtivoPage() {
         )}
       </div>
 
-      {cronometroDescansoAtivo && (
+      {restTimerActive && (
         <RestCard
-          segundosRestantes={cronometroDescansoSegundos}
+          segundosRestantes={restTimerSeconds}
           onPular={() => {
-            descansoAcabouNaturalRef.current = false
+            restEndedNaturalRef.current = false
             cancelarNotificacaoDescanso()
-            pararDescanso()
+            stopRest()
           }}
         />
       )}
@@ -336,21 +336,21 @@ function TreinoAtivoPage() {
                 placeholder="0"
                 onChange={(e) => {
                   const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
-                  atualizarSerie(exercicioAtualIndex, sIdx, { peso: val })
+                  updateSet(currentExerciseIndex, sIdx, { peso: val })
                   if (exercicioAtual.series.length > 1) setApplyAll({ field: 'peso', sIdx, value: val })
                 }}
                 onBlur={(e) => {
-                  if (!plano) return
+                  if (!plan) return
                   const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
-                  const exIdx = plano.exercicios.findIndex((ex) => ex.exercicioId === exercicioAtual.exercicioId)
+                  const exIdx = plan.exercicios.findIndex((ex) => ex.exercicioId === exercicioAtual.exercicioId)
                   if (exIdx === -1) return
-                  const exercicios = plano.exercicios.map((ex, i) => {
+                  const exercicios = plan.exercicios.map((ex, i) => {
                     if (i !== exIdx) return ex
                     const base = ex.seriesDetalhadas ?? Array.from({ length: ex.series }, () => ({ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta }))
                     const seriesDetalhadas = base.map((s, j) => (j === sIdx ? { ...s, peso: val } : s))
                     return { ...ex, seriesDetalhadas }
                   })
-                  atualizarPlano({ ...plano, exercicios })
+                  updatePlanById({ ...plan, exercicios })
                 }}
                 onFocus={(e) => e.target.select()}
               />
@@ -383,7 +383,7 @@ function TreinoAtivoPage() {
                   placeholder={tipo === 'falha' ? 'Falha' : '0'}
                   onChange={(e) => {
                     const val = e.target.value === '' ? 0 : parseInt(e.target.value)
-                    atualizarSerie(exercicioAtualIndex, sIdx, { repeticoes: val })
+                    updateSet(currentExerciseIndex, sIdx, { repeticoes: val })
                     if (exercicioAtual.series.length > 1) setApplyAll({ field: 'repeticoes', sIdx, value: val })
                   }}
                   onFocus={(e) => e.target.select()}
@@ -394,7 +394,7 @@ function TreinoAtivoPage() {
               <button
                 onClick={() => {
                   if (tipo === 'tempo' && isTimerAtivo) pararTimerSerie()
-                  handleCompletarSerie(sIdx)
+                  handleCompleteSet(sIdx)
                 }}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
                   serie.completada
@@ -429,7 +429,7 @@ function TreinoAtivoPage() {
                       onClick={() => {
                         exercicioAtual.series.forEach((_, i) => {
                           if (i > applyAll.sIdx)
-                            atualizarSerie(exercicioAtualIndex, i, { [applyAll.field]: applyAll.value })
+                            updateSet(currentExerciseIndex, i, { [applyAll.field]: applyAll.value })
                         })
                         setApplyAll(null)
                       }}
@@ -441,7 +441,7 @@ function TreinoAtivoPage() {
                   <button
                     onClick={() => {
                       exercicioAtual.series.forEach((_, i) => {
-                        atualizarSerie(exercicioAtualIndex, i, { [applyAll.field]: applyAll.value })
+                        updateSet(currentExerciseIndex, i, { [applyAll.field]: applyAll.value })
                       })
                       setApplyAll(null)
                     }}
@@ -476,7 +476,7 @@ function TreinoAtivoPage() {
             className="mt-4 w-full btn-secondary flex items-center justify-center gap-2 mb-[100px]"
           >
             <SkipForward size={16} />
-            Próximo: {sessao.exercicios[exercicioAtualIndex + 1]?.exercicioNome}
+            Próximo: {session.exercicios[currentExerciseIndex + 1]?.exercicioNome}
           </button>
         )}
 
@@ -493,7 +493,7 @@ function TreinoAtivoPage() {
         <ConfirmCancelModal
           onConfirm={() => {
             cancelarNotificacaoDescanso()
-            limparLocal()
+            clearLocal()
             navigate({ to: '/workouts' })
           }}
           onCancel={() => setShowConfirmCancelar(false)}
@@ -503,7 +503,7 @@ function TreinoAtivoPage() {
       {showInfo && (
         <ExerciseInfoModal
           exercicio={exercicioAtual}
-          exercicioPlano={planoExercicio}
+          exercicioPlano={planExercise}
           onClose={() => setShowInfo(false)}
         />
       )}
@@ -513,7 +513,7 @@ function TreinoAtivoPage() {
           notas={notasTemp}
           onNotasChange={setNotasTemp}
           onSalvar={() => {
-            atualizarNotas(notasTemp)
+            updateNotes(notasTemp)
             setShowNotas(false)
             toast.success('Notas salvas!')
           }}

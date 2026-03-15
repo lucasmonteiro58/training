@@ -18,37 +18,37 @@ export const Route = createFileRoute('/workouts/new')({
 
 function NovoPlanoPage() {
   const {
-    nome,
-    setNome,
-    descricao,
-    setDescricao,
+    name,
+    setName,
+    description,
+    setDescription,
     exercicios,
     saving,
     showPicker,
     setShowPicker,
-    corSelecionada,
-    setCorSelecionada,
-    selecionados,
-    setSelecionados,
+    selectedColor,
+    setSelectedColor,
+    selected,
+    setSelected,
     showGroupMenu,
     setShowGroupMenu,
-    salvouRef,
+    savedRef,
     isDirty,
     sensors,
-    criarAgrupamento,
-    removerDoAgrupamento,
-    toggleSelecionado,
-    adicionarExercicio,
-    removerExercicio,
-    atualizarExercicio,
+    createGrouping,
+    removeFromGrouping,
+    toggleSelected,
+    addExercise,
+    removeExercise,
+    updateExercise,
     handleDragOver,
-    salvar,
+    save,
   } = useNewPlan()
   const navigate = useNavigate()
 
   const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } =
     useBlocker({
-      shouldBlockFn: () => isDirty && !salvouRef.current,
+      shouldBlockFn: () => isDirty && !savedRef.current,
       withResolver: true,
     })
 
@@ -57,18 +57,18 @@ function NovoPlanoPage() {
       <div className="page-container pt-4">
         <NewPlanHeader
           onBack={() => navigate({ to: '/workouts' })}
-          onSave={salvar}
+          onSave={save}
           saving={saving}
-          saveDisabled={!nome.trim()}
+          saveDisabled={!name.trim()}
         />
 
         <PlanDetailsCard
-          nome={nome}
-          onNomeChange={setNome}
-          descricao={descricao}
-          onDescricaoChange={setDescricao}
-          corSelecionada={corSelecionada}
-          onCorChange={setCorSelecionada}
+          nome={name}
+          onNomeChange={setName}
+          descricao={description}
+          onDescricaoChange={setDescription}
+          corSelecionada={selectedColor}
+          onCorChange={setSelectedColor}
         />
 
         <div className="mb-4">
@@ -76,20 +76,20 @@ function NovoPlanoPage() {
             <h2 className="text-sm font-bold text-text">EXERCÍCIOS ({exercicios.length})</h2>
             {exercicios.length >= 2 && (
               <div className="flex items-center gap-2">
-                {selecionados.size >= 2 && (
+                {selected.size >= 2 && (
                   <button
                     type="button"
                     onClick={() => setShowGroupMenu(true)}
                     className="flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 px-2.5 py-1 rounded-lg"
                   >
                     <Link2 size={12} />
-                    Agrupar ({selecionados.size})
+                    Agrupar ({selected.size})
                   </button>
                 )}
-                {selecionados.size > 0 && (
+                {selected.size > 0 && (
                   <button
                     type="button"
-                    onClick={() => setSelecionados(new Set())}
+                    onClick={() => setSelected(new Set())}
                     className="text-xs text-text-muted"
                   >
                     Limpar
@@ -132,12 +132,12 @@ function NovoPlanoPage() {
                               <ExerciseInPlanCard
                                 key={gex.id}
                                 exercicio={gex}
-                                onUpdate={campo => atualizarExercicio(gex.id, campo)}
-                                onRemove={() => removerExercicio(gex.id)}
+                                onUpdate={campo => updateExercise(gex.id, campo)}
+                                onRemove={() => removeExercise(gex.id)}
                                 isSelected={selecionados.has(gex.id)}
-                                onToggleSelect={() => toggleSelecionado(gex.id)}
+                                onToggleSelect={() => toggleSelected(gex.id)}
                                 showSelect={exercicios.length >= 2}
-                                onRemoveFromGroup={() => removerDoAgrupamento(gex.id)}
+                                onRemoveFromGroup={() => removeFromGrouping(gex.id)}
                               />
                             ))}
                           </div>
@@ -149,10 +149,10 @@ function NovoPlanoPage() {
                       <ExerciseInPlanCard
                         key={ex.id}
                         exercicio={ex}
-                        onUpdate={campo => atualizarExercicio(ex.id, campo)}
-                        onRemove={() => removerExercicio(ex.id)}
+                        onUpdate={campo => updateExercise(ex.id, campo)}
+                        onRemove={() => removeExercise(ex.id)}
                         isSelected={selecionados.has(ex.id)}
-                        onToggleSelect={() => toggleSelecionado(ex.id)}
+                        onToggleSelect={() => toggleSelected(ex.id)}
                         showSelect={exercicios.length >= 2}
                       />
                     )
@@ -180,7 +180,7 @@ function NovoPlanoPage() {
       {showPicker && (
         <ExercisePicker
           onSelect={(ex) => {
-            adicionarExercicio({
+            addExercise({
               id: uuidv4(),
               exercicioId: ex.id,
               exercicio: ex,
@@ -196,7 +196,7 @@ function NovoPlanoPage() {
       )}
 
       {showGroupMenu && (
-        <GroupTypeModal onSelect={criarAgrupamento} onClose={() => setShowGroupMenu(false)} />
+        <GroupTypeModal onSelect={createGrouping} onClose={() => setShowGroupMenu(false)} />
       )}
     </>
   )

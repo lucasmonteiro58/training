@@ -30,20 +30,20 @@ export const Route = createFileRoute('/profile/')({
 
 function PerfilPage() {
   const { user, logout } = useAuth()
-  const planos = usePlansStore((s) => s.planos)
-  const sessoes = useHistoryStore((s) => s.sessoes)
+  const plans = usePlansStore((s) => s.plans)
+  const sessions = useHistoryStore((s) => s.sessions)
   const [notifPermitida, setNotifPermitida] = useState(() => getNotifAtivas())
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
 
   const streaks = useMemo(
-    () => calcularStreaks(sessoes, 4, parseDiasOpcionais()),
-    [sessoes]
+    () => calcularStreaks(sessions, 4, parseDiasOpcionais()),
+    [sessions]
   )
-  const conquistas = useMemo(() => calcularConquistas(sessoes, streaks), [sessoes, streaks])
+  const conquistas = useMemo(() => calcularConquistas(sessions, streaks), [sessions, streaks])
 
-  const totalDuracao = sessoes.reduce((sum, s) => sum + (s.duracaoSegundos ?? 0), 0)
-  const totalVolume = sessoes.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
+  const totalDuracao = sessions.reduce((sum, s) => sum + (s.duracaoSegundos ?? 0), 0)
+  const totalVolume = sessions.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
 
   const handleNotif = async () => {
     const permissao = typeof Notification !== 'undefined' ? Notification.permission : 'denied'
@@ -86,8 +86,8 @@ function PerfilPage() {
       />
 
       <ProfileStats
-        totalTreinos={sessoes.length}
-        totalPlanos={planos.length}
+        totalTreinos={sessions.length}
+        totalPlanos={plans.length}
         volumeTotal={totalVolume}
         tempoTotal={totalDuracao}
       />
@@ -116,8 +116,8 @@ function PerfilPage() {
 
       {showExportMenu && (
         <ExportModal
-          sessoes={sessoes}
-          planos={planos}
+          sessoes={sessions}
+          planos={plans}
           onClose={() => setShowExportMenu(false)}
           onExport={(msg) => toast.success(msg)}
         />

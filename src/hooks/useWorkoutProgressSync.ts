@@ -8,9 +8,9 @@ import {
 import { useHistory } from './useHistory'
 
 export function useWorkoutProgressSync(user: { uid: string } | null) {
-  const { salvarSessaoCompleta } = useHistory()
-  const setSessaoAutoEncerrada = useHistoryStore(
-    (s) => s.setSessaoAutoEncerrada
+  const { saveSessionComplete } = useHistory()
+  const setAutoClosedSnapshot = useHistoryStore(
+    (s) => s.setAutoClosedSnapshot
   )
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
       const historicoState = useHistoryStore.getState()
 
       if (!dados || !dados.iniciado) {
-        if (state.iniciado) state.limparLocal()
+        if (state.started) state.clearLocal()
         return
       }
 
@@ -31,7 +31,7 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
         Date.now() - updatedAt > INATIVIDADE_AUTO_ENCERRAR_MS
       ) {
         if (
-          historicoState.sessaoAutoEncerrada?.sessao.id === dados.sessao?.id
+          historicoState.autoClosedSnapshot?.session.id === dados.sessao?.id
         )
           return
         const sessao = dados.sessao
@@ -53,14 +53,14 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
           volumeTotal: calcularVolume(sessao),
           autoEncerrado: true,
         }
-        salvarSessaoCompleta(finalizada).then(() => {
+        saveSessionComplete(finalizada).then(() => {
           clearWorkoutProgressFromFirestore(user.uid)
-          state.limparLocal()
-          setSessaoAutoEncerrada({
-            sessao: finalizada,
-            exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
-            serieAtualIndex: dados.serieAtualIndex ?? 0,
-            cronometroGeralSegundos:
+          state.clearLocal()
+          setAutoClosedSnapshot({
+            session: finalizada,
+            currentExerciseIndex: dados.exercicioAtualIndex ?? 0,
+            currentSetIndex: dados.serieAtualIndex ?? 0,
+            totalTimerSeconds:
               (dados as { cronometroGeralSegundos?: number })
                 .cronometroGeralSegundos ?? 0,
           })
@@ -68,14 +68,14 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
         return
       }
 
-      if (!state.iniciado) {
-        state.restaurarDeExterno(dados)
+      if (!state.started) {
+        state.restoreFromExternal(dados as Parameters<typeof state.restoreFromExternal>[0])
         return
       }
 
-      state.sincronizarEstadoExterno(dados)
+      state.syncExternalState(dados as Parameters<typeof state.syncExternalState>[0])
     })
 
     return unsub
-  }, [user, salvarSessaoCompleta, setSessaoAutoEncerrada])
+  }, [user, saveSessionComplete, setAutoClosedSnapshot])
 }

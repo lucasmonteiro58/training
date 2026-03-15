@@ -5,12 +5,12 @@ import { AlertTriangle, Play } from 'lucide-react'
 
 export function useStartWorkout() {
   const navigate = useNavigate()
-  const treinoAtivo = useActiveWorkoutStore((s) => s.iniciado)
-  const sessao = useActiveWorkoutStore((s) => s.sessao)
+  const treinoAtivo = useActiveWorkoutStore((s) => s.started)
+  const session = useActiveWorkoutStore((s) => s.session)
   const [pendingId, setPendingId] = useState<string | null>(null)
 
   const handleIniciar = (planoId: string) => {
-    if (treinoAtivo && sessao?.planoId !== planoId) {
+    if (treinoAtivo && session?.planoId !== planoId) {
       setPendingId(planoId)
     } else {
       navigate({ to: '/active-workout/$planId', params: { planId } })

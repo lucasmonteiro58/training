@@ -17,23 +17,23 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 
 export function useNewPlan() {
   const navigate = useNavigate()
-  const { criarPlano, atualizarPlano } = usePlans()
-  const salvouRef = useRef(false)
+  const { createPlan, updatePlanById } = usePlans()
+  const savedRef = useRef(false)
 
-  const [nome, setNome] = useState('')
-  const [descricao, setDescricao] = useState('')
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [exercicios, setExercicios] = useState<ExerciseInPlan[]>([])
   const [saving, setSaving] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
-  const [corSelecionada, setCorSelecionada] = useState(PLAN_COLORS[0])
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [selectedColor, setSelectedColor] = useState(PLAN_COLORS[0])
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showGroupMenu, setShowGroupMenu] = useState(false)
 
   const isDirty =
-    nome.trim() !== '' ||
-    descricao.trim() !== '' ||
+    name.trim() !== '' ||
+    description.trim() !== '' ||
     exercicios.length > 0 ||
-    corSelecionada !== PLAN_COLORS[0]
+    selectedColor !== PLAN_COLORS[0]
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -45,20 +45,20 @@ export function useNewPlan() {
     })
   )
 
-  const criarAgrupamento = useCallback((tipo: GroupingType) => {
+  const createGrouping = useCallback((tipo: GroupingType) => {
     setExercicios((prev) => {
-      if (selecionados.size < 2) return prev
+      if (selected.size < 2) return prev
       const agrupamentoId = uuidv4()
-      const sel = selecionados
+      const sel = selected
       return prev.map((ex) =>
         sel.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex
       )
     })
-    setSelecionados(new Set())
+    setSelected(new Set())
     setShowGroupMenu(false)
-  }, [selecionados])
+  }, [selected])
 
-  const removerDoAgrupamento = useCallback((exId: string) => {
+  const removeFromGrouping = useCallback((exId: string) => {
     setExercicios((prev) =>
       prev.map((ex) =>
         ex.id === exId
@@ -68,8 +68,8 @@ export function useNewPlan() {
     )
   }, [])
 
-  const toggleSelecionado = useCallback((id: string) => {
-    setSelecionados((prev) => {
+  const toggleSelected = useCallback((id: string) => {
+    setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -77,7 +77,7 @@ export function useNewPlan() {
     })
   }, [])
 
-  const adicionarExercicio = useCallback(
+  const addExercise = useCallback(
     (ex: Partial<ExerciseInPlan> & { exercicio: any }) => {
       const seriesPadrao = Array(3).fill({ peso: 0, repeticoes: 10 })
       setExercicios((prev) => [
@@ -94,11 +94,11 @@ export function useNewPlan() {
     []
   )
 
-  const removerExercicio = useCallback((id: string) => {
+  const removeExercise = useCallback((id: string) => {
     setExercicios((prev) => prev.filter((e) => e.id !== id))
   }, [])
 
-  const atualizarExercicio = useCallback(
+  const updateExercise = useCallback(
     (id: string, campo: Partial<ExerciseInPlan>) => {
       setExercicios((prev) =>
         prev.map((e) => (e.id === id ? { ...e, ...campo } : e))
@@ -121,16 +121,16 @@ export function useNewPlan() {
     }
   }, [])
 
-  const salvar = useCallback(async () => {
-    if (!nome.trim()) return
+  const save = useCallback(async () => {
+    if (!name.trim()) return
     setSaving(true)
     try {
-      const plano = await criarPlano(
-        nome.trim(),
-        descricao.trim() || undefined
+      const plan = await createPlan(
+        name.trim(),
+        description.trim() || undefined
       )
-      await atualizarPlano({ ...plano, exercicios, cor: corSelecionada })
-      salvouRef.current = true
+      await updatePlanById({ ...plan, exercicios, cor: selectedColor })
+      savedRef.current = true
       navigate({ to: '/workouts' })
     } catch (err) {
       console.error(err)
@@ -139,12 +139,12 @@ export function useNewPlan() {
       setSaving(false)
     }
   }, [
-    nome,
-    descricao,
+    name,
+    description,
     exercicios,
-    corSelecionada,
-    criarPlano,
-    atualizarPlano,
+    selectedColor,
+    createPlan,
+    updatePlanById,
     navigate,
   ])
 
@@ -157,31 +157,31 @@ export function useNewPlan() {
   }, [isDirty, navigate])
 
   return {
-    nome,
-    setNome,
-    descricao,
-    setDescricao,
+    name,
+    setName,
+    description,
+    setDescription,
     exercicios,
     saving,
     showPicker,
     setShowPicker,
-    corSelecionada,
-    setCorSelecionada,
-    selecionados,
-    setSelecionados,
+    selectedColor,
+    setSelectedColor,
+    selected,
+    setSelected,
     showGroupMenu,
     setShowGroupMenu,
-    salvouRef,
+    savedRef,
     isDirty,
     sensors,
-    criarAgrupamento,
-    removerDoAgrupamento,
-    toggleSelecionado,
-    adicionarExercicio,
-    removerExercicio,
-    atualizarExercicio,
+    createGrouping,
+    removeFromGrouping,
+    toggleSelected,
+    addExercise,
+    removeExercise,
+    updateExercise,
     handleDragOver,
-    salvar,
+    save,
     handleBack,
   }
 }

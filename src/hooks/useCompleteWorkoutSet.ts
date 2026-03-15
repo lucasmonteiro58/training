@@ -4,103 +4,103 @@ import { detectarNovoPR } from '../lib/records'
 import type { WorkoutSession } from '../types'
 import type { RecordeExercicio } from '../lib/records'
 
-interface UseCompletarSerieTreinoParams {
-  sessao: WorkoutSession | null
-  exercicioAtualIndex: number
+interface UseCompleteWorkoutSetParams {
+  session: WorkoutSession | null
+  currentExerciseIndex: number
   recordes: Map<string, RecordeExercicio>
-  salvarPesosNoPlano: (exIdx?: number) => void
-  marcarSerieCompletada: (exercicioIdx: number, serieIdx: number) => void
-  atualizarSerie: (
+  saveWeightsToPlan: (exIdx?: number) => void
+  markSetCompleted: (exercicioIdx: number, serieIdx: number) => void
+  updateSet: (
     exercicioIdx: number,
     serieIdx: number,
     dados: Partial<{ repeticoes: number; peso: number; completada: boolean }>
   ) => void
-  iniciarDescanso: (segundos: number) => void
-  proximoExercicio: () => void
-  exercicioAnterior: () => void
-  pararDescanso: () => void
-  cancelarNotificacaoDescanso: () => void
-  descansoAcabouNaturalRef: React.MutableRefObject<boolean>
+  startRest: (segundos: number) => void
+  nextExercise: () => void
+  previousExercise: () => void
+  stopRest: () => void
+  cancelRestNotification: () => void
+  restEndedNaturalRef: React.MutableRefObject<boolean>
   onPrDetected?: () => void
   onWorkoutComplete?: () => void
 }
 
 export function useCompleteWorkoutSet({
-  sessao,
-  exercicioAtualIndex,
+  session,
+  currentExerciseIndex,
   recordes,
-  salvarPesosNoPlano,
-  marcarSerieCompletada,
-  atualizarSerie,
-  iniciarDescanso,
-  proximoExercicio,
-  exercicioAnterior,
-  pararDescanso,
-  cancelarNotificacaoDescanso,
-  descansoAcabouNaturalRef,
+  saveWeightsToPlan,
+  markSetCompleted,
+  updateSet,
+  startRest,
+  nextExercise,
+  previousExercise,
+  stopRest,
+  cancelRestNotification,
+  restEndedNaturalRef,
   onPrDetected,
   onWorkoutComplete,
-}: UseCompletarSerieTreinoParams) {
+}: UseCompleteWorkoutSetParams) {
   const prExibidoRef = useRef<Map<string, number>>(new Map())
 
-  const handleCompletarSerie = useCallback(
+  const handleCompleteSet = useCallback(
     (serieIdx: number) => {
-      const exercicioAtual = sessao?.exercicios[exercicioAtualIndex]
-      if (!exercicioAtual || !sessao) return
-      const serie = exercicioAtual.series[serieIdx]
-      const novaCompletada = !serie.completada
+      const currentExercise = session?.exercicios[currentExerciseIndex]
+      if (!currentExercise || !session) return
+      const serie = currentExercise.series[serieIdx]
+      const newlyCompleted = !serie.completada
 
-      if (novaCompletada) {
-        marcarSerieCompletada(exercicioAtualIndex, serieIdx)
-        setTimeout(() => salvarPesosNoPlano(), 0)
+      if (newlyCompleted) {
+        markSetCompleted(currentExerciseIndex, serieIdx)
+        setTimeout(() => saveWeightsToPlan(), 0)
 
-        const serieAtual = exercicioAtual.series[serieIdx]
-        const exId = exercicioAtual.exercicioId
+        const currentSet = currentExercise.series[serieIdx]
+        const exId = currentExercise.exercicioId
         const pesoCelebrado = prExibidoRef.current.get(exId) ?? 0
-        if (serieAtual.peso > pesoCelebrado) {
+        if (currentSet.peso > pesoCelebrado) {
           const prCheck = detectarNovoPR(
-            { ...serieAtual, completada: true },
+            { ...currentSet, completada: true },
             exId,
             recordes,
           )
           if (prCheck && prCheck.tipo === 'peso') {
-            prExibidoRef.current.set(exId, serieAtual.peso)
+            prExibidoRef.current.set(exId, currentSet.peso)
             onPrDetected?.()
           }
         }
 
         prepararAudio()
 
-        const isInGroup = !!exercicioAtual.agrupamentoId
+        const isInGroup = !!currentExercise.agrupamentoId
         const groupExercises = isInGroup
-          ? sessao.exercicios
+          ? session.exercicios
               .map((ex, idx) => ({ ex, idx }))
-              .filter(({ ex }) => ex.agrupamentoId === exercicioAtual.agrupamentoId)
+              .filter(({ ex }) => ex.agrupamentoId === currentExercise.agrupamentoId)
           : []
         const currentGroupPos = groupExercises.findIndex(
-          (g) => g.idx === exercicioAtualIndex
+          (g) => g.idx === currentExerciseIndex
         )
         const nextInGroup =
           currentGroupPos >= 0 && currentGroupPos < groupExercises.length - 1
             ? groupExercises[currentGroupPos + 1]
             : null
 
-        const todasExercicioCompletas = exercicioAtual.series.every((s, i) =>
+        const allSetsInExerciseComplete = currentExercise.series.every((s, i) =>
           i === serieIdx ? true : s.completada
         )
 
-        if (todasExercicioCompletas && isInGroup && nextInGroup) {
+        if (allSetsInExerciseComplete && isInGroup && nextInGroup) {
           setTimeout(() => {
             const target = nextInGroup.idx
-            const diff = target - exercicioAtualIndex
-            for (let i = 0; i < diff; i++) proximoExercicio()
+            const diff = target - currentExerciseIndex
+            for (let i = 0; i < diff; i++) nextExercise()
           }, 600)
-        } else if (todasExercicioCompletas && isInGroup && !nextInGroup) {
+        } else if (allSetsInExerciseComplete && isInGroup && !nextInGroup) {
           prepararAudio()
-          iniciarDescanso(exercicioAtual.descansoSegundos)
+          startRest(currentExercise.descansoSegundos)
           const allGroupDone = groupExercises.every(({ idx }) =>
-            sessao.exercicios[idx].series.every((s, i) =>
-              idx === exercicioAtualIndex
+            session.exercicios[idx].series.every((s, i) =>
+              idx === currentExerciseIndex
                 ? i === serieIdx
                   ? true
                   : s.completada
@@ -109,81 +109,81 @@ export function useCompleteWorkoutSet({
           )
           if (allGroupDone) {
             const lastGroupIdx = groupExercises[groupExercises.length - 1].idx
-            const isLastExercicio =
-              lastGroupIdx === sessao.exercicios.length - 1
-            if (!isLastExercicio) {
+            const isLastExercise =
+              lastGroupIdx === session.exercicios.length - 1
+            if (!isLastExercise) {
               setTimeout(() => {
                 const target = lastGroupIdx + 1
-                const diff = target - exercicioAtualIndex
-                for (let i = 0; i < diff; i++) proximoExercicio()
+                const diff = target - currentExerciseIndex
+                for (let i = 0; i < diff; i++) nextExercise()
               }, 800)
             } else {
-              const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) =>
+              const wholeWorkoutComplete = session.exercicios.every((ex, eIdx) =>
                 ex.series.every((s, i) =>
-                  eIdx === exercicioAtualIndex && i === serieIdx
+                  eIdx === currentExerciseIndex && i === serieIdx
                     ? true
                     : s.completada
                 )
               )
-              if (todosTreinoCompleto) {
+              if (wholeWorkoutComplete) {
                 setTimeout(() => onWorkoutComplete?.(), 800)
               }
             }
           } else {
             setTimeout(() => {
               const target = groupExercises[0].idx
-              const diff = exercicioAtualIndex - target
-              for (let i = 0; i < diff; i++) exercicioAnterior()
+              const diff = currentExerciseIndex - target
+              for (let i = 0; i < diff; i++) previousExercise()
             }, 800)
           }
         } else {
           prepararAudio()
-          iniciarDescanso(exercicioAtual.descansoSegundos)
+          startRest(currentExercise.descansoSegundos)
 
-          const isLastExercicio =
-            exercicioAtualIndex === sessao.exercicios.length - 1
-          if (todasExercicioCompletas) {
-            if (!isLastExercicio) {
-              setTimeout(() => proximoExercicio(), 800)
+          const isLastExercise =
+            currentExerciseIndex === session.exercicios.length - 1
+          if (allSetsInExerciseComplete) {
+            if (!isLastExercise) {
+              setTimeout(() => nextExercise(), 800)
             } else {
-              const todosTreinoCompleto = sessao.exercicios.every((ex, eIdx) => {
-                if (eIdx === exercicioAtualIndex) {
+              const wholeWorkoutComplete = session.exercicios.every((ex, eIdx) => {
+                if (eIdx === currentExerciseIndex) {
                   return ex.series.every((s, i) =>
                     i === serieIdx ? true : s.completada
                   )
                 }
                 return ex.series.every((s) => s.completada)
               })
-              if (todosTreinoCompleto) {
+              if (wholeWorkoutComplete) {
                 setTimeout(() => onWorkoutComplete?.(), 800)
               }
             }
           }
         }
       } else {
-        atualizarSerie(exercicioAtualIndex, serieIdx, { completada: false })
-        descansoAcabouNaturalRef.current = false
-        cancelarNotificacaoDescanso()
-        pararDescanso()
+        updateSet(currentExerciseIndex, serieIdx, { completada: false })
+        restEndedNaturalRef.current = false
+        cancelRestNotification()
+        stopRest()
       }
     },
     [
-      sessao,
-      exercicioAtualIndex,
+      session,
+      currentExerciseIndex,
       recordes,
-      salvarPesosNoPlano,
-      marcarSerieCompletada,
-      atualizarSerie,
-      iniciarDescanso,
-      proximoExercicio,
-      exercicioAnterior,
-      pararDescanso,
-      cancelarNotificacaoDescanso,
-      descansoAcabouNaturalRef,
+      saveWeightsToPlan,
+      markSetCompleted,
+      updateSet,
+      startRest,
+      nextExercise,
+      previousExercise,
+      stopRest,
+      cancelRestNotification,
+      restEndedNaturalRef,
       onPrDetected,
       onWorkoutComplete,
     ]
   )
 
-  return { handleCompletarSerie }
+  return { handleCompleteSet }
 }

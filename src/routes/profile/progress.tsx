@@ -12,13 +12,13 @@ export const Route = createFileRoute('/profile/progress')({
 })
 
 function EvolucaoPage() {
-  const sessoes = useHistoryStore(s => s.sessoes)
+  const sessions = useHistoryStore(s => s.sessions)
   const navigate = useNavigate()
   const [tab, setTab] = useState<ProgressTabId>('exercicios')
 
   const exercicios = useMemo(() => {
     const map = new Map<string, string>()
-    sessoes.forEach(s => {
+    sessions.forEach(s => {
       s.exercicios.forEach(ex => {
         if (ex.series.some(sr => sr.completada && sr.peso > 0))
           map.set(ex.exercicioId, ex.exercicioNome)
@@ -27,12 +27,12 @@ function EvolucaoPage() {
     return Array.from(map.entries())
       .map(([id, nome]) => ({ id, nome }))
       .sort((a, b) => a.nome.localeCompare(b.nome))
-  }, [sessoes])
+  }, [sessions])
 
   const timelineByExercicio = useMemo(() => {
     const result = new Map<string, { data: string; peso: number; iniciadoEm: number }[]>()
     exercicios.forEach(({ id }) => {
-      const pontos = sessoes
+      const pontos = sessions
         .filter(s => s.exercicios.some(ex => ex.exercicioId === id))
         .sort((a, b) => a.iniciadoEm - b.iniciadoEm)
         .flatMap(s => {
@@ -55,11 +55,11 @@ function EvolucaoPage() {
       if (pontos.length) result.set(id, pontos)
     })
     return result
-  }, [sessoes, exercicios])
+  }, [sessions, exercicios])
 
   const dadosVolume = useMemo(
     () =>
-      sessoes
+      sessions
         .slice()
         .sort((a, b) => a.iniciadoEm - b.iniciadoEm)
         .slice(-20)
@@ -71,10 +71,10 @@ function EvolucaoPage() {
           volume: Math.round(s.volumeTotal ?? 0),
           plano: s.planoNome,
         })),
-    [sessoes]
+    [sessions]
   )
 
-  if (sessoes.length === 0) {
+  if (sessions.length === 0) {
     return (
       <div className="page-container pt-6 flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-16 h-16 rounded-3xl bg-surface-2 flex items-center justify-center mb-4">

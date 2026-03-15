@@ -63,7 +63,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { user, loading: loadingAuth } = useAuthHook()
-  const { iniciado, pausado, tickGeral } = useActiveWorkoutStore()
+  const { started, paused, tickTotal } = useActiveWorkoutStore()
 
   useWorkoutProgressSync(user)
 
@@ -77,10 +77,10 @@ function RootComponent() {
   }, [])
 
   useEffect(() => {
-    if (!iniciado || pausado) return
-    const interval = setInterval(tickGeral, 1000)
+    if (!started || paused) return
+    const interval = setInterval(tickTotal, 1000)
     return () => clearInterval(interval)
-  }, [iniciado, pausado, tickGeral])
+  }, [started, paused, tickTotal])
 
   if (loadingAuth) {
     return <AuthLoadingScreen />

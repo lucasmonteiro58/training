@@ -2,38 +2,38 @@ import { create } from 'zustand'
 import type { WorkoutSession } from '../types'
 
 export interface AutoClosedSnapshot {
-  sessao: WorkoutSession
-  exercicioAtualIndex: number
-  serieAtualIndex: number
-  cronometroGeralSegundos: number
+  session: WorkoutSession
+  currentExerciseIndex: number
+  currentSetIndex: number
+  totalTimerSeconds: number
 }
 
 export interface HistoryState {
-  sessoes: WorkoutSession[]
+  sessions: WorkoutSession[]
   loading: boolean
-  /** Preenchido quando um treino foi encerrado automaticamente por inatividade (20 min) */
-  sessaoAutoEncerrada: AutoClosedSnapshot | null
-  setSessoes: (sessoes: WorkoutSession[]) => void
-  addSessao: (sessao: WorkoutSession) => void
-  removeSessao: (id: string) => void
+  /** Filled when a workout was auto-closed due to inactivity (20 min) */
+  autoClosedSnapshot: AutoClosedSnapshot | null
+  setSessions: (sessions: WorkoutSession[]) => void
+  addSession: (session: WorkoutSession) => void
+  removeSession: (id: string) => void
   setLoading: (v: boolean) => void
-  setSessaoAutoEncerrada: (snapshot: AutoClosedSnapshot | null) => void
+  setAutoClosedSnapshot: (snapshot: AutoClosedSnapshot | null) => void
 }
 
 export const useHistoryStore = create<HistoryState>(set => ({
-  sessoes: [],
+  sessions: [],
   loading: true,
-  sessaoAutoEncerrada: null,
-  setSessoes: sessoes => set({ sessoes }),
-  addSessao: sessao =>
+  autoClosedSnapshot: null,
+  setSessions: sessions => set({ sessions }),
+  addSession: session =>
     set(s => {
-      const exists = s.sessoes.some(x => x.id === sessao.id)
+      const exists = s.sessions.some(x => x.id === session.id)
       const next = exists
-        ? s.sessoes.map(x => (x.id === sessao.id ? sessao : x))
-        : [sessao, ...s.sessoes]
-      return { sessoes: next.sort((a, b) => b.iniciadoEm - a.iniciadoEm) }
+        ? s.sessions.map(x => (x.id === session.id ? session : x))
+        : [session, ...s.sessions]
+      return { sessions: next.sort((a, b) => b.iniciadoEm - a.iniciadoEm) }
     }),
-  removeSessao: id => set(s => ({ sessoes: s.sessoes.filter(s2 => s2.id !== id) })),
+  removeSession: id => set(s => ({ sessions: s.sessions.filter(s2 => s2.id !== id) })),
   setLoading: loading => set({ loading }),
-  setSessaoAutoEncerrada: sessaoAutoEncerrada => set({ sessaoAutoEncerrada }),
+  setAutoClosedSnapshot: autoClosedSnapshot => set({ autoClosedSnapshot }),
 }))

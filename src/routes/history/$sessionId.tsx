@@ -18,14 +18,14 @@ export const Route = createFileRoute('/history/$sessionId')({
 function SessaoDetalhePage() {
   const { sessionId } = Route.useParams()
   const navigate = useNavigate()
-  const { sessoes, salvarSessaoCompleta } = useHistory()
-  const allSessoes = useHistoryStore((s) => s.sessoes)
-  const sessao = sessoes.find((s) => s.id === sessionId)
-  const restaurarDeHistorico = useActiveWorkoutStore(
-    (s) => s.restaurarDeHistorico
+  const { sessions, saveSessionComplete } = useHistory()
+  const allSessions = useHistoryStore((s) => s.sessions)
+  const session = sessions.find((s) => s.id === sessionId)
+  const restoreFromHistory = useActiveWorkoutStore(
+    (s) => s.restoreFromHistory
   )
 
-  const edicao = useSessionEdit(sessao, salvarSessaoCompleta)
+  const edicao = useSessionEdit(session, saveSessionComplete)
   const {
     editando,
     editData,
@@ -39,11 +39,11 @@ function SessaoDetalhePage() {
   } = edicao
 
   const recordesSemAtual = useMemo(
-    () => calcularRecordes(allSessoes.filter((s) => s.id !== sessionId)),
-    [allSessoes, sessionId]
+    () => calcularRecordes(allSessions.filter((s) => s.id !== sessionId)),
+    [allSessions, sessionId]
   )
 
-  if (!sessao) {
+  if (!session) {
     return (
       <div className="page-container pt-6 text-center">
         <p className="text-text-muted">Sessão não encontrada.</p>
@@ -112,7 +112,7 @@ function SessaoDetalhePage() {
 
       <ReturnToWorkoutButton
         onClick={() => {
-          restaurarDeHistorico(displaySessao!)
+          restoreFromHistory(displaySessao!)
           navigate({
             to: '/active-workout/$planId',
             params: { planId: displaySessao!.planoId },

@@ -3,19 +3,19 @@ import type { WorkoutSession } from '../types'
 import { toast } from 'sonner'
 
 export function useSessionEdit(
-  sessao: WorkoutSession | undefined,
-  salvarSessaoCompleta: (sessao: WorkoutSession) => Promise<void>
+  session: WorkoutSession | undefined,
+  saveSessionComplete: (session: WorkoutSession) => Promise<void>
 ) {
   const [editando, setEditando] = useState(false)
   const [editData, setEditData] = useState<WorkoutSession | null>(null)
 
-  const displaySessao = editando && editData ? editData : sessao ?? null
+  const displaySessao = editando && editData ? editData : session ?? null
 
   const iniciarEdicao = useCallback(() => {
-    if (!sessao) return
-    setEditData(JSON.parse(JSON.stringify(sessao)))
+    if (!session) return
+    setEditData(JSON.parse(JSON.stringify(session)))
     setEditando(true)
-  }, [sessao])
+  }, [session])
 
   const salvarEdicao = useCallback(async () => {
     if (!editData) return
@@ -27,11 +27,11 @@ export function useSessionEdit(
           .reduce((s, sr) => s + (sr.peso ?? 0) * (sr.repeticoes ?? 0), 0),
       0
     )
-    await salvarSessaoCompleta({ ...editData, volumeTotal })
+    await saveSessionComplete({ ...editData, volumeTotal })
     setEditando(false)
     setEditData(null)
     toast.success('Sessão atualizada!')
-  }, [editData, salvarSessaoCompleta])
+  }, [editData, saveSessionComplete])
 
   const cancelarEdicao = useCallback(() => {
     setEditando(false)

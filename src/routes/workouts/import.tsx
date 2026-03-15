@@ -23,7 +23,7 @@ export const Route = createFileRoute('/workouts/import')({
 
 function ImportarCsvPage() {
   const navigate = useNavigate()
-  const { criarPlano, atualizarPlano } = usePlans()
+  const { createPlan, updatePlanById } = usePlans()
   const user = useAuthStore(s => s.user)
   const inputRef = useRef<HTMLInputElement>(null)
   const [planos, setPlanos] = useState<PlanoEditado[] | null>(null)
@@ -79,8 +79,8 @@ function ImportarCsvPage() {
             return { ...ex, exercicio: exFinal }
           })
         )
-        const plano = await criarPlano(planoData.nome.trim())
-        await atualizarPlano({ ...plano, exercicios: exerciciosComUser })
+        const plan = await createPlan(planoData.nome.trim())
+        await updatePlanById({ ...plan, exercicios: exerciciosComUser })
       }
       setSucesso(true)
       setTimeout(() => navigate({ to: '/workouts' }), 1500)

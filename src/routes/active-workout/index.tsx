@@ -8,9 +8,9 @@ export const Route = createFileRoute('/active-workout/')({
 })
 
 function TreinoAtivoIndexPage() {
-  const { iniciado, sessao } = useActiveWorkoutStore()
+  const { started, session } = useActiveWorkoutStore()
 
-  if (iniciado && sessao) {
+  if (started && session) {
     return (
       <div className="page-container pt-6">
         <div className="flex flex-col items-center gap-6 mt-8 animate-fade-up">
@@ -19,9 +19,9 @@ function TreinoAtivoIndexPage() {
           </div>
           <div className="text-center">
             <p className="text-text-muted text-sm">Treino em andamento</p>
-            <h2 className="text-xl font-bold text-text mt-1">{sessao.planoNome}</h2>
+            <h2 className="text-xl font-bold text-text mt-1">{session.planoNome}</h2>
           </div>
-          <Link to="/active-workout/$planId" params={{ planId: sessao.planoId }} style={{ textDecoration: 'none' }}>
+          <Link to="/active-workout/$planId" params={{ planId: session.planoId }} style={{ textDecoration: 'none' }}>
             <button className="btn-primary flex items-center gap-2">
               <Play size={18} />
               Continuar Treino

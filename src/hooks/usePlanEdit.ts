@@ -18,24 +18,24 @@ import type {
 } from '../types'
 
 export function usePlanEdit(
-  plano: WorkoutPlan | undefined,
-  atualizarPlano: (plano: WorkoutPlan) => Promise<void>
+  plan: WorkoutPlan | undefined,
+  updatePlanById: (plan: WorkoutPlan) => Promise<void>
 ) {
-  const [editando, setEditando] = useState(false)
-  const [nome, setNome] = useState(plano?.nome ?? '')
-  const [exerciciosEdit, setExerciciosEdit] = useState<ExerciseInPlan[]>(
-    plano?.exercicios ?? []
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(plan?.nome ?? '')
+  const [exercisesEdit, setExercisesEdit] = useState<ExerciseInPlan[]>(
+    plan?.exercicios ?? []
   )
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showGroupMenu, setShowGroupMenu] = useState(false)
 
   useEffect(() => {
-    if (plano) {
-      setNome(plano.nome)
-      setExerciciosEdit(plano.exercicios)
+    if (plan) {
+      setName(plan.nome)
+      setExercisesEdit(plan.exercicios)
     }
-  }, [plano?.id])
+  }, [plan?.id])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -47,21 +47,21 @@ export function usePlanEdit(
     })
   )
 
-  const salvarEdicao = useCallback(async () => {
-    if (!plano) return
-    await atualizarPlano({ ...plano, nome, exercicios: exerciciosEdit })
-    setEditando(false)
-  }, [plano, nome, exerciciosEdit, atualizarPlano])
+  const saveEdit = useCallback(async () => {
+    if (!plan) return
+    await updatePlanById({ ...plan, nome: name, exercicios: exercisesEdit })
+    setEditing(false)
+  }, [plan, name, exercisesEdit, updatePlanById])
 
-  const iniciarEdicao = useCallback(() => {
-    if (!plano) return
-    setEditando(true)
-    setNome(plano.nome)
-    setExerciciosEdit(plano.exercicios)
-  }, [plano])
+  const startEdit = useCallback(() => {
+    if (!plan) return
+    setEditing(true)
+    setName(plan.nome)
+    setExercisesEdit(plan.exercicios)
+  }, [plan])
 
-  const adicionarEx = useCallback((ex: { id: string; [key: string]: any }) => {
-    setExerciciosEdit((prev) => [
+  const addExercise = useCallback((ex: { id: string; [key: string]: any }) => {
+    setExercisesEdit((prev) => [
       ...prev,
       {
         id: uuidv4(),
@@ -81,13 +81,13 @@ export function usePlanEdit(
     ])
   }, [])
 
-  const removerEx = useCallback((id: string) => {
-    setExerciciosEdit((p) => p.filter((e) => e.id !== id))
+  const removeExercise = useCallback((id: string) => {
+    setExercisesEdit((p) => p.filter((e) => e.id !== id))
   }, [])
 
-  const atualizarSerieEdit = useCallback(
+  const updateSetEdit = useCallback(
     (exId: string, sIdx: number, campo: Partial<PlanSet>) => {
-      setExerciciosEdit((prev) =>
+      setExercisesEdit((prev) =>
         prev.map((ex) => {
           if (ex.id !== exId) return ex
           const base =
@@ -106,9 +106,9 @@ export function usePlanEdit(
     []
   )
 
-  const atualizarExercicioEdit = useCallback(
+  const updateExerciseEdit = useCallback(
     (exId: string, campos: Partial<ExerciseInPlan['exercicio']>) => {
-      setExerciciosEdit((prev) =>
+      setExercisesEdit((prev) =>
         prev.map((ex) =>
           ex.id === exId
             ? { ...ex, exercicio: { ...ex.exercicio, ...campos } }
@@ -119,16 +119,16 @@ export function usePlanEdit(
     []
   )
 
-  const atualizarDescansoEdit = useCallback((exId: string, segundos: number) => {
-    setExerciciosEdit((prev) =>
+  const updateRestEdit = useCallback((exId: string, segundos: number) => {
+    setExercisesEdit((prev) =>
       prev.map((ex) =>
         ex.id === exId ? { ...ex, descansoSegundos: segundos } : ex
       )
     )
   }, [])
 
-  const atualizarTipoSerieEdit = useCallback((exId: string, tipo: SetType) => {
-    setExerciciosEdit((prev) =>
+  const updateSetTypeEdit = useCallback((exId: string, tipo: SetType) => {
+    setExercisesEdit((prev) =>
       prev.map((ex) => {
         if (ex.id !== exId) return ex
         const base =
@@ -147,7 +147,7 @@ export function usePlanEdit(
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
-      setExerciciosEdit((items) => {
+      setExercisesEdit((items) => {
         const oldIndex = items.findIndex((i) => i.id === active.id)
         const newIndex = items.findIndex((i) => i.id === over.id)
         return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({
@@ -167,21 +167,21 @@ export function usePlanEdit(
     })
   }, [])
 
-  const criarAgrupamento = useCallback((tipo: GroupingType) => {
-    if (selecionados.size < 2) return
+  const createGrouping = useCallback((tipo: GroupingType) => {
+    if (selected.size < 2) return
     const agrupamentoId = uuidv4()
-    const sel = selecionados
-    setExerciciosEdit((prev) =>
+    const sel = selected
+    setExercisesEdit((prev) =>
       prev.map((ex) =>
         sel.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex
       )
     )
-    setSelecionados(new Set())
+    setSelected(new Set())
     setShowGroupMenu(false)
-  }, [selecionados])
+  }, [selected])
 
-  const removerDoAgrupamento = useCallback((exId: string) => {
-    setExerciciosEdit((prev) =>
+  const removeFromGrouping = useCallback((exId: string) => {
+    setExercisesEdit((prev) =>
       prev.map((ex) =>
         ex.id === exId
           ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined }
@@ -190,8 +190,8 @@ export function usePlanEdit(
     )
   }, [])
 
-  const toggleSelecionado = useCallback((id: string) => {
-    setSelecionados((prev) => {
+  const toggleSelected = useCallback((id: string) => {
+    setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -200,29 +200,29 @@ export function usePlanEdit(
   }, [])
 
   return {
-    editando,
-    setEditando,
-    nome,
-    setNome,
-    exerciciosEdit,
+    editing,
+    setEditing,
+    name,
+    setName,
+    exercisesEdit,
     expandedEx,
-    selecionados,
+    selected,
     showGroupMenu,
     setShowGroupMenu,
-    setSelecionados,
+    setSelected,
     sensors,
-    salvarEdicao,
-    iniciarEdicao,
-    adicionarEx,
-    removerEx,
-    atualizarSerieEdit,
-    atualizarExercicioEdit,
-    atualizarDescansoEdit,
-    atualizarTipoSerieEdit,
+    saveEdit,
+    startEdit,
+    addExercise,
+    removeExercise,
+    updateSetEdit,
+    updateExerciseEdit,
+    updateRestEdit,
+    updateSetTypeEdit,
     handleDragEnd,
     toggleExpandedEx,
-    criarAgrupamento,
-    removerDoAgrupamento,
-    toggleSelecionado,
+    createGrouping,
+    removeFromGrouping,
+    toggleSelected,
   }
 }

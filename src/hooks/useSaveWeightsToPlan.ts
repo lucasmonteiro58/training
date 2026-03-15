@@ -2,52 +2,52 @@ import { useRef, useEffect, useCallback } from 'react'
 import type { WorkoutPlan, WorkoutSession } from '../types'
 
 export function useSaveWeightsToPlan(
-  plano: WorkoutPlan | undefined,
-  sessao: WorkoutSession | null,
-  exercicioAtualIndex: number,
-  atualizarPlano: (plano: WorkoutPlan) => Promise<void>,
+  plan: WorkoutPlan | undefined,
+  session: WorkoutSession | null,
+  currentExerciseIndex: number,
+  updatePlanById: (plan: WorkoutPlan) => Promise<void>,
   onExerciseChange?: () => void
 ) {
-  const prevExIdxRef = useRef(exercicioAtualIndex)
+  const prevExIdxRef = useRef(currentExerciseIndex)
 
-  const salvarPesosNoPlano = useCallback(
+  const saveWeightsToPlan = useCallback(
     (exIdx?: number) => {
-      if (!plano || !sessao) return
-      const idx = exIdx ?? exercicioAtualIndex
-      const exSessao = sessao.exercicios[idx]
-      if (!exSessao) return
-      const planoExIdx = plano.exercicios.findIndex(
-        (e) => e.exercicioId === exSessao.exercicioId
+      if (!plan || !session) return
+      const idx = exIdx ?? currentExerciseIndex
+      const exInSession = session.exercicios[idx]
+      if (!exInSession) return
+      const planExIdx = plan.exercicios.findIndex(
+        (e) => e.exercicioId === exInSession.exercicioId
       )
-      if (planoExIdx === -1) return
-      const exPlano = plano.exercicios[planoExIdx]
-      const seriesDetalhadas = exSessao.series.map((s, i) => ({
-        ...(exPlano.seriesDetalhadas?.[i] ?? {}),
+      if (planExIdx === -1) return
+      const planEx = plan.exercicios[planExIdx]
+      const seriesDetalhadas = exInSession.series.map((s, i) => ({
+        ...(planEx.seriesDetalhadas?.[i] ?? {}),
         peso: s.peso,
         repeticoes: s.repeticoes,
       }))
       const changed = seriesDetalhadas.some((sd, i) => {
-        const old = exPlano.seriesDetalhadas?.[i]
+        const old = planEx.seriesDetalhadas?.[i]
         return (
           !old || old.peso !== sd.peso || old.repeticoes !== sd.repeticoes
         )
       })
       if (!changed) return
-      const exercicios = plano.exercicios.map((ex, i) =>
-        i === planoExIdx ? { ...ex, seriesDetalhadas } : ex
+      const exercicios = plan.exercicios.map((ex, i) =>
+        i === planExIdx ? { ...ex, seriesDetalhadas } : ex
       )
-      atualizarPlano({ ...plano, exercicios })
+      updatePlanById({ ...plan, exercicios })
     },
-    [plano, sessao, exercicioAtualIndex, atualizarPlano]
+    [plan, session, currentExerciseIndex, updatePlanById]
   )
 
   useEffect(() => {
-    if (prevExIdxRef.current !== exercicioAtualIndex) {
-      salvarPesosNoPlano(prevExIdxRef.current)
-      prevExIdxRef.current = exercicioAtualIndex
+    if (prevExIdxRef.current !== currentExerciseIndex) {
+      saveWeightsToPlan(prevExIdxRef.current)
+      prevExIdxRef.current = currentExerciseIndex
     }
     onExerciseChange?.()
-  }, [exercicioAtualIndex, salvarPesosNoPlano, onExerciseChange])
+  }, [currentExerciseIndex, saveWeightsToPlan, onExerciseChange])
 
-  return { salvarPesosNoPlano }
+  return { saveWeightsToPlan }
 }

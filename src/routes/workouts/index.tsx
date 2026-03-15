@@ -27,13 +27,13 @@ export const Route = createFileRoute('/workouts/')({
 
 function TreinosPage() {
   const {
-    planosAtivos,
-    planosArquivados,
+    activePlans,
+    archivedPlans,
     loading,
-    excluirPlano,
-    arquivarPlano,
-    desarquivarPlano,
-    reordenarPlanos,
+    deletePlanById,
+    archivePlan,
+    unarchivePlan,
+    reorderPlans,
   } = usePlans()
   const [deletando, setDeletando] = useState<string | null>(null)
   const [processando, setProcessando] = useState<string | null>(null)
@@ -41,7 +41,7 @@ function TreinosPage() {
   const [reordenando, setReordenando] = useState(false)
   const [ordemLocal, setOrdemLocal] = useState<WorkoutPlan[]>([])
 
-  const listaOrdenada = reordenando ? ordemLocal : planosAtivos
+  const listaOrdenada = reordenando ? ordemLocal : activePlans
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -58,10 +58,10 @@ function TreinosPage() {
 
   const handleToggleReordenar = () => {
     if (!reordenando) {
-      setOrdemLocal([...planosAtivos])
+      setOrdemLocal([...activePlans])
       setReordenando(true)
     } else {
-      reordenarPlanos(ordemLocal.map(p => p.id))
+      reorderPlans(ordemLocal.map(p => p.id))
       setReordenando(false)
     }
   }
@@ -69,19 +69,19 @@ function TreinosPage() {
   const handleDelete = async (id: string, nome: string) => {
     if (!confirm(`Excluir o plano "${nome}"? Esta ação não pode ser desfeita.`)) return
     setDeletando(id)
-    await excluirPlano(id)
+    await deletePlanById(id)
     setDeletando(null)
   }
 
   const handleArchive = async (id: string) => {
     setProcessando(id)
-    await arquivarPlano(id)
+    await archivePlan(id)
     setProcessando(null)
   }
 
   const handleRestore = async (id: string) => {
     setProcessando(id)
-    await desarquivarPlano(id)
+    await unarchivePlan(id)
     setProcessando(null)
   }
 
@@ -92,7 +92,7 @@ function TreinosPage() {
     >
       <WorkoutsHeader
         reordenando={reordenando}
-        podeOrdenar={planosAtivos.length > 1}
+        podeOrdenar={activePlans.length > 1}
         onToggleReordenar={handleToggleReordenar}
       />
 
@@ -102,12 +102,12 @@ function TreinosPage() {
             <div key={i} className="skeleton h-20 rounded-2xl" />
           ))}
         </div>
-      ) : planosAtivos.length === 0 && planosArquivados.length === 0 ? (
+      ) : activePlans.length === 0 && archivedPlans.length === 0 ? (
         <EmptyPlans />
       ) : (
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-3">
-            {planosAtivos.length === 0 && (
+            {activePlans.length === 0 && (
               <p className="text-center text-text-muted text-sm py-8">Nenhum treino ativo no momento.</p>
             )}
             {reordenando ? (
@@ -128,10 +128,10 @@ function TreinosPage() {
                 </SortableContext>
               </DndContext>
             ) : (
-              planosAtivos.map(plano => (
+              activePlans.map(plan => (
                 <PlanSortableCard
-                  key={plano.id}
-                  plano={plano}
+                  key={plan.id}
+                  plano={plan}
                   reordenando={false}
                   processando={processando}
                   onArchive={handleArchive}
@@ -141,7 +141,7 @@ function TreinosPage() {
           </div>
 
           <ArchivedPlansSection
-            planos={planosArquivados}
+            planos={archivedPlans}
             expandido={mostrarArquivados}
             processando={processando}
             deletando={deletando}

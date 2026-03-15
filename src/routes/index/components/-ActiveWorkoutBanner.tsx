@@ -20,7 +20,7 @@ export function ActiveWorkoutBanner({
   return (
     <Link
       to="/active-workout/$planId"
-      params={{ planId }}
+      params={{ planId: planoId }}
       className="block mb-4 animate-fade-up"
       style={{ textDecoration: 'none' }}
     >

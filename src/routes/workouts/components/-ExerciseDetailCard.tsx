@@ -15,7 +15,7 @@ import { useGiphyImageSearch } from '../../../hooks/useGiphyImageSearch'
 
 export interface ExerciseDetailCardProps {
   ex: ExerciseInPlan
-  editando: boolean
+  editing: boolean
   isExpanded: boolean
   onToggleExpand: () => void
   onRemove: () => void
@@ -31,7 +31,7 @@ export interface ExerciseDetailCardProps {
 
 export function ExerciseDetailCard({
   ex,
-  editando,
+  editing,
   isExpanded,
   onToggleExpand,
   onRemove,
@@ -45,11 +45,11 @@ export function ExerciseDetailCard({
   onRemoveFromGroup,
 }: ExerciseDetailCardProps) {
   const {
-    termoBusca,
-    setTermoBusca,
-    imagensWeb,
-    buscandoImagem,
-    buscarImagem,
+    searchTerm,
+    setSearchTerm,
+    webImages,
+    searchingImage,
+    searchImage,
   } = useGiphyImageSearch(ex.exercicio.nome)
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
@@ -95,7 +95,7 @@ export function ExerciseDetailCard({
       className={`card p-3 transition-opacity ${isDragging ? 'opacity-50' : ''}`}
     >
       <div className="flex items-center gap-3">
-        {editando && (
+        {editing && (
           <div
             ref={setActivatorNodeRef}
             {...attributes}
@@ -153,7 +153,7 @@ export function ExerciseDetailCard({
             </span>
           </div>
         </div>
-        {editando && (
+        {editing && (
           <div className="flex items-center gap-1">
             <button
               onClick={onToggleExpand}
@@ -211,26 +211,26 @@ export function ExerciseDetailCard({
             <div className="flex gap-2">
               <input
                 className="input flex-1 text-sm"
-                value={termoBusca}
-                onChange={(e) => setTermoBusca(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && buscarImagem()}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && searchImage()}
                 placeholder="Ex: bench press"
               />
               <button
-                onClick={buscarImagem}
-                disabled={buscandoImagem}
+                onClick={searchImage}
+                disabled={searchingImage}
                 className="btn-secondary px-3 shrink-0"
               >
-                {buscandoImagem ? (
+                {searchingImage ? (
                   <RefreshCw size={15} className="animate-spin" />
                 ) : (
                   <Search size={15} />
                 )}
               </button>
             </div>
-            {imagensWeb.length > 0 && (
+            {webImages.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mt-2 p-2 bg-surface-2 rounded-xl max-h-44 overflow-y-auto">
-                {imagensWeb.map((url, i) => (
+                {webImages.map((url, i) => (
                   <button
                     key={i}
                     onClick={() => onUpdateExercicio({ gifUrl: url })}

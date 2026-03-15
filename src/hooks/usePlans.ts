@@ -9,128 +9,120 @@ import { PLAN_COLORS } from '../types'
 
 export function usePlans() {
   const user = useAuthStore((s) => s.user)
-  const { planos, loading, setPlanos, addPlano, updatePlano, removePlano, setLoading } =
+  const { plans, loading, setPlans, addPlan, updatePlan, removePlan, setLoading } =
     usePlansStore()
 
-  // Carregar planos locais e assinar firestore
   useEffect(() => {
     if (!user) return
 
-    // 1. Carrega local primeiro (mais rápido)
     getPlans(user.uid).then((local) => {
-      setPlanos(local)
+      setPlans(local)
       setLoading(false)
     })
 
-    // 2. Subscribe em tempo real ao Firestore
-    const unsubPlanos = subscribeToPlans(user.uid, (remote) => {
-      setPlanos(remote)
+    const unsubPlans = subscribeToPlans(user.uid, (remote) => {
+      setPlans(remote)
       setLoading(false)
     })
 
-    // 3. Subscribe em tempo real aos Exercícios Personalizados
-    const unsubExercicios = subscribeToExercises(user.uid, () => {
-      // O subscribeToExercicios já salva no Dexie local automaticamente.
-      // Não precisamos atualizar um store específico aqui se não houver um useExerciciosStore,
-      // mas as telas que consultam o Dexie (como a de Exercícios) verão os dados.
-    })
+    const unsubExercises = subscribeToExercises(user.uid, () => {})
 
     return () => {
-      unsubPlanos()
-      unsubExercicios()
+      unsubPlans()
+      unsubExercises()
     }
-  }, [user, setPlanos, setLoading])
+  }, [user, setPlans, setLoading])
 
-  const criarPlano = useCallback(
+  const createPlan = useCallback(
     async (nome: string, descricao?: string): Promise<WorkoutPlan> => {
       if (!user) throw new Error('Usuário não autenticado')
-      const corAleatoria = PLAN_COLORS[Math.floor(Math.random() * PLAN_COLORS.length)]
-      const plano: WorkoutPlan = {
+      const randomColor = PLAN_COLORS[Math.floor(Math.random() * PLAN_COLORS.length)]
+      const plan: WorkoutPlan = {
         id: uuidv4(),
         userId: user.uid,
         nome,
         descricao,
         exercicios: [],
-        cor: corAleatoria,
+        cor: randomColor,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       }
-      await savePlan(plano)
-      addPlano(plano)
-      syncPlanToFirestore(plano) // background
-      return plano
+      await savePlan(plan)
+      addPlan(plan)
+      syncPlanToFirestore(plan)
+      return plan
     },
-    [user, addPlano]
+    [user, addPlan]
   )
 
-  const atualizarPlano = useCallback(
-    async (plano: WorkoutPlan): Promise<void> => {
-      const updated = { ...plano, updatedAt: Date.now() }
+  const updatePlanById = useCallback(
+    async (plan: WorkoutPlan): Promise<void> => {
+      const updated = { ...plan, updatedAt: Date.now() }
       await savePlan(updated)
-      updatePlano(updated)
-      syncPlanToFirestore(updated) // background
+      updatePlan(updated)
+      syncPlanToFirestore(updated)
     },
-    [updatePlano]
+    [updatePlan]
   )
 
-  const excluirPlano = useCallback(
+  const deletePlanById = useCallback(
     async (id: string): Promise<void> => {
       await deletePlan(id)
-      removePlano(id)
-      deletePlanFromFirestore(id) // background
+      removePlan(id)
+      deletePlanFromFirestore(id)
     },
-    [removePlano]
+    [removePlan]
   )
 
-  const sincronizar = useCallback(async () => {
+  const sync = useCallback(async () => {
     if (!user) return
     const remote = await fetchPlans(user.uid)
-    if (remote.length > 0) setPlanos(remote)
-  }, [user, setPlanos])
+    if (remote.length > 0) setPlans(remote)
+  }, [user, setPlans])
 
-  const arquivarPlano = useCallback(
+  const archivePlan = useCallback(
     async (id: string): Promise<void> => {
-      const plano = planos.find(p => p.id === id)
-      if (!plano) return
-      const updated = { ...plano, arquivado: true, updatedAt: Date.now() }
+      const plan = plans.find(p => p.id === id)
+      if (!plan) return
+      const updated = { ...plan, arquivado: true, updatedAt: Date.now() }
       await savePlan(updated)
-      updatePlano(updated)
+      updatePlan(updated)
       syncPlanToFirestore(updated)
     },
-    [planos, updatePlano]
+    [plans, updatePlan]
   )
 
-  const desarquivarPlano = useCallback(
+  const unarchivePlan = useCallback(
     async (id: string): Promise<void> => {
-      const plano = planos.find(p => p.id === id)
-      if (!plano) return
-      const updated = { ...plano, arquivado: false, updatedAt: Date.now() }
+      const plan = plans.find(p => p.id === id)
+      if (!plan) return
+      const updated = { ...plan, arquivado: false, updatedAt: Date.now() }
       await savePlan(updated)
-      updatePlano(updated)
+      updatePlan(updated)
       syncPlanToFirestore(updated)
     },
-    [planos, updatePlano]
+    [plans, updatePlan]
   )
 
-  const reordenarPlanos = useCallback(
-    async (idsOrdenados: string[]): Promise<void> => {
-      const atualizados = planos.map((p) => {
-        const idx = idsOrdenados.indexOf(p.id)
+  const reorderPlans = useCallback(
+    async (orderedIds: string[]): Promise<void> => {
+      const updatedList = plans.map((p) => {
+        const idx = orderedIds.indexOf(p.id)
         if (idx === -1) return p
         const updated = { ...p, ordem: idx, updatedAt: Date.now() }
         savePlan(updated)
         syncPlanToFirestore(updated)
         return updated
       })
-      setPlanos(atualizados)
+      setPlans(updatedList)
     },
-    [planos, setPlanos]
+    [plans, setPlans]
   )
 
-  const clonarPlano = useCallback(
-    async (planoId: string): Promise<WorkoutPlan | null> => {
+  const clonePlan = useCallback(
+    async (planId: string): Promise<WorkoutPlan | null> => {
       if (!user) throw new Error('Usuário não autenticado')
-      const original = planos.find(p => p.id === planoId)
+      const original = plans.find(p => p.id === planId)
       if (!original) return null
       const clone: WorkoutPlan = {
         ...original,
@@ -146,30 +138,30 @@ export function usePlans() {
         syncedAt: undefined,
       }
       await savePlan(clone)
-      addPlano(clone)
+      addPlan(clone)
       syncPlanToFirestore(clone)
       return clone
     },
-    [user, planos, addPlano]
+    [user, plans, addPlan]
   )
 
-  const planosAtivos = planos
+  const activePlans = plans
     .filter((p) => !p.arquivado)
     .sort((a, b) => (a.ordem ?? a.createdAt) - (b.ordem ?? b.createdAt))
-  const planosArquivados = planos.filter((p) => p.arquivado)
+  const archivedPlans = plans.filter((p) => p.arquivado)
 
   return {
-    planos,
-    planosAtivos,
-    planosArquivados,
+    plans,
+    activePlans,
+    archivedPlans,
     loading,
-    criarPlano,
-    atualizarPlano,
-    excluirPlano,
-    arquivarPlano,
-    desarquivarPlano,
-    reordenarPlanos,
-    clonarPlano,
-    sincronizar,
+    createPlan,
+    updatePlanById,
+    deletePlanById,
+    archivePlan,
+    unarchivePlan,
+    reorderPlans,
+    clonePlan,
+    sync,
   }
 }

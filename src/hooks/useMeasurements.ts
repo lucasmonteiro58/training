@@ -6,44 +6,42 @@ import type { BodyMeasurement } from '../types'
 
 export function useMeasurements() {
   const user = useAuthStore((s) => s.user)
-  const [medidas, setMedidas] = useState<BodyMeasurement[]>([])
+  const [measurements, setMeasurements] = useState<BodyMeasurement[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
 
-    // Load local first
     getMeasurements(user.uid).then((local) => {
-      setMedidas(local)
+      setMeasurements(local)
       setLoading(false)
     })
 
-    // Subscribe to Firestore for real-time sync
     const unsub = subscribeToMeasurements(user.uid, (remote) => {
-      setMedidas(remote)
+      setMeasurements(remote)
       setLoading(false)
     })
 
     return unsub
   }, [user])
 
-  const adicionar = useCallback(
+  const add = useCallback(
     async (medida: BodyMeasurement) => {
       await saveMeasurement(medida)
-      setMedidas(prev => [medida, ...prev].sort((a, b) => b.data - a.data))
-      syncMeasurementToFirestore(medida) // background
+      setMeasurements(prev => [medida, ...prev].sort((a, b) => b.data - a.data))
+      syncMeasurementToFirestore(medida)
     },
     []
   )
 
-  const remover = useCallback(
+  const remove = useCallback(
     async (id: string) => {
       await deleteMeasurement(id)
-      setMedidas(prev => prev.filter(m => m.id !== id))
-      deleteMeasurementFromFirestore(id) // background
+      setMeasurements(prev => prev.filter(m => m.id !== id))
+      deleteMeasurementFromFirestore(id)
     },
     []
   )
 
-  return { medidas, loading, adicionar, remover }
+  return { measurements, loading, add, remove }
 }

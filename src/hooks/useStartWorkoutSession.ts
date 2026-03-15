@@ -3,11 +3,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { solicitarPermissaoNotificacao } from '../lib/notifications'
 import type { WorkoutPlan, WorkoutSession, RecordedSet, ExerciseInSession } from '../types'
 
-interface UseIniciarSessaoTreinoParams {
+interface UseStartWorkoutSessionParams {
   planoId: string
   plano: WorkoutPlan | undefined
   user: { uid: string } | null
-  sessoes: WorkoutSession[]
+  sessions: WorkoutSession[]
   iniciado: boolean
   sessao: WorkoutSession | null
   iniciarTreino: (sessao: WorkoutSession) => void
@@ -17,11 +17,11 @@ export function useStartWorkoutSession({
   planoId,
   plano,
   user,
-  sessoes,
+  sessions,
   iniciado,
   sessao,
   iniciarTreino,
-}: UseIniciarSessaoTreinoParams) {
+}: UseStartWorkoutSessionParams) {
   const startedForPlanoIdRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -38,12 +38,12 @@ export function useStartWorkoutSession({
     // Não re-iniciar sessão após cancelar/finalizar: já tratamos este plano nesta visita
     if (startedForPlanoIdRef.current === planoId) return
 
-    const ultimaSessao = sessoes
+    const lastSession = sessions
       .filter((s) => s.planoId === planoId && s.finalizadoEm)
       .sort((a, b) => (b.finalizadoEm ?? 0) - (a.finalizadoEm ?? 0))[0]
 
     const exerciciosNaSessao: ExerciseInSession[] = plano.exercicios.map((ex) => {
-      const exUltimaSessao = ultimaSessao?.exercicios.find(
+      const exLastSession = lastSession?.exercicios.find(
         (e) => e.exercicioId === ex.exercicioId
       )
       return {
@@ -62,8 +62,8 @@ export function useStartWorkoutSession({
         series: Array.from({ length: ex.series }, (_, i) => {
           const pesoPlano = ex.seriesDetalhadas?.[i]?.peso
           const repsPlano = ex.seriesDetalhadas?.[i]?.repeticoes
-          const pesoSessao = exUltimaSessao?.series[i]?.peso
-          const repsSessao = exUltimaSessao?.series[i]?.repeticoes
+          const pesoSessao = exLastSession?.series[i]?.peso
+          const repsSessao = exLastSession?.series[i]?.repeticoes
           return {
             id: uuidv4(),
             ordem: i,
@@ -86,5 +86,5 @@ export function useStartWorkoutSession({
     iniciarTreino(novaSessao)
     startedForPlanoIdRef.current = planoId
     solicitarPermissaoNotificacao()
-  }, [plano, user, planoId, sessoes, iniciado, sessao?.planoId, iniciarTreino])
+  }, [plano, user, planoId, sessions, iniciado, sessao?.planoId, iniciarTreino])
 }

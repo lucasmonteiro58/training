@@ -6,47 +6,47 @@ import type { WorkoutSession } from '../types'
 
 export function useHistory() {
   const user = useAuthStore((s) => s.user)
-  const { sessoes, loading, setSessoes, addSessao, removeSessao, setLoading } = useHistoryStore()
+  const { sessions, loading, setSessions, addSession, removeSession, setLoading } = useHistoryStore()
 
   useEffect(() => {
     if (!user) return
 
     getSessions(user.uid).then((local) => {
-      setSessoes(local)
+      setSessions(local)
       setLoading(false)
     })
 
     const unsub = subscribeToSessions(user.uid, (remote) => {
-      setSessoes(remote)
+      setSessions(remote)
       setLoading(false)
     })
 
     return unsub
-  }, [user, setSessoes, setLoading])
+  }, [user, setSessions, setLoading])
 
-  const salvarSessaoCompleta = useCallback(
-    async (sessao: WorkoutSession): Promise<void> => {
-      await saveSession(sessao)
-      addSessao(sessao)
-      syncSessionToFirestore(sessao) // background
+  const saveSessionComplete = useCallback(
+    async (session: WorkoutSession): Promise<void> => {
+      await saveSession(session)
+      addSession(session)
+      syncSessionToFirestore(session)
     },
-    [addSessao]
+    [addSession]
   )
 
-  const excluirSessao = useCallback(
+  const deleteSessionById = useCallback(
     async (id: string): Promise<void> => {
       await deleteSession(id)
-      removeSessao(id)
-      deleteSessionFromFirestore(id) // background
+      removeSession(id)
+      deleteSessionFromFirestore(id)
     },
-    [removeSessao]
+    [removeSession]
   )
 
-  const sincronizar = useCallback(async () => {
+  const sync = useCallback(async () => {
     if (!user) return
     const remote = await fetchSessions(user.uid)
-    if (remote.length > 0) setSessoes(remote)
-  }, [user, setSessoes])
+    if (remote.length > 0) setSessions(remote)
+  }, [user, setSessions])
 
-  return { sessoes, loading, salvarSessaoCompleta, excluirSessao, sincronizar }
+  return { sessions, loading, saveSessionComplete, deleteSessionById, sync }
 }

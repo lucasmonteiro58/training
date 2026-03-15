@@ -17,413 +17,430 @@ export function calcularVolume(sessao: WorkoutSession): number {
 
 export const INATIVIDADE_AUTO_ENCERRAR_MS = 20 * 60 * 1000 // 20 minutos
 
-export interface ActiveWorkoutStoreState {
-  sessao: WorkoutSession | null
+/** Payload shape sent to Firestore "ativo" doc (keys kept for backward compatibility). */
+export interface ActiveWorkoutSyncPayload {
+  sessao: WorkoutSession
   exercicioAtualIndex: number
   serieAtualIndex: number
-  cronometroGeralSegundos: number
-  cronometroDescansoSegundos: number
-  cronometroDescansoAtivo: boolean
-  pausado: boolean
-  iniciado: boolean
-  tempoPausadoTotal: number
-  ultimaPausaRecordada: number | null
-  timestampDescansoFim: number | null
-  ultimaSerieCompletada: { exercicioIdx: number; serieIdx: number } | null
-  iniciarTreino: (sessao: WorkoutSession) => void
-  finalizarTreino: () => WorkoutSession | null
-  pausarTreino: () => void
-  retomar: () => void
-  proximoExercicio: () => void
-  exercicioAnterior: () => void
-  atualizarSerie: (
+  cronometroGeralSegundos?: number
+  iniciado?: boolean
+  pausado?: boolean
+  tempoPausadoTotal?: number
+  ultimaPausaRecordada?: number | null
+  timestampDescansoFim?: number | null
+}
+
+export interface ActiveWorkoutStoreState {
+  session: WorkoutSession | null
+  currentExerciseIndex: number
+  currentSetIndex: number
+  totalTimerSeconds: number
+  restTimerSeconds: number
+  restTimerActive: boolean
+  paused: boolean
+  started: boolean
+  totalPausedTime: number
+  lastPauseRecorded: number | null
+  restEndTimestamp: number | null
+  lastSetCompleted: { exercicioIdx: number; serieIdx: number } | null
+  startWorkout: (session: WorkoutSession) => void
+  finishWorkout: () => WorkoutSession | null
+  pauseWorkout: () => void
+  resume: () => void
+  nextExercise: () => void
+  previousExercise: () => void
+  updateSet: (
     exercicioIdx: number,
     serieIdx: number,
     dados: Partial<{ repeticoes: number; peso: number; completada: boolean }>
   ) => void
-  marcarSerieCompletada: (exercicioIdx: number, serieIdx: number) => void
-  desfazerUltimaSerie: () => void
-  iniciarDescanso: (segundos: number) => void
-  pararDescanso: () => void
-  tickGeral: () => void
-  tickDescanso: () => void
-  atualizarCronometroGeral: (segundos: number) => void
-  restaurarDeExterno: (dados: {
-    sessao: WorkoutSession
-    exercicioAtualIndex: number
-    serieAtualIndex: number
-    pausado?: boolean
-    tempoPausadoTotal?: number
-    ultimaPausaRecordada?: number | null
-    timestampDescansoFim?: number | null
-    cronometroGeralSegundos?: number
-  }) => void
-  sincronizarEstadoExterno: (dados: {
-    sessao: WorkoutSession
-    exercicioAtualIndex: number
-    serieAtualIndex: number
-    pausado: boolean
-    tempoPausadoTotal?: number
-    ultimaPausaRecordada?: number | null
-    timestampDescansoFim?: number | null
-  }) => void
-  atualizarNotas: (notas: string) => void
-  limparLocal: () => void
-  restaurarDeAutoEncerrado: (snapshot: AutoClosedSnapshot) => void
+  markSetCompleted: (exercicioIdx: number, serieIdx: number) => void
+  undoLastSet: () => void
+  startRest: (segundos: number) => void
+  stopRest: () => void
+  tickTotal: () => void
+  tickRest: () => void
+  updateTotalTimer: (segundos: number) => void
+  restoreFromExternal: (dados: ActiveWorkoutSyncPayload & { pausado?: boolean; tempoPausadoTotal?: number; ultimaPausaRecordada?: number | null; timestampDescansoFim?: number | null; cronometroGeralSegundos?: number }) => void
+  syncExternalState: (dados: ActiveWorkoutSyncPayload & { pausado: boolean; tempoPausadoTotal?: number; ultimaPausaRecordada?: number | null; timestampDescansoFim?: number | null }) => void
+  updateNotes: (notas: string) => void
+  clearLocal: () => void
+  restoreFromAutoClosed: (snapshot: AutoClosedSnapshot) => void
   heartbeat: () => void
-  restaurarDeHistorico: (sessao: WorkoutSession) => void
+  restoreFromHistory: (session: WorkoutSession) => void
 }
 
-const syncAtivo = (state: ActiveWorkoutStoreState) => {
-  if (state.iniciado && state.sessao?.userId && state.sessao) {
-    syncWorkoutProgressToFirestore(state.sessao.userId, {
-      sessao: state.sessao,
-      exercicioAtualIndex: state.exercicioAtualIndex,
-      serieAtualIndex: state.serieAtualIndex,
-      iniciado: state.iniciado,
-      pausado: state.pausado,
-      tempoPausadoTotal: state.tempoPausadoTotal,
-      ultimaPausaRecordada: state.ultimaPausaRecordada,
-      timestampDescansoFim: state.timestampDescansoFim,
-      cronometroGeralSegundos: state.cronometroGeralSegundos,
+const syncActiveToFirestore = (state: ActiveWorkoutStoreState) => {
+  if (state.started && state.session?.userId && state.session) {
+    syncWorkoutProgressToFirestore(state.session.userId, {
+      sessao: state.session,
+      exercicioAtualIndex: state.currentExerciseIndex,
+      serieAtualIndex: state.currentSetIndex,
+      cronometroGeralSegundos: state.totalTimerSeconds,
+      iniciado: state.started,
+      pausado: state.paused,
+      tempoPausadoTotal: state.totalPausedTime,
+      ultimaPausaRecordada: state.lastPauseRecorded,
+      timestampDescansoFim: state.restEndTimestamp,
       updatedAt: Date.now(),
-    })
+    } as ActiveWorkoutSyncPayload & { updatedAt: number })
   }
 }
 
 export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
   persist(
-    (set, get) => ({
-      sessao: null,
-      exercicioAtualIndex: 0,
-      serieAtualIndex: 0,
-      cronometroGeralSegundos: 0,
-      cronometroDescansoSegundos: 0,
-      cronometroDescansoAtivo: false,
-      pausado: false,
-      iniciado: false,
-      tempoPausadoTotal: 0,
-      ultimaPausaRecordada: null,
-      timestampDescansoFim: null,
-      ultimaSerieCompletada: null,
+    (set, get) => {
+      const mapPayloadToState = (d: {
+        sessao: WorkoutSession
+        exercicioAtualIndex?: number
+        serieAtualIndex?: number
+        cronometroGeralSegundos?: number
+        pausado?: boolean
+        tempoPausadoTotal?: number
+        ultimaPausaRecordada?: number | null
+        timestampDescansoFim?: number | null
+      }) => ({
+        session: d.sessao,
+        currentExerciseIndex: d.exercicioAtualIndex ?? 0,
+        currentSetIndex: d.serieAtualIndex ?? 0,
+        totalTimerSeconds: d.cronometroGeralSegundos ?? 0,
+        restTimerSeconds: 0,
+        restTimerActive: (d.timestampDescansoFim != null && d.timestampDescansoFim > Date.now()) ?? false,
+        paused: d.pausado ?? false,
+        totalPausedTime: d.tempoPausadoTotal ?? 0,
+        lastPauseRecorded: d.ultimaPausaRecordada ?? null,
+        restEndTimestamp: d.timestampDescansoFim ?? null,
+        started: true,
+      })
+      return {
+        session: null,
+        currentExerciseIndex: 0,
+        currentSetIndex: 0,
+        totalTimerSeconds: 0,
+        restTimerSeconds: 0,
+        restTimerActive: false,
+        paused: false,
+        started: false,
+        totalPausedTime: 0,
+        lastPauseRecorded: null,
+        restEndTimestamp: null,
+        lastSetCompleted: null,
 
-      iniciarTreino: sessao => {
-        set({
-          sessao,
-          exercicioAtualIndex: 0,
-          serieAtualIndex: 0,
-          cronometroGeralSegundos: 0,
-          cronometroDescansoSegundos: 0,
-          cronometroDescansoAtivo: false,
-          pausado: false,
-          iniciado: true,
-          tempoPausadoTotal: 0,
-          ultimaPausaRecordada: null,
-          timestampDescansoFim: null,
-          ultimaSerieCompletada: null,
-        })
-        syncAtivo(get())
-      },
+        startWorkout: session => {
+          set({
+            session,
+            currentExerciseIndex: 0,
+            currentSetIndex: 0,
+            totalTimerSeconds: 0,
+            restTimerSeconds: 0,
+            restTimerActive: false,
+            paused: false,
+            started: true,
+            totalPausedTime: 0,
+            lastPauseRecorded: null,
+            restEndTimestamp: null,
+            lastSetCompleted: null,
+          })
+          syncActiveToFirestore(get())
+        },
 
-      finalizarTreino: () => {
-        const { sessao, cronometroGeralSegundos } = get()
-        if (!sessao) return null
-        const userId = sessao.userId
-        const finalizada: WorkoutSession = {
-          ...sessao,
-          finalizadoEm: Date.now(),
-          duracaoSegundos: cronometroGeralSegundos,
-          volumeTotal: calcularVolume(sessao),
-        }
-        set({
-          sessao: null,
-          iniciado: false,
-          exercicioAtualIndex: 0,
-          serieAtualIndex: 0,
-          cronometroGeralSegundos: 0,
-          cronometroDescansoAtivo: false,
-          tempoPausadoTotal: 0,
-          ultimaPausaRecordada: null,
-          timestampDescansoFim: null,
-          ultimaSerieCompletada: null,
-        })
-        if (userId) clearWorkoutProgressFromFirestore(userId)
-        return finalizada
-      },
-
-      pausarTreino: () => {
-        set({ pausado: true, ultimaPausaRecordada: Date.now() })
-        syncAtivo(get())
-      },
-      retomar: () => {
-        set(s => {
-          const pausaRecente = s.ultimaPausaRecordada ? Date.now() - s.ultimaPausaRecordada : 0
-          return {
-            pausado: false,
-            tempoPausadoTotal: s.tempoPausadoTotal + pausaRecente,
-            ultimaPausaRecordada: null,
+        finishWorkout: () => {
+          const { session, totalTimerSeconds } = get()
+          if (!session) return null
+          const userId = session.userId
+          const finalizada: WorkoutSession = {
+            ...session,
+            finalizadoEm: Date.now(),
+            duracaoSegundos: totalTimerSeconds,
+            volumeTotal: calcularVolume(session),
           }
-        })
-        syncAtivo(get())
-      },
+          set({
+            session: null,
+            started: false,
+            currentExerciseIndex: 0,
+            currentSetIndex: 0,
+            totalTimerSeconds: 0,
+            restTimerActive: false,
+            totalPausedTime: 0,
+            lastPauseRecorded: null,
+            restEndTimestamp: null,
+            lastSetCompleted: null,
+          })
+          if (userId) clearWorkoutProgressFromFirestore(userId)
+          return finalizada
+        },
 
-      proximoExercicio: () => {
-        set(s => {
-          const total = s.sessao?.exercicios.length ?? 0
-          const next = Math.min(s.exercicioAtualIndex + 1, total - 1)
-          return { exercicioAtualIndex: next, serieAtualIndex: 0 }
-        })
-        syncAtivo(get())
-      },
-
-      exercicioAnterior: () => {
-        set(s => ({
-          exercicioAtualIndex: Math.max(0, s.exercicioAtualIndex - 1),
-          serieAtualIndex: 0,
-        }))
-        syncAtivo(get())
-      },
-
-      atualizarSerie: (exercicioIdx, serieIdx, dados) => {
-        set(s => {
-          if (!s.sessao) return {}
-          const exercicios = s.sessao.exercicios.map((ex, eIdx) => {
-            if (eIdx !== exercicioIdx) return ex
+        pauseWorkout: () => {
+          set({ paused: true, lastPauseRecorded: Date.now() })
+          syncActiveToFirestore(get())
+        },
+        resume: () => {
+          set(s => {
+            const recent = s.lastPauseRecorded ? Date.now() - s.lastPauseRecorded : 0
             return {
-              ...ex,
-              series: ex.series.map((serie, sIdx) => {
-                if (sIdx !== serieIdx) return serie
-                return { ...serie, ...dados }
-              }),
+              paused: false,
+              totalPausedTime: s.totalPausedTime + recent,
+              lastPauseRecorded: null,
             }
           })
-          return { sessao: { ...s.sessao, exercicios } }
-        })
-        syncAtivo(get())
-      },
+          syncActiveToFirestore(get())
+        },
 
-      marcarSerieCompletada: (exercicioIdx, serieIdx) => {
-        set(s => {
-          if (!s.sessao) return {}
-          const exercicios = s.sessao.exercicios.map((ex, eIdx) => {
-            if (eIdx !== exercicioIdx) return ex
+        nextExercise: () => {
+          set(s => {
+            const total = s.session?.exercicios.length ?? 0
+            const next = Math.min(s.currentExerciseIndex + 1, total - 1)
+            return { currentExerciseIndex: next, currentSetIndex: 0 }
+          })
+          syncActiveToFirestore(get())
+        },
+
+        previousExercise: () => {
+          set(s => ({
+            currentExerciseIndex: Math.max(0, s.currentExerciseIndex - 1),
+            currentSetIndex: 0,
+          }))
+          syncActiveToFirestore(get())
+        },
+
+        updateSet: (exercicioIdx, serieIdx, dados) => {
+          set(s => {
+            if (!s.session) return {}
+            const exercicios = s.session.exercicios.map((ex, eIdx) => {
+              if (eIdx !== exercicioIdx) return ex
+              return {
+                ...ex,
+                series: ex.series.map((serie, sIdx) => {
+                  if (sIdx !== serieIdx) return serie
+                  return { ...serie, ...dados }
+                }),
+              }
+            })
+            return { session: { ...s.session, exercicios } }
+          })
+          syncActiveToFirestore(get())
+        },
+
+        markSetCompleted: (exercicioIdx, serieIdx) => {
+          set(s => {
+            if (!s.session) return {}
+            const exercicios = s.session.exercicios.map((ex, eIdx) => {
+              if (eIdx !== exercicioIdx) return ex
+              return {
+                ...ex,
+                series: ex.series.map((serie, sIdx) => {
+                  if (sIdx !== serieIdx) return serie
+                  return { ...serie, completada: true }
+                }),
+              }
+            })
             return {
-              ...ex,
-              series: ex.series.map((serie, sIdx) => {
-                if (sIdx !== serieIdx) return serie
-                return { ...serie, completada: true }
-              }),
+              session: { ...s.session, exercicios },
+              lastSetCompleted: { exercicioIdx, serieIdx },
             }
           })
-          return {
-            sessao: { ...s.sessao, exercicios },
-            ultimaSerieCompletada: { exercicioIdx, serieIdx },
-          }
-        })
-        syncAtivo(get())
-      },
+          syncActiveToFirestore(get())
+        },
 
-      desfazerUltimaSerie: () => {
-        const { ultimaSerieCompletada } = get()
-        if (!ultimaSerieCompletada) return
-        const { exercicioIdx, serieIdx } = ultimaSerieCompletada
-        set(s => {
-          if (!s.sessao) return {}
-          const exercicios = s.sessao.exercicios.map((ex, eIdx) => {
-            if (eIdx !== exercicioIdx) return ex
+        undoLastSet: () => {
+          const { lastSetCompleted } = get()
+          if (!lastSetCompleted) return
+          const { exercicioIdx, serieIdx } = lastSetCompleted
+          set(s => {
+            if (!s.session) return {}
+            const exercicios = s.session.exercicios.map((ex, eIdx) => {
+              if (eIdx !== exercicioIdx) return ex
+              return {
+                ...ex,
+                series: ex.series.map((serie, sIdx) => {
+                  if (sIdx !== serieIdx) return serie
+                  return { ...serie, completada: false }
+                }),
+              }
+            })
             return {
-              ...ex,
-              series: ex.series.map((serie, sIdx) => {
-                if (sIdx !== serieIdx) return serie
-                return { ...serie, completada: false }
-              }),
+              session: { ...s.session, exercicios },
+              lastSetCompleted: null,
+              restTimerActive: false,
+              restTimerSeconds: 0,
+              restEndTimestamp: null,
             }
           })
-          return {
-            sessao: { ...s.sessao, exercicios },
-            ultimaSerieCompletada: null,
-            cronometroDescansoAtivo: false,
-            cronometroDescansoSegundos: 0,
-            timestampDescansoFim: null,
-          }
-        })
-        syncAtivo(get())
-      },
+          syncActiveToFirestore(get())
+        },
 
-      iniciarDescanso: segundos => {
-        set({
-          cronometroDescansoSegundos: segundos,
-          cronometroDescansoAtivo: true,
-          timestampDescansoFim: Date.now() + segundos * 1000,
-        })
-        syncAtivo(get())
-      },
+        startRest: segundos => {
+          set({
+            restTimerSeconds: segundos,
+            restTimerActive: true,
+            restEndTimestamp: Date.now() + segundos * 1000,
+          })
+          syncActiveToFirestore(get())
+        },
 
-      pararDescanso: () => {
-        set({
-          cronometroDescansoAtivo: false,
-          cronometroDescansoSegundos: 0,
-          timestampDescansoFim: null,
-        })
-        syncAtivo(get())
-      },
+        stopRest: () => {
+          set({
+            restTimerActive: false,
+            restTimerSeconds: 0,
+            restEndTimestamp: null,
+          })
+          syncActiveToFirestore(get())
+        },
 
-      tickGeral: () =>
-        set(s => {
-          if (!s.iniciado || !s.sessao) return {}
+        tickTotal: () =>
+          set(s => {
+            if (!s.started || !s.session) return {}
 
-          const agora = Date.now()
-          let tempoPausadoAcumulado = s.tempoPausadoTotal
+            const agora = Date.now()
+            let acum = s.totalPausedTime
 
-          if (s.pausado && s.ultimaPausaRecordada) {
-            tempoPausadoAcumulado += agora - s.ultimaPausaRecordada
-          }
-
-          const tempoAtivoMs = agora - s.sessao.iniciadoEm - tempoPausadoAcumulado
-          const novosSegundos = Math.max(0, Math.floor(tempoAtivoMs / 1000))
-
-          if (novosSegundos === s.cronometroGeralSegundos) return {}
-          return { cronometroGeralSegundos: novosSegundos }
-        }),
-
-      tickDescanso: () =>
-        set(s => {
-          if (!s.cronometroDescansoAtivo || !s.timestampDescansoFim) return {}
-          const agora = Date.now()
-          const restante = Math.ceil((s.timestampDescansoFim - agora) / 1000)
-
-          if (restante <= 0)
-            return {
-              cronometroDescansoSegundos: 0,
-              cronometroDescansoAtivo: false,
-              timestampDescansoFim: null,
+            if (s.paused && s.lastPauseRecorded) {
+              acum += agora - s.lastPauseRecorded
             }
-          return { cronometroDescansoSegundos: restante }
-        }),
 
-      atualizarCronometroGeral: segundos => set({ cronometroGeralSegundos: segundos }),
+            const tempoAtivoMs = agora - s.session.iniciadoEm - acum
+            const novosSegundos = Math.max(0, Math.floor(tempoAtivoMs / 1000))
 
-      restaurarDeExterno: dados =>
-        set({
-          sessao: dados.sessao,
-          exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
-          serieAtualIndex: dados.serieAtualIndex ?? 0,
-          pausado: dados.pausado ?? false,
-          tempoPausadoTotal: dados.tempoPausadoTotal ?? 0,
-          ultimaPausaRecordada: dados.ultimaPausaRecordada ?? null,
-          timestampDescansoFim: dados.timestampDescansoFim ?? null,
-          cronometroDescansoAtivo:
-            dados.timestampDescansoFim != null && dados.timestampDescansoFim > Date.now(),
-          iniciado: true,
-          cronometroGeralSegundos: dados.cronometroGeralSegundos ?? 0,
-          cronometroDescansoSegundos: 0,
-        }),
+            if (novosSegundos === s.totalTimerSeconds) return {}
+            return { totalTimerSeconds: novosSegundos }
+          }),
 
-      sincronizarEstadoExterno: dados =>
-        set({
-          sessao: dados.sessao,
-          exercicioAtualIndex: dados.exercicioAtualIndex ?? 0,
-          serieAtualIndex: dados.serieAtualIndex ?? 0,
-          pausado: dados.pausado ?? false,
-          tempoPausadoTotal: dados.tempoPausadoTotal ?? 0,
-          ultimaPausaRecordada: dados.ultimaPausaRecordada ?? null,
-          timestampDescansoFim: dados.timestampDescansoFim ?? null,
-          cronometroDescansoAtivo:
-            dados.timestampDescansoFim != null && dados.timestampDescansoFim > Date.now(),
-        }),
+        tickRest: () =>
+          set(s => {
+            if (!s.restTimerActive || !s.restEndTimestamp) return {}
+            const agora = Date.now()
+            const restante = Math.ceil((s.restEndTimestamp - agora) / 1000)
 
-      atualizarNotas: notas => {
-        set(s => {
-          if (!s.sessao) return {}
-          return { sessao: { ...s.sessao, notas } }
-        })
-        syncAtivo(get())
-      },
+            if (restante <= 0)
+              return {
+                restTimerSeconds: 0,
+                restTimerActive: false,
+                restEndTimestamp: null,
+              }
+            return { restTimerSeconds: restante }
+          }),
 
-      limparLocal: () =>
-        set({
-          sessao: null,
-          iniciado: false,
-          exercicioAtualIndex: 0,
-          serieAtualIndex: 0,
-          cronometroGeralSegundos: 0,
-          cronometroDescansoSegundos: 0,
-          cronometroDescansoAtivo: false,
-          tempoPausadoTotal: 0,
-          ultimaPausaRecordada: null,
-          timestampDescansoFim: null,
-          ultimaSerieCompletada: null,
-        }),
+        updateTotalTimer: segundos => set({ totalTimerSeconds: segundos }),
 
-      restaurarDeAutoEncerrado: snapshot => {
-        const tempoOciosoSegundos = Math.floor(INATIVIDADE_AUTO_ENCERRAR_MS / 1000)
-        const cronometroAtivo = Math.max(0, snapshot.cronometroGeralSegundos - tempoOciosoSegundos)
-        const sessaoAtiva = {
-          ...snapshot.sessao,
-          finalizadoEm: undefined,
-          duracaoSegundos: undefined,
-          tempoOciosoDescontadoSegundos: undefined,
-          autoEncerrado: undefined,
-        }
-        set({
-          sessao: sessaoAtiva,
-          exercicioAtualIndex: snapshot.exercicioAtualIndex,
-          serieAtualIndex: snapshot.serieAtualIndex,
-          cronometroGeralSegundos: cronometroAtivo,
-          cronometroDescansoSegundos: 0,
-          cronometroDescansoAtivo: false,
-          pausado: false,
-          tempoPausadoTotal: 0,
-          ultimaPausaRecordada: null,
-          timestampDescansoFim: null,
-          ultimaSerieCompletada: null,
-          iniciado: true,
-        })
-        syncAtivo(get())
-      },
+        restoreFromExternal: dados =>
+          set({
+            ...mapPayloadToState(dados),
+          }),
 
-      heartbeat: () => {
-        syncAtivo(get())
-      },
+        syncExternalState: dados =>
+          set({
+            ...mapPayloadToState(dados),
+          }),
 
-      restaurarDeHistorico: sessao => {
-        const duracaoSegundos = sessao.duracaoSegundos ?? 0
-        const sessaoAtiva = {
-          ...sessao,
-          finalizadoEm: undefined,
-          duracaoSegundos: undefined,
-          autoEncerrado: undefined,
-        }
-        set({
-          sessao: sessaoAtiva,
-          exercicioAtualIndex: 0,
-          serieAtualIndex: 0,
-          cronometroGeralSegundos: duracaoSegundos,
-          cronometroDescansoSegundos: 0,
-          cronometroDescansoAtivo: false,
-          pausado: false,
-          tempoPausadoTotal: 0,
-          ultimaPausaRecordada: null,
-          timestampDescansoFim: null,
-          ultimaSerieCompletada: null,
-          iniciado: true,
-        })
-        syncAtivo(get())
-      },
-    }),
+        updateNotes: notas => {
+          set(s => {
+            if (!s.session) return {}
+            return { session: { ...s.session, notas } }
+          })
+          syncActiveToFirestore(get())
+        },
+
+        clearLocal: () =>
+          set({
+            session: null,
+            started: false,
+            currentExerciseIndex: 0,
+            currentSetIndex: 0,
+            totalTimerSeconds: 0,
+            restTimerSeconds: 0,
+            restTimerActive: false,
+            totalPausedTime: 0,
+            lastPauseRecorded: null,
+            restEndTimestamp: null,
+            lastSetCompleted: null,
+          }),
+
+        restoreFromAutoClosed: snapshot => {
+          const tempoOciosoSegundos = Math.floor(INATIVIDADE_AUTO_ENCERRAR_MS / 1000)
+          const cronometroAtivo = Math.max(0, snapshot.totalTimerSeconds - tempoOciosoSegundos)
+          const sessaoAtiva = {
+            ...snapshot.session,
+            finalizadoEm: undefined,
+            duracaoSegundos: undefined,
+            tempoOciosoDescontadoSegundos: undefined,
+            autoEncerrado: undefined,
+          }
+          set({
+            session: sessaoAtiva,
+            currentExerciseIndex: snapshot.currentExerciseIndex,
+            currentSetIndex: snapshot.currentSetIndex,
+            totalTimerSeconds: snapshot.totalTimerSeconds,
+            restTimerSeconds: 0,
+            restTimerActive: false,
+            paused: false,
+            totalPausedTime: 0,
+            lastPauseRecorded: null,
+            restEndTimestamp: null,
+            lastSetCompleted: null,
+            started: true,
+          })
+          syncActiveToFirestore(get())
+        },
+
+        heartbeat: () => {
+          syncActiveToFirestore(get())
+        },
+
+        restoreFromHistory: session => {
+          const duracaoSegundos = session.duracaoSegundos ?? 0
+          const sessaoAtiva = {
+            ...session,
+            finalizadoEm: undefined,
+            duracaoSegundos: undefined,
+            autoEncerrado: undefined,
+          }
+          set({
+            session: sessaoAtiva,
+            currentExerciseIndex: 0,
+            currentSetIndex: 0,
+            totalTimerSeconds: duracaoSegundos,
+            restTimerSeconds: 0,
+            restTimerActive: false,
+            paused: false,
+            totalPausedTime: 0,
+            lastPauseRecorded: null,
+            restEndTimestamp: null,
+            lastSetCompleted: null,
+            started: true,
+          })
+          syncActiveToFirestore(get())
+        },
+      }
+    },
     {
       name: 'training-treino-ativo',
+      version: 1,
       partialize: s => ({
-        sessao: s.sessao,
-        exercicioAtualIndex: s.exercicioAtualIndex,
-        serieAtualIndex: s.serieAtualIndex,
-        cronometroGeralSegundos: s.cronometroGeralSegundos,
-        iniciado: s.iniciado,
-        pausado: s.pausado,
-        tempoPausadoTotal: s.tempoPausadoTotal,
-        ultimaPausaRecordada: s.ultimaPausaRecordada,
-        timestampDescansoFim: s.timestampDescansoFim,
+        session: s.session,
+        currentExerciseIndex: s.currentExerciseIndex,
+        currentSetIndex: s.currentSetIndex,
+        totalTimerSeconds: s.totalTimerSeconds,
+        started: s.started,
+        paused: s.paused,
+        totalPausedTime: s.totalPausedTime,
+        lastPauseRecorded: s.lastPauseRecorded,
+        restEndTimestamp: s.restEndTimestamp,
       }),
+      migrate: (persisted: unknown, version: number) => {
+        const raw = persisted as Record<string, unknown>
+        if (!raw || version >= 1) return persisted as Partial<ActiveWorkoutStoreState>
+        return {
+          session: raw.sessao ?? raw.session ?? null,
+          currentExerciseIndex: (raw.exercicioAtualIndex as number) ?? raw.currentExerciseIndex ?? 0,
+          currentSetIndex: (raw.serieAtualIndex as number) ?? raw.currentSetIndex ?? 0,
+          totalTimerSeconds: (raw.cronometroGeralSegundos as number) ?? raw.totalTimerSeconds ?? 0,
+          started: (raw.iniciado as boolean) ?? raw.started ?? false,
+          paused: (raw.pausado as boolean) ?? raw.paused ?? false,
+          totalPausedTime: (raw.tempoPausadoTotal as number) ?? raw.totalPausedTime ?? 0,
+          lastPauseRecorded: (raw.ultimaPausaRecordada as number | null) ?? raw.lastPauseRecorded ?? null,
+          restEndTimestamp: (raw.timestampDescansoFim as number | null) ?? raw.restEndTimestamp ?? null,
+        }
+      },
     }
   )
 )

@@ -27,19 +27,19 @@ const DIAS_DA_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 function HomePage() {
   const user = useAuthStore((s) => s.user)
-  const { planosAtivos, loading, sincronizar: sincronizarPlanos } = usePlans()
-  const { sessoes, loading: loadingSessoes, sincronizar: sincronizarSessoes } =
+  const { activePlans, loading, sync: syncPlans } = usePlans()
+  const { sessions, loading: loadingSessions, sync: syncSessions } =
     useHistory()
   const [sincronizando, setSincronizando] = useState(false)
   const [showEditMeta, setShowEditMeta] = useState(false)
   const [metaInput, setMetaInput] = useState('4')
 
-  const treinoAtivo = useActiveWorkoutStore((s) => s.iniciado)
-  const sessaoAtiva = useActiveWorkoutStore((s) => s.sessao)
-  const exercicioAtualIndex = useActiveWorkoutStore((s) => s.exercicioAtualIndex)
-  const pausado = useActiveWorkoutStore((s) => s.pausado)
-  const cronometroGeralSegundos = useActiveWorkoutStore(
-    (s) => s.cronometroGeralSegundos
+  const treinoAtivo = useActiveWorkoutStore((s) => s.started)
+  const sessaoAtiva = useActiveWorkoutStore((s) => s.session)
+  const exercicioAtualIndex = useActiveWorkoutStore((s) => s.currentExerciseIndex)
+  const pausado = useActiveWorkoutStore((s) => s.paused)
+  const totalTimerSeconds = useActiveWorkoutStore(
+    (s) => s.totalTimerSeconds
   )
 
   const { metaSemanal, diasOpcionais, handleSaveMeta } =
@@ -54,28 +54,28 @@ function HomePage() {
     handleTouchEnd,
     threshold: pullThreshold,
   } = usePullToRefresh(async () => {
-    await Promise.all([sincronizarPlanos(), sincronizarSessoes()])
+    await Promise.all([syncPlans(), syncSessions()])
   })
 
   const stats = useHomeStats({
-    sessoes,
-    planosAtivos,
+    sessions,
+    activePlans,
     metaSemanal,
     diasOpcionais,
     loading,
-    loadingSessoes,
+    loadingSessions,
   })
   const {
-    treinosSemana,
-    volumeTotal,
-    ultimasSessoes,
-    carregando,
+    workoutsThisWeek,
+    totalVolume,
+    lastSessions,
+    isLoading,
     streaks,
-    proximoPlano,
-    alertasGrupos,
-    hoje,
-    inicioSemana,
-    ultimaSessao,
+    nextPlan,
+    groupAlerts,
+    today,
+    weekStart,
+    lastSession,
   } = stats
 
   const nome = user?.displayName?.split(' ')[0] ?? 'Atleta'
@@ -103,7 +103,7 @@ function HomePage() {
         nome={nome}
         onSync={async () => {
           setSincronizando(true)
-          await Promise.all([sincronizarPlanos(), sincronizarSessoes()])
+          await Promise.all([syncPlans(), syncSessions()])
           setSincronizando(false)
         }}
         sincronizando={sincronizando}
@@ -113,13 +113,13 @@ function HomePage() {
         <ActiveWorkoutBanner
           planoId={sessaoAtiva.planoId}
           pausado={pausado}
-          cronometroGeralSegundos={cronometroGeralSegundos}
+          cronometroGeralSegundos={totalTimerSeconds}
           exercicioAtualNome={exercicioAtual?.exercicioNome ?? null}
           planoNome={sessaoAtiva.planoNome}
         />
       )}
 
-      {carregando ? (
+      {isLoading ? (
         <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
           {[...Array(3)].map((_, i) => (
             <div key={i} className="skeleton h-[88px] rounded-2xl" />
@@ -127,13 +127,13 @@ function HomePage() {
         </div>
       ) : (
         <HomeStats
-          treinosSemana={treinosSemana}
-          volumeTotal={volumeTotal}
-          treinosTotal={sessoes.length}
+          treinosSemana={workoutsThisWeek}
+          volumeTotal={totalVolume}
+          treinosTotal={sessions.length}
         />
       )}
 
-      {!carregando && sessoes.length > 0 && (
+      {!isLoading && sessions.length > 0 && (
         <StreakMetaSection
           streakAtual={streaks.streakAtual}
           treinosEstaSemana={streaks.treinosEstaSemana}
@@ -148,34 +148,34 @@ function HomePage() {
 
       <WeekDaysCard
         diasDaSemana={DIAS_DA_SEMANA}
-        inicioSemana={inicioSemana}
-        hoje={hoje}
-        sessoes={sessoes}
+        inicioSemana={weekStart}
+        hoje={today}
+        sessoes={sessions}
         diasOpcionais={diasOpcionais}
       />
 
-      {!treinoAtivo && proximoPlano && (
+      {!treinoAtivo && nextPlan && (
         <NextWorkoutSection
-          proximoPlano={proximoPlano}
-          ultimaSessao={ultimaSessao}
+          proximoPlano={nextPlan}
+          ultimaSessao={lastSession}
         />
       )}
 
-      {!carregando && sessoes.length > 0 && (
-        <GroupFrequencyCard alertas={alertasGrupos} />
+      {!isLoading && sessions.length > 0 && (
+        <GroupFrequencyCard alertas={groupAlerts} />
       )}
 
-      <MyPlansSection planos={planosAtivos} carregando={carregando} />
+      <MyPlansSection planos={activePlans} carregando={isLoading} />
 
       <LastWorkoutsSection
-        sessoes={ultimasSessoes.map(s => ({
+        sessoes={lastSessions.map(s => ({
           id: s.id,
           planoNome: s.planoNome,
           iniciadoEm: s.iniciadoEm,
           duracaoSegundos: s.duracaoSegundos,
           volumeTotal: s.volumeTotal,
         }))}
-        carregando={carregando}
+        carregando={isLoading}
       />
 
       {showEditMeta && (

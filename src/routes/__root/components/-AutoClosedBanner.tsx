@@ -5,25 +5,25 @@ import { useActiveWorkoutStore } from '../../../stores'
 
 export function AutoClosedBanner() {
   const navigate = useNavigate()
-  const sessaoAutoEncerrada = useHistoryStore(s => s.sessaoAutoEncerrada)
-  const setSessaoAutoEncerrada = useHistoryStore(s => s.setSessaoAutoEncerrada)
-  const { excluirSessao } = useHistory()
-  const restaurarDeAutoEncerrado = useActiveWorkoutStore(s => s.restaurarDeAutoEncerrado)
+  const autoClosedSnapshot = useHistoryStore(s => s.autoClosedSnapshot)
+  const setAutoClosedSnapshot = useHistoryStore(s => s.setAutoClosedSnapshot)
+  const { deleteSessionById } = useHistory()
+  const restoreFromAutoClosed = useActiveWorkoutStore(s => s.restoreFromAutoClosed)
 
-  if (!sessaoAutoEncerrada) return null
+  if (!autoClosedSnapshot) return null
 
   const handleRetornar = () => {
-    excluirSessao(sessaoAutoEncerrada.sessao.id)
-    restaurarDeAutoEncerrado(sessaoAutoEncerrada)
-    setSessaoAutoEncerrada(null)
+    deleteSessionById(autoClosedSnapshot.session.id)
+    restoreFromAutoClosed(autoClosedSnapshot)
+    setAutoClosedSnapshot(null)
     navigate({
       to: '/active-workout/$planId',
-      params: { planId: sessaoAutoEncerrada.sessao.planoId },
+      params: { planId: autoClosedSnapshot.session.planoId },
     })
   }
 
   const handleFechar = () => {
-    setSessaoAutoEncerrada(null)
+    setAutoClosedSnapshot(null)
   }
 
   return (

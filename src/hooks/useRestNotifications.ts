@@ -8,44 +8,43 @@ import {
   onSwMessage,
 } from '../lib/notifications'
 
-interface UseNotificacoesDescansoParams {
-  cronometroDescansoAtivo: boolean
-  cronometroDescansoSegundos: number
-  sessao: WorkoutSession | null
-  exercicioAtualIndex: number
+interface UseRestNotificationsParams {
+  restTimerActive: boolean
+  restTimerSeconds: number
+  session: WorkoutSession | null
+  currentExerciseIndex: number
 }
 
 export function useRestNotifications({
-  cronometroDescansoAtivo,
-  cronometroDescansoSegundos,
-  sessao,
-  exercicioAtualIndex,
-}: UseNotificacoesDescansoParams) {
-  const descansoAcabouNaturalRef = useRef(false)
+  restTimerActive,
+  restTimerSeconds,
+  session,
+  currentExerciseIndex,
+}: UseRestNotificationsParams) {
+  const restEndedNaturalRef = useRef(false)
   const restEndAgendadoRef = useRef(false)
 
   useEffect(() => {
-    if (cronometroDescansoAtivo && sessao) {
-      const ex = sessao.exercicios[exercicioAtualIndex]
-      descansoAcabouNaturalRef.current = true
+    if (restTimerActive && session) {
+      const ex = session.exercicios[currentExerciseIndex]
+      restEndedNaturalRef.current = true
 
-      // Agenda uma única notificação para quando o descanso terminar (não a cada segundo)
       if (!restEndAgendadoRef.current) {
         restEndAgendadoRef.current = true
-        agendarNotificacaoDescanso(cronometroDescansoSegundos, ex?.exercicioNome)
+        agendarNotificacaoDescanso(restTimerSeconds, ex?.exercicioNome)
       }
     }
 
-    if (!cronometroDescansoAtivo) {
+    if (!restTimerActive) {
       restEndAgendadoRef.current = false
-      if (descansoAcabouNaturalRef.current) {
+      if (restEndedNaturalRef.current) {
         tocarAlertaDescanso()
         vibrarDescansoFim()
-        descansoAcabouNaturalRef.current = false
+        restEndedNaturalRef.current = false
       }
       limparNotificacoesTreino()
     }
-  }, [cronometroDescansoAtivo, cronometroDescansoSegundos, sessao, exercicioAtualIndex])
+  }, [restTimerActive, restTimerSeconds, session, currentExerciseIndex])
 
   useEffect(() => {
     return onSwMessage((msg) => {
@@ -58,13 +57,13 @@ export function useRestNotifications({
 
   useEffect(() => {
     if (
-      cronometroDescansoAtivo &&
-      cronometroDescansoSegundos > 0 &&
-      cronometroDescansoSegundos <= 5
+      restTimerActive &&
+      restTimerSeconds > 0 &&
+      restTimerSeconds <= 5
     ) {
-      navigator.vibrate?.(cronometroDescansoSegundos === 1 ? [150, 50, 150] : [80])
+      navigator.vibrate?.(restTimerSeconds === 1 ? [150, 50, 150] : [80])
     }
-  }, [cronometroDescansoSegundos, cronometroDescansoAtivo])
+  }, [restTimerSeconds, restTimerActive])
 
-  return { descansoAcabouNaturalRef }
+  return { restEndedNaturalRef }
 }
