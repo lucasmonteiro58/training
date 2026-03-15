@@ -44,13 +44,13 @@ export function ExerciseSessionCard({
         </div>
         {seriesPRs.some(Boolean) && (
           <span className="flex items-center gap-1 text-[10px] font-bold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-full">
-            <Trophy size={10} /> PR
+            <Trophy size={10} /> RP
           </span>
         )}
       </div>
 
       <div className="grid grid-cols-[24px_1fr_1fr_24px] gap-2 px-1 mb-1">
-        {['#', 'Weight (kg)', 'Reps', ''].map((h, i) => (
+        {['#', 'Peso (kg)', 'Repetições', ''].map((h, i) => (
           <span key={i} className="text-[9px] text-text-subtle font-semibold text-center">{h}</span>
         ))}
       </div>
@@ -97,7 +97,7 @@ export function ExerciseSessionCard({
                 type="button"
                 onClick={() => onUpdateSet(exIdx, sIdx, { completed: !s.completed })}
                 className="p-0.5 rounded-full hover:bg-surface-2 transition-colors"
-                title={s.completed ? 'Mark as not completed' : 'Mark as completed'}
+                title={s.completed ? 'Marcar como não concluída' : 'Marcar como concluída'}
               >
                 {s.completed ? (
                   <CheckCircle2 size={15} className="text-success" />

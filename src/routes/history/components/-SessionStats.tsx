@@ -52,17 +52,17 @@ export function SessionStats({
             </p>
             {idleMinutes > 0 && (
               <p className="text-[10px] text-amber-400/90 mt-0.5">
-                {idleMinutes} min idle deducted
+                {idleMinutes} min ociosos descontados
               </p>
             )}
           </>
         )}
-        <p className="text-[10px] text-text-muted">Duration</p>
+        <p className="text-[10px] text-text-muted">Duração</p>
       </div>
       <div className="card p-3 text-center">
         <Dumbbell size={16} className="text-accent mx-auto mb-1" />
         <p className="text-lg font-bold text-text">{numExercises}</p>
-        <p className="text-[10px] text-text-muted">Exercises</p>
+        <p className="text-[10px] text-text-muted">Exercícios</p>
       </div>
       <div className="card p-3 text-center">
         <TrendingUp size={16} className="text-accent mx-auto mb-1" />

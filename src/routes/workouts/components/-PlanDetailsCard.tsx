@@ -21,10 +21,10 @@ export function PlanDetailsCard({
     <div className="card p-4 mb-4 animate-fade-up">
       <div className="flex flex-col gap-3">
         <div>
-          <label className="text-xs text-text-muted font-medium mb-1.5 block">PLAN NAME *</label>
+          <label className="text-xs text-text-muted font-medium mb-1.5 block">NOME DO PLANO *</label>
           <input
             className="input"
-            placeholder="Ex: Workout A – Chest and Triceps"
+            placeholder="Ex: Treino A – Peito e Tríceps"
             value={name}
             onChange={e => onNameChange(e.target.value)}
             maxLength={60}
@@ -32,18 +32,18 @@ export function PlanDetailsCard({
         </div>
         <div>
           <label className="text-xs text-text-muted font-medium mb-1.5 block">
-            DESCRIPTION (optional)
+            DESCRIÇÃO (opcional)
           </label>
           <textarea
             className="input resize-none"
-            placeholder="Ex: Focus on hypertrophy..."
+            placeholder="Ex: Foco em hipertrofia..."
             rows={2}
             value={description}
             onChange={e => onDescriptionChange(e.target.value)}
           />
         </div>
         <div>
-          <label className="text-xs text-text-muted font-medium mb-1.5 block">COLOR</label>
+          <label className="text-xs text-text-muted font-medium mb-1.5 block">COR</label>
           <div className="flex gap-2 flex-wrap">
             {PLAN_COLORS.map(color => (
               <button

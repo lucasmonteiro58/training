@@ -56,13 +56,13 @@ export function SessionDetailHeader({
           {autoClosed && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/25 shrink-0">
               <TimerOff size={10} />
-              Closed automatically
+              Encerrado automaticamente
             </span>
           )}
         </div>
         {isEditing && startedAt != null && onStartedAtChange ? (
           <label className="block mt-1">
-            <span className="text-xs text-text-muted block mb-1">Workout date</span>
+            <span className="text-xs text-text-muted block mb-1">Data do treino</span>
             <input
               type="date"
               value={toDateInputValue(startedAt)}
@@ -80,9 +80,9 @@ export function SessionDetailHeader({
           <div className="mt-0.5 space-y-0.5">
             <p className="text-xs text-text-muted capitalize">{dateStr}</p>
             <p className="text-xs text-text-subtle">
-              Start {startedAt != null ? formatTime(startedAt) : '–'}
+              Início {startedAt != null ? formatTime(startedAt) : '–'}
               {finishedAt != null && (
-                <> · End {formatTime(finishedAt)}</>
+                <> · Fim {formatTime(finishedAt)}</>
               )}
             </p>
           </div>
