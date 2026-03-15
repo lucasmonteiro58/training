@@ -3,25 +3,25 @@ import { formatDuration } from '../../../lib/notifications'
 
 interface SessionStatsProps {
   durationSeconds: number | undefined
-  numExercicios: number
+  numExercises: number
   totalVolume: number | undefined
-  editando: boolean
+  editing: boolean
   durationMinutes?: number
-  onDurationChange?: (minutos: number) => void
-  /** Quando o treino foi auto-encerrado: segundos de inatividade já descontados da duração */
+  onDurationChange?: (seconds: number) => void
+  /** When workout was auto-closed: idle seconds already deducted from duration */
   idleSecondsDeducted?: number
 }
 
 export function SessionStats({
   durationSeconds,
-  numExercicios,
+  numExercises,
   totalVolume,
-  editando,
+  editing,
   durationMinutes = 0,
   onDurationChange,
   idleSecondsDeducted,
 }: SessionStatsProps) {
-  const tempoOcioMin =
+  const idleMinutes =
     idleSecondsDeducted != null && idleSecondsDeducted > 0
       ? Math.round(idleSecondsDeducted / 60)
       : 0
@@ -30,7 +30,7 @@ export function SessionStats({
     <div className="grid grid-cols-3 gap-2 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
       <div className="card p-3 text-center">
         <Clock size={16} className="text-accent mx-auto mb-1" />
-        {editando && onDurationChange ? (
+        {editing && onDurationChange ? (
           <div className="flex flex-col gap-1">
             <input
               type="number"
@@ -50,19 +50,19 @@ export function SessionStats({
             <p className="text-lg font-bold text-text">
               {durationSeconds != null ? formatDuration(durationSeconds) : '–'}
             </p>
-            {tempoOcioMin > 0 && (
+            {idleMinutes > 0 && (
               <p className="text-[10px] text-amber-400/90 mt-0.5">
-                {tempoOcioMin} min ociosos descontados
+                {idleMinutes} min idle deducted
               </p>
             )}
           </>
         )}
-        <p className="text-[10px] text-text-muted">Duração</p>
+        <p className="text-[10px] text-text-muted">Duration</p>
       </div>
       <div className="card p-3 text-center">
         <Dumbbell size={16} className="text-accent mx-auto mb-1" />
-        <p className="text-lg font-bold text-text">{numExercicios}</p>
-        <p className="text-[10px] text-text-muted">Exercícios</p>
+        <p className="text-lg font-bold text-text">{numExercises}</p>
+        <p className="text-[10px] text-text-muted">Exercises</p>
       </div>
       <div className="card p-3 text-center">
         <TrendingUp size={16} className="text-accent mx-auto mb-1" />

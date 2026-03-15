@@ -6,6 +6,7 @@ import {
   clearWorkoutProgressFromFirestore,
 } from '../lib/firestore/sync'
 import { useHistory } from './useHistory'
+import type { WorkoutSession } from '../types'
 
 export function useWorkoutProgressSync(user: { uid: string } | null) {
   const { saveSessionComplete } = useHistory()
@@ -20,6 +21,34 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
       const state = useActiveWorkoutStore.getState()
       const historyState = useHistoryStore.getState()
 
+      // Doc deletado (ex.: Cloud Function encerrou por inatividade): tratar como encerrado e mostrar modal
+      if (data === null && state.started && state.session) {
+        const idleTimeSeconds = Math.floor(
+          INATIVIDADE_AUTO_ENCERRAR_MS / 1000
+        )
+        const finishedSession: WorkoutSession = {
+          ...state.session,
+          finishedAt: Date.now(),
+          durationSeconds: Math.max(
+            0,
+            state.totalTimerSeconds - idleTimeSeconds
+          ),
+          idleSecondsDeducted: idleTimeSeconds,
+          totalVolume: calcularVolume(state.session),
+          autoClosed: true,
+        }
+        saveSessionComplete(finishedSession).then(() => {
+          state.clearLocal()
+          setAutoClosedSnapshot({
+            session: finishedSession,
+            currentExerciseIndex: state.currentExerciseIndex,
+            currentSetIndex: state.currentSetIndex,
+            totalTimerSeconds: state.totalTimerSeconds,
+          })
+        })
+        return
+      }
+
       // Não limpar quando data é null: o doc pode ainda não existir (write em progresso ao iniciar treino)
       const isActive = data && (data.started === true || data.iniciado === true)
       if (!isActive) {
@@ -28,23 +57,23 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
       }
 
       const updatedAt = (data as { updatedAt?: number }).updatedAt
+      const session = ((data as { session?: WorkoutSession; sessao?: WorkoutSession }).session ?? (data as { sessao?: WorkoutSession }).sessao) as WorkoutSession | undefined
+      const rawTimerSeconds =
+        (data as { totalTimerSeconds?: number; cronometroGeralSegundos?: number }).totalTimerSeconds ??
+        (data as { cronometroGeralSegundos?: number }).cronometroGeralSegundos ?? 0
+      const currentIdx = (data as { currentExerciseIndex?: number; exercicioAtualIndex?: number }).currentExerciseIndex ?? (data as { exercicioAtualIndex?: number }).exercicioAtualIndex ?? 0
+      const setIdx = (data as { currentSetIndex?: number; serieAtualIndex?: number }).currentSetIndex ?? (data as { serieAtualIndex?: number }).serieAtualIndex ?? 0
+
       if (
         updatedAt &&
         Date.now() - updatedAt > INATIVIDADE_AUTO_ENCERRAR_MS
       ) {
-        if (
-          historyState.autoClosedSnapshot?.session.id === data.sessao?.id
-        )
-          return
-        const session = data.sessao
+        if (historyState.autoClosedSnapshot?.session.id === session?.id) return
         if (!session) return
-        const rawTimerSeconds =
-          (data as { cronometroGeralSegundos?: number })
-            .cronometroGeralSegundos ?? 0
         const idleTimeSeconds = Math.floor(
           INATIVIDADE_AUTO_ENCERRAR_MS / 1000
         )
-        const finishedSession = {
+        const finishedSession: WorkoutSession = {
           ...session,
           finishedAt: Date.now(),
           durationSeconds: Math.max(
@@ -60,11 +89,9 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
           state.clearLocal()
           setAutoClosedSnapshot({
             session: finishedSession,
-            currentExerciseIndex: data.exercicioAtualIndex ?? 0,
-            currentSetIndex: data.serieAtualIndex ?? 0,
-            totalTimerSeconds:
-              (data as { cronometroGeralSegundos?: number })
-                .cronometroGeralSegundos ?? 0,
+            currentExerciseIndex: currentIdx,
+            currentSetIndex: setIdx,
+            totalTimerSeconds: rawTimerSeconds,
           })
         })
         return

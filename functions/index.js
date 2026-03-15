@@ -47,6 +47,7 @@ function stripUndefined(obj) {
 /**
  * Closes active workouts that have been inactive for more than 20 minutes.
  * Runs every 10 minutes via Cloud Scheduler.
+ * Client writes to active/{userId} with updatedAt on each heartbeat; if no write for 20 min, we close.
  */
 exports.closeInactiveWorkouts = onSchedule(
   {
@@ -75,10 +76,12 @@ exports.closeInactiveWorkouts = onSchedule(
       hasWrites = true;
       const totalTimerSeconds =
         data.totalTimerSeconds ?? data.cronometroGeralSegundos ?? 0;
+      const idleSeconds = Math.floor(INACTIVITY_MS / 1000);
       const closedSession = {
         ...session,
         finishedAt: now,
-        durationSeconds: totalTimerSeconds,
+        durationSeconds: Math.max(0, totalTimerSeconds - idleSeconds),
+        idleSecondsDeducted: idleSeconds,
         totalVolume: calculateVolume(session),
         autoClosed: true,
         syncedAt: now,

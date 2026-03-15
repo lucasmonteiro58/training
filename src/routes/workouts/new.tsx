@@ -63,12 +63,12 @@ function NewPlanPage() {
         />
 
         <PlanDetailsCard
-          nome={name}
-          onNomeChange={setName}
-          descricao={description}
-          onDescricaoChange={setDescription}
-          corSelecionada={selectedColor}
-          onCorChange={setSelectedColor}
+          name={name}
+          onNameChange={setName}
+          description={description}
+          onDescriptionChange={setDescription}
+          selectedColor={selectedColor}
+          onColorChange={setSelectedColor}
         />
 
         <div className="mb-4">

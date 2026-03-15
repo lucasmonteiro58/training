@@ -40,7 +40,7 @@ function SessaoDetalhePage() {
     })
   }
 
-  const edicao = useSessionEdit(session, saveSessionComplete)
+  const sessionEdit = useSessionEdit(session, saveSessionComplete)
   const {
     isEditing,
     editData,
@@ -51,7 +51,7 @@ function SessaoDetalhePage() {
     updateSet,
     updateDuration,
     updateStartedAt,
-  } = edicao
+  } = sessionEdit
 
   const recordsExcludingCurrent = useMemo(
     () => calculateRecords(allSessions.filter((s) => s.id !== sessionId)),
@@ -61,20 +61,20 @@ function SessaoDetalhePage() {
   if (!session) {
     return (
       <div className="page-container pt-6 text-center">
-        <p className="text-text-muted">Sessão não encontrada.</p>
+        <p className="text-text-muted">Session not found.</p>
         <Link
           to="/history"
           className="text-accent text-sm mt-2 block"
           style={{ textDecoration: 'none' }}
         >
-          Voltar
+          Back
         </Link>
       </div>
     )
   }
 
-  const data = new Date(displaySession!.startedAt)
-  const dataStr = data.toLocaleDateString('pt-BR', {
+  const date = new Date(displaySession!.startedAt)
+  const dateStr = date.toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -93,7 +93,7 @@ function SessaoDetalhePage() {
     <div className="page-container pt-4">
       <SessionDetailHeader
         planName={displaySession!.planName}
-        dataStr={dataStr}
+        dateStr={dateStr}
         isEditing={isEditing}
         autoClosed={displaySession!.autoClosed}
         startedAt={
@@ -109,9 +109,9 @@ function SessaoDetalhePage() {
 
       <SessionStats
         durationSeconds={displaySession!.durationSeconds}
-        numExercicios={displaySession!.exercises.length}
+        numExercises={displaySession!.exercises.length}
         totalVolume={displaySession!.totalVolume}
-        editando={isEditing}
+        editing={isEditing}
         durationMinutes={
           editData?.durationSeconds != null
             ? Math.round(editData.durationSeconds / 60)
@@ -144,7 +144,7 @@ function SessaoDetalhePage() {
       )}
 
       {displaySession!.notes && (
-        <WorkoutNotes notas={displaySession!.notes} />
+        <WorkoutNotes notes={displaySession!.notes} />
       )}
 
       <div className="flex flex-col gap-3">
@@ -153,9 +153,9 @@ function SessaoDetalhePage() {
             key={`${ex.exerciseId}-${eIdx}`}
             ex={ex}
             exIdx={eIdx}
-            editando={isEditing}
+            editing={isEditing}
             recordsExcludingCurrent={recordsExcludingCurrent}
-            onUpdateSerie={updateSet}
+            onUpdateSet={updateSet}
           />
         ))}
       </div>

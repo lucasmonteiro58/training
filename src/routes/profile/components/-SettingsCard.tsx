@@ -12,13 +12,13 @@ import {
 } from 'lucide-react'
 
 interface SettingsCardProps {
-  notifPermitida: boolean
+  notificationsEnabled: boolean
   onNotifToggle: () => void
   onExportClick: () => void
 }
 
 export function SettingsCard({
-  notifPermitida,
+  notificationsEnabled,
   onNotifToggle,
   onExportClick,
 }: SettingsCardProps) {
@@ -29,7 +29,7 @@ export function SettingsCard({
   return (
     <div className="card p-1 mb-5 animate-fade-up" style={{ animationDelay: '100ms' }}>
       <p className="text-xs font-bold text-text-muted px-4 py-3 uppercase tracking-wider">
-        Conta e Recursos
+        Account & Features
       </p>
 
       <Link
@@ -41,8 +41,8 @@ export function SettingsCard({
           <History size={18} className="text-accent" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-text">Histórico de Treinos</p>
-          <p className="text-xs text-text-muted mt-0.5">Veja todos os seus treinos passados</p>
+          <p className="text-sm font-medium text-text">Workout History</p>
+          <p className="text-xs text-text-muted mt-0.5">View all your past workouts</p>
         </div>
         <ChevronRight size={16} className="text-text-subtle" />
       </Link>
@@ -58,8 +58,8 @@ export function SettingsCard({
           <TrendingUp size={18} className="text-green-400" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-text">Evolução de Peso</p>
-          <p className="text-xs text-text-muted mt-0.5">Gráficos de progresso por exercício</p>
+          <p className="text-sm font-medium text-text">Weight Progress</p>
+          <p className="text-xs text-text-muted mt-0.5">Progress charts per exercise</p>
         </div>
         <ChevronRight size={16} className="text-text-subtle" />
       </Link>
@@ -75,8 +75,8 @@ export function SettingsCard({
           <Ruler size={18} className="text-indigo-400" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-text">Medidas Corporais</p>
-          <p className="text-xs text-text-muted mt-0.5">Acompanhe peso, gordura e circunferências</p>
+          <p className="text-sm font-medium text-text">Body Measurements</p>
+          <p className="text-xs text-text-muted mt-0.5">Track weight, body fat and circumferences</p>
         </div>
         <ChevronRight size={16} className="text-text-subtle" />
       </Link>
@@ -92,9 +92,9 @@ export function SettingsCard({
           <Calendar size={18} className="text-blue-400" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-text">Dias opcionais de treino</p>
+          <p className="text-sm font-medium text-text">Optional workout days</p>
           <p className="text-xs text-text-muted mt-0.5">
-            Dias que você pode pular sem perder a sequência
+            Days you can skip without losing the sequence
           </p>
         </div>
         <ChevronRight size={16} className="text-text-subtle" />
@@ -109,29 +109,29 @@ export function SettingsCard({
       >
         <div
           className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-            notifPermitida ? 'bg-[rgba(245,158,11,0.12)]' : 'bg-surface-2'
+            notificationsEnabled ? 'bg-[rgba(245,158,11,0.12)]' : 'bg-surface-2'
           }`}
         >
-          {notifPermitida ? (
+          {notificationsEnabled ? (
             <Bell size={18} className="text-amber-400" />
           ) : (
             <BellOff size={18} className="text-text-muted" />
           )}
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-text">Notificações de Treino</p>
+          <p className="text-sm font-medium text-text">Workout Notifications</p>
           <p className="text-xs text-text-muted mt-0.5">
-            {notifPermitida ? 'Toque para desativar' : 'Toque para ativar'}
+            {notificationsEnabled ? 'Tap to disable' : 'Tap to enable'}
           </p>
         </div>
         <div
           className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-            notifPermitida ? 'bg-amber-400' : 'bg-border-strong'
+            notificationsEnabled ? 'bg-amber-400' : 'bg-border-strong'
           }`}
         >
           <div
             className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${
-              notifPermitida ? 'left-5' : 'left-0.5'
+              notificationsEnabled ? 'left-5' : 'left-0.5'
             }`}
           />
         </div>
@@ -148,8 +148,8 @@ export function SettingsCard({
           <Download size={18} className="text-emerald-400" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-medium text-text">Exportar Dados</p>
-          <p className="text-xs text-text-muted mt-0.5">Histórico em CSV, planos e sessões em JSON</p>
+          <p className="text-sm font-medium text-text">Export Data</p>
+          <p className="text-xs text-text-muted mt-0.5">History as CSV, plans and sessions as JSON</p>
         </div>
         <ChevronRight size={16} className="text-text-subtle" />
       </button>

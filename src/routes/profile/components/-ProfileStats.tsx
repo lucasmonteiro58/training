@@ -3,23 +3,23 @@ import { History, Dumbbell, TrendingUp } from 'lucide-react'
 import { formatDuration } from '../../../lib/notifications'
 
 interface ProfileStatsProps {
-  totalTreinos: number
-  totalPlanos: number
-  volumeTotal: number
-  tempoTotal: number
+  totalWorkouts: number
+  totalPlans: number
+  totalVolume: number
+  totalDuration: number
 }
 
-export function ProfileStats({ totalTreinos, totalPlanos, volumeTotal, tempoTotal }: ProfileStatsProps) {
+export function ProfileStats({ totalWorkouts, totalPlans, totalVolume, totalDuration }: ProfileStatsProps) {
   const stats = [
-    { icon: History, label: 'Total de Treinos', value: totalTreinos, to: '/history' as const },
-    { icon: Dumbbell, label: 'Planos Criados', value: totalPlanos, to: '/workouts' as const },
-    { icon: TrendingUp, label: 'Volume Total (kg)', value: Math.round(volumeTotal).toLocaleString('pt-BR'), to: null },
-    { icon: null, label: 'Tempo Total', value: formatDuration(tempoTotal), to: null },
+    { icon: History, label: 'Total Workouts', value: totalWorkouts, to: '/history' as const },
+    { icon: Dumbbell, label: 'Plans Created', value: totalPlans, to: '/workouts' as const },
+    { icon: TrendingUp, label: 'Total Volume (kg)', value: Math.round(totalVolume).toLocaleString('pt-BR'), to: null },
+    { icon: null, label: 'Total Time', value: formatDuration(totalDuration), to: null },
   ]
 
   return (
     <div className="card p-4 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
-      <p className="text-xs font-bold text-text-muted mb-3">ESTATÍSTICAS GERAIS</p>
+      <p className="text-xs font-bold text-text-muted mb-3">GENERAL STATS</p>
       <div className="grid grid-cols-2 gap-3">
         {stats.map((stat, i) => {
           const content = (

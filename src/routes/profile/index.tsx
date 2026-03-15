@@ -90,16 +90,16 @@ function ProfilePage() {
       />
 
       <ProfileStats
-        totalTreinos={sessions.length}
-        totalPlanos={plans.length}
-        volumeTotal={totalVolume}
-        tempoTotal={totalDuration}
+        totalWorkouts={sessions.length}
+        totalPlans={plans.length}
+        totalVolume={totalVolume}
+        totalDuration={totalDuration}
       />
 
       <AchievementsCard achievements={achievements} />
 
       <SettingsCard
-        notifPermitida={notificationsEnabled}
+        notificationsEnabled={notificationsEnabled}
         onNotifToggle={handleNotificationToggle}
         onExportClick={() => setShowExportMenu(true)}
       />

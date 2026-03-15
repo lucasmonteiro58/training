@@ -1,17 +1,17 @@
 import { CheckCircle } from 'lucide-react'
 
 interface ImportSuccessProps {
-  planosCount: number
+  plansCount: number
 }
 
-export function ImportSuccess({ planosCount }: ImportSuccessProps) {
+export function ImportSuccess({ plansCount }: ImportSuccessProps) {
   return (
     <div className="flex flex-col items-center gap-4 mt-16 animate-scale-in">
       <CheckCircle size={48} className="text-success" />
       <p className="text-text font-semibold text-lg">
-        {planosCount > 1 ? `${planosCount} planos criados com sucesso!` : 'Plano criado com sucesso!'}
+        {plansCount > 1 ? `${plansCount} plans created successfully!` : 'Plan created successfully!'}
       </p>
-      <p className="text-text-muted text-sm">Redirecionando...</p>
+      <p className="text-text-muted text-sm">Redirecting...</p>
     </div>
   )
 }

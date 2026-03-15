@@ -2,11 +2,11 @@ import { ArrowLeft, Edit2, Save, TimerOff } from 'lucide-react'
 
 interface SessionDetailHeaderProps {
   planName: string
-  dataStr: string
+  dateStr: string
   isEditing: boolean
-  /** Treino encerrado automaticamente por inatividade */
+  /** Workout closed automatically due to inactivity */
   autoClosed?: boolean
-  /** Timestamp (startedAt) para edição da data; quando editando, permite alterar */
+  /** Timestamp (startedAt) for date edit; when editing, allows changing */
   startedAt?: number
   /** Timestamp (finishedAt) para exibir hora de fim */
   finishedAt?: number
@@ -31,7 +31,7 @@ function formatTime(ts: number): string {
 
 export function SessionDetailHeader({
   planName,
-  dataStr,
+  dateStr,
   isEditing,
   autoClosed,
   startedAt,
@@ -56,13 +56,13 @@ export function SessionDetailHeader({
           {autoClosed && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/25 shrink-0">
               <TimerOff size={10} />
-              Encerrado automaticamente
+              Closed automatically
             </span>
           )}
         </div>
         {isEditing && startedAt != null && onStartedAtChange ? (
           <label className="block mt-1">
-            <span className="text-xs text-text-muted block mb-1">Data do treino</span>
+            <span className="text-xs text-text-muted block mb-1">Workout date</span>
             <input
               type="date"
               value={toDateInputValue(startedAt)}
@@ -78,11 +78,11 @@ export function SessionDetailHeader({
           </label>
         ) : (
           <div className="mt-0.5 space-y-0.5">
-            <p className="text-xs text-text-muted capitalize">{dataStr}</p>
+            <p className="text-xs text-text-muted capitalize">{dateStr}</p>
             <p className="text-xs text-text-subtle">
-              Início {startedAt != null ? formatTime(startedAt) : '–'}
+              Start {startedAt != null ? formatTime(startedAt) : '–'}
               {finishedAt != null && (
-                <> · Fim {formatTime(finishedAt)}</>
+                <> · End {formatTime(finishedAt)}</>
               )}
             </p>
           </div>

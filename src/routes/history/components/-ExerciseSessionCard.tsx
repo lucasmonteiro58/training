@@ -5,17 +5,17 @@ import type { ExerciseRecord } from '../../../lib/records'
 interface ExerciseSessionCardProps {
   ex: ExerciseInSession
   exIdx: number
-  editando: boolean
+  editing: boolean
   recordsExcludingCurrent: Map<string, ExerciseRecord>
-  onUpdateSerie: (exIdx: number, sIdx: number, campo: Partial<{ weight: number; reps: number; completed: boolean }>) => void
+  onUpdateSet: (exIdx: number, sIdx: number, field: Partial<{ weight: number; reps: number; completed: boolean }>) => void
 }
 
 export function ExerciseSessionCard({
   ex,
   exIdx,
-  editando,
+  editing,
   recordsExcludingCurrent,
-  onUpdateSerie,
+  onUpdateSet,
 }: ExerciseSessionCardProps) {
   const seriesPRs = ex.sets.map((s: { completed: boolean; weight: number }) => {
     if (!s.completed || s.weight <= 0) return false
@@ -50,7 +50,7 @@ export function ExerciseSessionCard({
       </div>
 
       <div className="grid grid-cols-[24px_1fr_1fr_24px] gap-2 px-1 mb-1">
-        {['#', 'Peso (kg)', 'Reps', ''].map((h, i) => (
+        {['#', 'Weight (kg)', 'Reps', ''].map((h, i) => (
           <span key={i} className="text-[9px] text-text-subtle font-semibold text-center">{h}</span>
         ))}
       </div>
@@ -60,14 +60,14 @@ export function ExerciseSessionCard({
           className={`grid grid-cols-[24px_1fr_1fr_24px] gap-2 px-1 py-1.5 rounded-lg ${s.completed ? 'bg-[rgba(34,197,94,0.06)]' : ''}`}
         >
           <span className="text-xs text-center text-text-subtle font-bold">{sIdx + 1}</span>
-          {editando ? (
+          {editing ? (
             <>
               <input
                 type="number"
                 className="set-input h-8! py-0! text-sm! text-center"
                 value={s.weight === 0 ? '' : s.weight}
                 onChange={e =>
-                  onUpdateSerie(exIdx, sIdx, { weight: e.target.value === '' ? 0 : parseFloat(e.target.value) })
+                  onUpdateSet(exIdx, sIdx, { weight: e.target.value === '' ? 0 : parseFloat(e.target.value) })
                 }
                 onFocus={e => e.target.select()}
               />
@@ -76,7 +76,7 @@ export function ExerciseSessionCard({
                 className="set-input h-8! py-0! text-sm! text-center"
                 value={s.reps === 0 ? '' : s.reps}
                 onChange={e =>
-                  onUpdateSerie(exIdx, sIdx, { reps: e.target.value === '' ? 0 : parseInt(e.target.value) })
+                  onUpdateSet(exIdx, sIdx, { reps: e.target.value === '' ? 0 : parseInt(e.target.value) })
                 }
                 onFocus={e => e.target.select()}
               />
@@ -92,12 +92,12 @@ export function ExerciseSessionCard({
             </>
           )}
           <span className="flex items-center justify-center">
-            {editando ? (
+            {editing ? (
               <button
                 type="button"
-                onClick={() => onUpdateSerie(exIdx, sIdx, { completed: !s.completed })}
+                onClick={() => onUpdateSet(exIdx, sIdx, { completed: !s.completed })}
                 className="p-0.5 rounded-full hover:bg-surface-2 transition-colors"
-                title={s.completed ? 'Marcar como não concluída' : 'Marcar como concluída'}
+                title={s.completed ? 'Mark as not completed' : 'Mark as completed'}
               >
                 {s.completed ? (
                   <CheckCircle2 size={15} className="text-success" />

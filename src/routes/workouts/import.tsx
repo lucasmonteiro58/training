@@ -99,7 +99,7 @@ function ImportCsvPage() {
       <ImportHeader onBack={() => navigate({ to: '/workouts' })} planosCount={plans?.length} />
 
       {success ? (
-        <ImportSuccess planosCount={validPlans.length} />
+        <ImportSuccess plansCount={validPlans.length} />
       ) : (
         <>
           <CsvFormatCard />
