@@ -10,15 +10,23 @@ interface ExerciseGridCardProps {
 
 export function ExerciseGridCard({ ex, isFavorite, onSelect, onToggleFavorite }: ExerciseGridCardProps) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
-      className="card p-0 overflow-hidden text-left flex flex-col h-full relative"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect()
+        }
+      }}
+      className="card p-0 overflow-hidden text-left flex flex-col h-full relative cursor-pointer"
     >
       <button
         type="button"
         onClick={onToggleFavorite}
         className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-colors hover:bg-black/60"
+        aria-label={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
       >
         <Heart size={16} className={isFavorite ? 'fill-red-400 text-red-400' : 'text-white/70'} />
       </button>
@@ -40,6 +48,6 @@ export function ExerciseGridCard({ ex, isFavorite, onSelect, onToggleFavorite }:
           <p className="text-text-muted text-xs mt-1 capitalize">{ex.muscleGroup}</p>
         </div>
       </div>
-    </button>
+    </div>
   )
 }

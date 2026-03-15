@@ -183,9 +183,17 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
                       paddingBottom: '8px'
                     }}
                   >
-                    <button
+                    <div
+                      role="button"
+                      tabIndex={0}
                       onClick={() => onSelect(ex)}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors text-left w-full h-full min-w-0"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          onSelect(ex)
+                        }
+                      }}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors text-left w-full h-full min-w-0 cursor-pointer"
                     >
                       {ex.gifUrl ? (
                         <img
@@ -210,14 +218,16 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
+                          type="button"
                           onClick={(e) => handleToggleFavorite(e, ex.id)}
                           className="p-1.5 rounded-lg hover:bg-surface-3 transition-colors"
+                          aria-label={favoriteIds.has(ex.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                         >
                           <Heart size={16} className={favoriteIds.has(ex.id) ? 'fill-red-400 text-red-400' : 'text-text-subtle'} />
                         </button>
                         <Plus size={18} className="text-accent" />
                       </div>
-                    </button>
+                    </div>
                   </div>
                 )
               })}
