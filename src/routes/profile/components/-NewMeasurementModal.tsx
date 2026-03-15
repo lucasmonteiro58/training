@@ -4,11 +4,11 @@ import { MEASUREMENT_FIELDS } from '../../../types'
 interface NewMeasurementModalProps {
   form: Record<string, string>
   onFormChange: (form: Record<string, string>) => void
-  onSalvar: () => void
+  onSave: () => void
   onClose: () => void
 }
 
-export function NewMeasurementModal({ form, onFormChange, onSalvar, onClose }: NewMeasurementModalProps) {
+export function NewMeasurementModal({ form, onFormChange, onSave, onClose }: NewMeasurementModalProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -49,7 +49,7 @@ export function NewMeasurementModal({ form, onFormChange, onSalvar, onClose }: N
           />
         </div>
 
-        <button type="button" onClick={onSalvar} className="btn-primary w-full">
+        <button type="button" onClick={onSave} className="btn-primary w-full">
           Salvar Medida
         </button>
       </div>

@@ -3,7 +3,7 @@ import { ArrowLeft, Edit2, Save, TimerOff } from 'lucide-react'
 interface SessionDetailHeaderProps {
   planName: string
   dataStr: string
-  editando: boolean
+  isEditing: boolean
   /** Treino encerrado automaticamente por inatividade */
   autoClosed?: boolean
   /** Timestamp (startedAt) para edição da data; quando editando, permite alterar */
@@ -11,10 +11,10 @@ interface SessionDetailHeaderProps {
   /** Timestamp (finishedAt) para exibir hora de fim */
   finishedAt?: number
   onStartedAtChange?: (timestamp: number) => void
-  onVoltar: () => void
-  onIniciarEdicao: () => void
-  onCancelarEdicao: () => void
-  onSalvarEdicao: () => void
+  onBack: () => void
+  onStartEdit: () => void
+  onCancelEdit: () => void
+  onSaveEdit: () => void
 }
 
 function toDateInputValue(timestamp: number): string {
@@ -25,27 +25,27 @@ function toDateInputValue(timestamp: number): string {
   return `${y}-${m}-${day}`
 }
 
-function formatarHora(ts: number): string {
+function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
 export function SessionDetailHeader({
   planName,
   dataStr,
-  editando,
+  isEditing,
   autoClosed,
   startedAt,
   finishedAt,
   onStartedAtChange,
-  onVoltar,
-  onIniciarEdicao,
-  onCancelarEdicao,
-  onSalvarEdicao,
+  onBack,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
 }: SessionDetailHeaderProps) {
   return (
     <div className="flex items-center gap-3 mb-6 animate-fade-up">
       <button
-        onClick={onVoltar}
+        onClick={onBack}
         className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-muted"
       >
         <ArrowLeft size={18} />
@@ -60,7 +60,7 @@ export function SessionDetailHeader({
             </span>
           )}
         </div>
-        {editando && startedAt != null && onStartedAtChange ? (
+        {isEditing && startedAt != null && onStartedAtChange ? (
           <label className="block mt-1">
             <span className="text-xs text-text-muted block mb-1">Data do treino</span>
             <input
@@ -80,25 +80,25 @@ export function SessionDetailHeader({
           <div className="mt-0.5 space-y-0.5">
             <p className="text-xs text-text-muted capitalize">{dataStr}</p>
             <p className="text-xs text-text-subtle">
-              Início {startedAt != null ? formatarHora(startedAt) : '–'}
+              Início {startedAt != null ? formatTime(startedAt) : '–'}
               {finishedAt != null && (
-                <> · Fim {formatarHora(finishedAt)}</>
+                <> · Fim {formatTime(finishedAt)}</>
               )}
             </p>
           </div>
         )}
       </div>
-      {editando ? (
+      {isEditing ? (
         <div className="flex gap-2">
-          <button onClick={onCancelarEdicao} className="btn-ghost p-2.5 text-text-muted text-sm">
+          <button onClick={onCancelEdit} className="btn-ghost p-2.5 text-text-muted text-sm">
             Cancelar
           </button>
-          <button onClick={onSalvarEdicao} className="btn-primary py-2 px-4 text-sm flex items-center gap-1.5">
+          <button onClick={onSaveEdit} className="btn-primary py-2 px-4 text-sm flex items-center gap-1.5">
             <Save size={14} /> Salvar
           </button>
         </div>
       ) : (
-        <button onClick={onIniciarEdicao} className="btn-ghost p-2.5">
+        <button onClick={onStartEdit} className="btn-ghost p-2.5">
           <Edit2 size={16} />
         </button>
       )}

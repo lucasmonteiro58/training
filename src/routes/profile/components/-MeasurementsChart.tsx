@@ -2,21 +2,21 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import { MEASUREMENT_FIELDS } from '../../../types'
 
 interface MeasurementsChartProps {
-  campoGrafico: string
-  dados: { data: string; valor: number }[]
-  onCampoChange: (key: string) => void
+  chartFieldKey: string
+  data: { data: string; valor: number }[]
+  onChartFieldChange: (key: string) => void
 }
 
-export function MeasurementsChart({ campoGrafico, dados, onCampoChange }: MeasurementsChartProps) {
-  const campoAtual = MEASUREMENT_FIELDS.find(c => c.key === campoGrafico)
+export function MeasurementsChart({ chartFieldKey, data, onChartFieldChange }: MeasurementsChartProps) {
+  const currentField = MEASUREMENT_FIELDS.find(c => c.key === chartFieldKey)
 
   return (
     <div className="card p-4 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-bold text-text-muted uppercase">Evolução</p>
         <select
-          value={campoGrafico}
-          onChange={e => onCampoChange(e.target.value)}
+          value={chartFieldKey}
+          onChange={e => onChartFieldChange(e.target.value)}
           className="text-xs bg-surface-2 text-text border border-border rounded-lg px-2 py-1"
         >
           {MEASUREMENT_FIELDS.map(c => (
@@ -26,9 +26,9 @@ export function MeasurementsChart({ campoGrafico, dados, onCampoChange }: Measur
           ))}
         </select>
       </div>
-      {dados.length >= 1 ? (
+      {data.length >= 1 ? (
         <ResponsiveContainer width="100%" height={180}>
-          <LineChart data={dados}>
+          <LineChart data={data}>
             <XAxis dataKey="data" tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} />
             <YAxis
               tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
@@ -42,7 +42,7 @@ export function MeasurementsChart({ campoGrafico, dados, onCampoChange }: Measur
                 borderRadius: 12,
                 fontSize: 12,
               }}
-              formatter={(v: unknown) => [`${Number(v)} ${campoAtual?.unidade ?? ''}`, campoAtual?.label ?? '']}
+              formatter={(v: unknown) => [`${Number(v)} ${currentField?.unidade ?? ''}`, currentField?.label ?? '']}
             />
             <Line
               type="monotone"
@@ -55,7 +55,7 @@ export function MeasurementsChart({ campoGrafico, dados, onCampoChange }: Measur
         </ResponsiveContainer>
       ) : (
         <p className="text-xs text-text-muted text-center py-6">
-          Registre mais medidas de {campoAtual?.label.toLowerCase()} para ver o gráfico.
+          Registre mais medidas de {currentField?.label.toLowerCase()} para ver o gráfico.
         </p>
       )}
     </div>

@@ -83,15 +83,15 @@ function MeasurementsPage() {
   return (
     <div className="page-container pt-6 pb-28">
       <MeasurementsHeader
-        onVoltar={() => navigate({ to: '/profile' })}
-        onNova={() => setShowForm(true)}
+        onBack={() => navigate({ to: '/profile' })}
+        onNew={() => setShowForm(true)}
       />
 
       {measurements.length >= 1 && (
         <MeasurementsChart
-          campoGrafico={chartField}
-          dados={chartData}
-          onCampoChange={setChartField}
+          chartFieldKey={chartField}
+          data={chartData}
+          onChartFieldChange={setChartField}
         />
       )}
 
@@ -108,8 +108,8 @@ function MeasurementsPage() {
           {measurements.map(m => (
             <MeasurementCard
               key={m.id}
-              medida={m}
-              onExcluir={() => setConfirmDelete(m.id)}
+              measurement={m}
+              onDelete={() => setConfirmDelete(m.id)}
             />
           ))}
         </div>
@@ -119,7 +119,7 @@ function MeasurementsPage() {
         <NewMeasurementModal
           form={form}
           onFormChange={setForm}
-          onSalvar={handleSave}
+          onSave={handleSave}
           onClose={() => setShowForm(false)}
         />
       )}

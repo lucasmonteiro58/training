@@ -1,15 +1,15 @@
 import { ChevronLeft } from 'lucide-react'
 
 interface ProgressHeaderProps {
-  onVoltar: () => void
+  onBack: () => void
 }
 
-export function ProgressHeader({ onVoltar }: ProgressHeaderProps) {
+export function ProgressHeader({ onBack }: ProgressHeaderProps) {
   return (
     <div className="flex items-center gap-3 mb-5 animate-fade-up">
       <button
         type="button"
-        onClick={onVoltar}
+        onClick={onBack}
         className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted"
       >
         <ChevronLeft size={20} />

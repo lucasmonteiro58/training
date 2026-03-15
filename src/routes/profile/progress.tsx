@@ -30,7 +30,7 @@ function ProgressPage() {
   }, [sessions])
 
   const timelineByExercise = useMemo(() => {
-    const result = new Map<string, { data: string; peso: number; iniciadoEm: number }[]>()
+    const result = new Map<string, { dateLabel: string; weight: number; startedAt: number }[]>()
     exercises.forEach(({ id }) => {
       const points = sessions
         .filter((s: { exercises: { exerciseId: string }[] }) => s.exercises.some((ex: { exerciseId: string }) => ex.exerciseId === id))
@@ -43,12 +43,12 @@ function ProgressPage() {
           if (!weights.length) return []
           return [
             {
-              data: new Date(s.startedAt).toLocaleDateString('pt-BR', {
+              dateLabel: new Date(s.startedAt).toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: '2-digit',
               }),
-              peso: Math.max(...weights),
-              iniciadoEm: s.startedAt,
+              weight: Math.max(...weights),
+              startedAt: s.startedAt,
             },
           ]
         })
@@ -91,7 +91,7 @@ function ProgressPage() {
 
   return (
     <div className="page-container pt-4">
-      <ProgressHeader onVoltar={() => navigate({ to: '/profile' })} />
+      <ProgressHeader onBack={() => navigate({ to: '/profile' })} />
 
       <ProgressTabs tab={tab} onTabChange={setTab} />
 
@@ -105,15 +105,15 @@ function ProgressPage() {
             exercises.map(ex => (
               <ProgressExerciseCard
                 key={ex.id}
-                nome={ex.name}
-                pontos={timelineByExercise.get(ex.id) ?? []}
+                name={ex.name}
+                points={timelineByExercise.get(ex.id) ?? []}
               />
             ))
           )}
         </div>
       )}
 
-      {tab === 'grafico' && <VolumeChart dados={volumeData} />}
+      {tab === 'grafico' && <VolumeChart data={volumeData} />}
     </div>
   )
 }

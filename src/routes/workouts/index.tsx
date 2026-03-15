@@ -91,9 +91,9 @@ function WorkoutsPage() {
       style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
     >
       <WorkoutsHeader
-        reordenando={isReordering}
-        podeOrdenar={activePlans.length > 1}
-        onToggleReordenar={handleToggleReorder}
+        isReordering={isReordering}
+        canReorder={activePlans.length > 1}
+        onToggleReorder={handleToggleReorder}
       />
 
       {loading ? (
@@ -116,12 +116,12 @@ function WorkoutsPage() {
                   items={sortedList.map(p => p.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {sortedList.map(plano => (
+                  {sortedList.map(plan => (
                     <PlanSortableCard
-                      key={plano.id}
-                      plano={plano}
-                      reordenando={isReordering}
-                      processando={processingId}
+                      key={plan.id}
+                      plan={plan}
+                      isReordering={isReordering}
+                      processingId={processingId}
                       onArchive={handleArchive}
                     />
                   ))}
@@ -131,9 +131,9 @@ function WorkoutsPage() {
               activePlans.map(plan => (
                 <PlanSortableCard
                   key={plan.id}
-                  plano={plan}
-                  reordenando={false}
-                  processando={processingId}
+                  plan={plan}
+                  isReordering={false}
+                  processingId={processingId}
                   onArchive={handleArchive}
                 />
               ))
@@ -141,10 +141,10 @@ function WorkoutsPage() {
           </div>
 
           <ArchivedPlansSection
-            planos={archivedPlans}
-            expandido={showArchived}
-            processando={processingId}
-            deletando={deletingId}
+            plans={archivedPlans}
+            isExpanded={showArchived}
+            processingId={processingId}
+            deletingId={deletingId}
             onToggle={() => setShowArchived(!showArchived)}
             onRestore={handleRestore}
             onDelete={handleDelete}

@@ -3,28 +3,28 @@ import { Search, Plus, Heart, Calculator } from 'lucide-react'
 interface ExercisesToolbarProps {
   query: string
   onQueryChange: (v: string) => void
-  grupo: string
-  gruposUnicos: string[]
-  onGrupoChange: (g: string) => void
-  showFavoritos: boolean
-  onToggleFavoritos: () => void
-  favoritoCount: number
+  group: string
+  uniqueGroups: string[]
+  onGroupChange: (g: string) => void
+  showFavorites: boolean
+  onToggleFavorites: () => void
+  favoriteCount: number
   count: number
-  onOpenCriar: () => void
+  onOpenCreate: () => void
   onOpen1RM: () => void
 }
 
 export function ExercisesToolbar({
   query,
   onQueryChange,
-  grupo,
-  gruposUnicos,
-  onGrupoChange,
-  showFavoritos,
-  onToggleFavoritos,
-  favoritoCount,
+  group,
+  uniqueGroups,
+  onGroupChange,
+  showFavorites,
+  onToggleFavorites,
+  favoriteCount,
   count,
-  onOpenCriar,
+  onOpenCreate,
   onOpen1RM,
 }: ExercisesToolbarProps) {
   return (
@@ -46,22 +46,22 @@ export function ExercisesToolbar({
         style={{ animationDelay: '100ms' }}
       >
         <button
-          onClick={onToggleFavoritos}
+          onClick={onToggleFavorites}
           className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
-            showFavoritos
+            showFavorites
               ? 'bg-red-500/15 text-red-400 border border-red-500/30'
               : 'bg-surface-2 text-text-muted border border-border'
           }`}
         >
-          <Heart size={12} className={showFavoritos ? 'fill-red-400' : ''} />
-          Favoritos{favoritoCount > 0 ? ` (${favoritoCount})` : ''}
+          <Heart size={12} className={showFavorites ? 'fill-red-400' : ''} />
+          Favoritos{favoriteCount > 0 ? ` (${favoriteCount})` : ''}
         </button>
-        {['', ...gruposUnicos].map((g) => (
+        {['', ...uniqueGroups].map((g) => (
           <button
             key={g}
-            onClick={() => onGrupoChange(g)}
+            onClick={() => onGroupChange(g)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
-              grupo === g ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted border border-border'
+              group === g ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted border border-border'
             }`}
           >
             {g || 'Todos'}
@@ -80,7 +80,7 @@ export function ExercisesToolbar({
             1RM
           </button>
           <button
-            onClick={onOpenCriar}
+            onClick={onOpenCreate}
             className="flex items-center gap-1.5 text-xs font-semibold text-accent bg-accent/10 px-3 py-1.5 rounded-full"
           >
             <Plus size={14} />

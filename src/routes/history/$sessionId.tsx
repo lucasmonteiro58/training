@@ -79,17 +79,17 @@ function SessaoDetalhePage() {
       <SessionDetailHeader
         planName={displaySession!.planName}
         dataStr={dataStr}
-        editando={isEditing}
+        isEditing={isEditing}
         autoClosed={displaySession!.autoClosed}
         startedAt={
           isEditing && editData ? editData.startedAt : displaySession!.startedAt
         }
         finishedAt={displaySession!.finishedAt}
         onStartedAtChange={isEditing ? updateStartedAt : undefined}
-        onVoltar={() => navigate({ to: '/history' })}
-        onIniciarEdicao={startEditing}
-        onCancelarEdicao={cancelEdit}
-        onSalvarEdicao={saveEdit}
+        onBack={() => navigate({ to: '/history' })}
+        onStartEdit={startEditing}
+        onCancelEdit={cancelEdit}
+        onSaveEdit={saveEdit}
       />
 
       <SessionStats

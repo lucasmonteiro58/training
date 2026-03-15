@@ -2,15 +2,15 @@ import { Link } from '@tanstack/react-router'
 import { Plus, FileUp, ArrowUpDown } from 'lucide-react'
 
 interface WorkoutsHeaderProps {
-  reordenando: boolean
-  podeOrdenar: boolean
-  onToggleReordenar: () => void
+  isReordering: boolean
+  canReorder: boolean
+  onToggleReorder: () => void
 }
 
 export function WorkoutsHeader({
-  reordenando,
-  podeOrdenar,
-  onToggleReordenar,
+  isReordering,
+  canReorder,
+  onToggleReorder,
 }: WorkoutsHeaderProps) {
   return (
     <div className="flex flex-col gap-2 mb-6 animate-fade-up">
@@ -24,19 +24,19 @@ export function WorkoutsHeader({
         </Link>
       </div>
       <div className="flex items-center gap-2">
-        {podeOrdenar && (
+        {canReorder && (
           <button
             type="button"
             className={`btn-ghost flex items-center gap-1.5 text-sm ${
-              reordenando ? 'text-accent font-semibold' : ''
+              isReordering ? 'text-accent font-semibold' : ''
             }`}
-            onClick={onToggleReordenar}
+            onClick={onToggleReorder}
           >
             <ArrowUpDown size={16} />
-            {reordenando ? 'Salvar ordem' : 'Ordenar'}
+            {isReordering ? 'Salvar ordem' : 'Ordenar'}
           </button>
         )}
-        {!reordenando && (
+        {!isReordering && (
           <Link to="/workouts/import" style={{ textDecoration: 'none' }}>
             <button type="button" className="btn-ghost flex items-center gap-1.5 text-sm" title="Importar CSV">
               <FileUp size={16} />

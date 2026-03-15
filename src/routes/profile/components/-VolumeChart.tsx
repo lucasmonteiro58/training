@@ -2,7 +2,7 @@ import { BarChart2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface VolumeChartProps {
-  dados: { data: string; volume: number; plan?: string }[]
+  data: { data: string; volume: number; plan?: string }[]
 }
 
 const TOOLTIP_STYLE = {
@@ -13,8 +13,8 @@ const TOOLTIP_STYLE = {
   fontSize: 12,
 }
 
-export function VolumeChart({ dados }: VolumeChartProps) {
-  if (dados.length < 2) {
+export function VolumeChart({ data }: VolumeChartProps) {
+  if (data.length < 2) {
     return (
       <div className="card p-4 animate-fade-up">
         <div className="flex items-center gap-2 mb-4">
@@ -37,7 +37,7 @@ export function VolumeChart({ dados }: VolumeChartProps) {
         <span className="text-[10px] text-text-muted ml-auto">últimas 20</span>
       </div>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={dados} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+        <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <CartesianGrid
             strokeDasharray="3 3"
             stroke="var(--color-border)"

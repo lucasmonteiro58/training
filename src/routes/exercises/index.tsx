@@ -100,14 +100,14 @@ function ExercisesPage() {
         <ExercisesToolbar
           query={query}
           onQueryChange={setQuery}
-          grupo={group}
-          gruposUnicos={uniqueGroups}
-          onGrupoChange={setGroup}
-          showFavoritos={showFavorites}
-          onToggleFavoritos={() => setShowFavorites(!showFavorites)}
-          favoritoCount={favoriteIds.size}
+          group={group}
+          uniqueGroups={uniqueGroups}
+          onGroupChange={setGroup}
+          showFavorites={showFavorites}
+          onToggleFavorites={() => setShowFavorites(!showFavorites)}
+          favoriteCount={favoriteIds.size}
           count={filtered.length}
-          onOpenCriar={() => setShowCreate(true)}
+          onOpenCreate={() => setShowCreate(true)}
           onOpen1RM={() => setShow1RM(true)}
         />
 
@@ -123,7 +123,7 @@ function ExercisesPage() {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <EmptyExercises onCriar={() => setShowCreate(true)} />
+            <EmptyExercises onCreate={() => setShowCreate(true)} />
           ) : (
             <div
               style={{

@@ -35,8 +35,8 @@ export function HistoryFilters({
         <label className="text-[10px] font-bold text-text-subtle uppercase tracking-wider block mb-1.5">Plano</label>
         <select className="input text-sm w-full" value={planFilter} onChange={e => onPlanChange(e.target.value)}>
           <option value="todos">Todos os planos</option>
-          {sessionNames.map(nome => (
-            <option key={nome} value={nome}>{nome}</option>
+          {sessionNames.map(name => (
+            <option key={name} value={name}>{name}</option>
           ))}
         </select>
       </div>

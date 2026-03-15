@@ -66,10 +66,10 @@ function HistoryPage() {
   return (
     <div className="page-container pt-6">
       <HistoryHeader
-        hasSessoes={sessions.length > 0}
-        filtroAtivo={hasActiveFilter}
-        onVoltar={() => navigate({ to: '/profile' })}
-        onToggleFiltros={() => setShowFilters(v => !v)}
+        hasSessions={sessions.length > 0}
+        hasActiveFilter={hasActiveFilter}
+        onBack={() => navigate({ to: '/profile' })}
+        onToggleFilters={() => setShowFilters(v => !v)}
       />
 
       {showFilters && (
@@ -91,7 +91,7 @@ function HistoryPage() {
           {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
         </div>
       ) : filteredSessions.length === 0 ? (
-        <EmptyHistory filtroAtivo={hasActiveFilter} onLimparFiltros={clearFilters} />
+        <EmptyHistory hasActiveFilter={hasActiveFilter} onClearFilters={clearFilters} />
       ) : (
         <div className="flex flex-col gap-3">
           {hasActiveFilter && (
@@ -99,13 +99,13 @@ function HistoryPage() {
               {filteredSessions.length} resultado{filteredSessions.length !== 1 ? 's' : ''}
             </p>
           )}
-          {filteredSessions.map((sessao, idx) => (
+          {filteredSessions.map((session, idx) => (
             <SessionCard
-              key={sessao.id}
-              sessao={sessao}
+              key={session.id}
+              session={session}
               index={idx}
-              onExcluir={setConfirmDeleteId}
-              onRetornar={restoreFromHistory}
+              onDelete={setConfirmDeleteId}
+              onRestore={restoreFromHistory}
             />
           ))}
         </div>
