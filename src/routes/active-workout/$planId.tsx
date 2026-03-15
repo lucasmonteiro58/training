@@ -8,6 +8,7 @@ import {
   cancelRestNotification,
   formatDuration,
 } from '../../lib/notifications'
+import { clearWorkoutProgressFromFirestore } from '../../lib/firestore/sync'
 import { useSetTimer } from '../../hooks/useSetTimer'
 import { useRestNotifications } from '../../hooks/useRestNotifications'
 import { useSaveWeightsToPlan } from '../../hooks/useSaveWeightsToPlan'
@@ -494,6 +495,7 @@ function ActiveWorkoutPage() {
         <ConfirmCancelModal
           onConfirm={() => {
             cancelRestNotification()
+            if (session?.userId) clearWorkoutProgressFromFirestore(session.userId)
             clearLocal()
             navigate({ to: '/workouts' })
           }}

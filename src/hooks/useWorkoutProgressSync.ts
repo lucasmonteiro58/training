@@ -70,12 +70,12 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
         return
       }
 
+      // Só restaura do Firestore quando não temos sessão local (ex.: abriu em outra aba).
+      // Se já temos treino ativo local, não sobrescrever — senão dados antigos do Firestore
+      // apagariam séries, pesos e concluídos que o usuário acabou de marcar.
       if (!state.started) {
         state.restoreFromExternal(data as Parameters<typeof state.restoreFromExternal>[0])
-        return
       }
-
-      state.syncExternalState(data as Parameters<typeof state.syncExternalState>[0])
     })
 
     return unsub
