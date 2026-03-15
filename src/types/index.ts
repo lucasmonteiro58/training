@@ -255,12 +255,12 @@ export interface BodyMeasurement {
 }
 
 export const MEASUREMENT_FIELDS: { key: keyof BodyMeasurement; label: string; unidade: string }[] = [
-  { key: 'weight', label: 'Weight', unidade: 'kg' },
-  { key: 'bodyFat', label: 'Body Fat', unidade: '%' },
-  { key: 'arm', label: 'Arm', unidade: 'cm' },
-  { key: 'chest', label: 'Chest', unidade: 'cm' },
-  { key: 'waist', label: 'Waist', unidade: 'cm' },
-  { key: 'hip', label: 'Hip', unidade: 'cm' },
-  { key: 'thigh', label: 'Thigh', unidade: 'cm' },
-  { key: 'calf', label: 'Calf', unidade: 'cm' },
+  { key: 'weight', label: 'Peso', unidade: 'kg' },
+  { key: 'bodyFat', label: 'Gordura Corporal', unidade: '%' },
+  { key: 'arm', label: 'Braço', unidade: 'cm' },
+  { key: 'chest', label: 'Peito', unidade: 'cm' },
+  { key: 'waist', label: 'Cintura', unidade: 'cm' },
+  { key: 'hip', label: 'Quadril', unidade: 'cm' },
+  { key: 'thigh', label: 'Coxa', unidade: 'cm' },
+  { key: 'calf', label: 'Panturrilha', unidade: 'cm' },
 ]

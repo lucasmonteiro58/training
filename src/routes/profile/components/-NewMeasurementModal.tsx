@@ -22,7 +22,7 @@ export function NewMeasurementModal({ form, onFormChange, onSave, onClose }: New
         <div className="grid grid-cols-2 gap-3 mb-4">
           {MEASUREMENT_FIELDS.map(c => (
             <div key={c.key}>
-              <label className="text-xs text-text-muted mb-1 block">
+              <label className="text-xs text-text-muted font-medium mb-1.5 block">
                 {c.label} ({c.unidade})
               </label>
               <input
@@ -32,20 +32,20 @@ export function NewMeasurementModal({ form, onFormChange, onSave, onClose }: New
                 placeholder="0"
                 value={form[c.key] ?? ''}
                 onChange={e => onFormChange({ ...form, [c.key]: e.target.value })}
-                className="input-field w-full text-sm"
+                className="input w-full"
               />
             </div>
           ))}
         </div>
 
         <div className="mb-4">
-          <label className="text-xs text-text-muted mb-1 block">Notes (optional)</label>
+          <label className="text-xs text-text-muted font-medium mb-1.5 block">Notas (opcional)</label>
           <textarea
-            placeholder="Observations..."
+            placeholder="Observações..."
             value={form.notes ?? ''}
             onChange={e => onFormChange({ ...form, notes: e.target.value })}
-            className="input-field w-full text-sm resize-none"
-            rows={2}
+            className="input w-full resize-none"
+            rows={3}
           />
         </div>
 
