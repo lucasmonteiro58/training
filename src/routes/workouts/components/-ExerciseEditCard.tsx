@@ -28,7 +28,7 @@ export function ExerciseEditCard({
   } | null>(null)
   const [buscandoImagem, setBuscandoImagem] = useState(false)
   const [imagensWeb, setImagensWeb] = useState<string[]>([])
-  const [termoBusca, setTermoBusca] = useState(ex.exercicio.nome)
+  const [termoBusca, setTermoBusca] = useState(ex.exercise.name)
 
   const buscarImagem = async () => {
     if (!termoBusca.trim()) return
@@ -60,38 +60,38 @@ export function ExerciseEditCard({
     }
   }
 
-  const series = ex.seriesDetalhadas ?? [{ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta }]
-  const tipo: SetType = ex.tipoSerie ?? 'reps'
+  const series = ex.setsDetail ?? [{ weight: ex.targetWeight ?? 0, reps: ex.targetReps }]
+  const tipo: SetType = ex.setType ?? 'reps'
 
   const setField = (field: string, value: unknown) =>
-    onUpdate(e => ({ ...e, exercicio: { ...e.exercicio, [field]: value } }))
+    onUpdate(e => ({ ...e, exercise: { ...e.exercise, [field]: value } }))
 
   const updateSerie = (sIdx: number, campo: Partial<PlanSet>) => {
     onUpdate(e => {
-      const s = (e.seriesDetalhadas ?? []).map((sr, i) => (i === sIdx ? { ...sr, ...campo } : sr))
+      const s = (e.setsDetail ?? []).map((sr, i) => (i === sIdx ? { ...sr, ...campo } : sr))
       return {
         ...e,
-        seriesDetalhadas: s,
+        setsDetail: s,
         series: s.length,
-        repeticoesMeta: s[0]?.repeticoes ?? 1,
-        pesoMeta: s[0]?.peso ?? 0,
+        targetReps: s[0]?.reps ?? 1,
+        targetWeight: s[0]?.weight ?? 0,
       }
     })
     if (series.length > 1) {
-      if ('peso' in campo && campo.peso !== undefined)
-        setApplyAll({ field: 'peso', sIdx, value: campo.peso as number })
-      else if ('repeticoes' in campo && campo.repeticoes !== undefined)
-        setApplyAll({ field: 'repeticoes', sIdx, value: campo.repeticoes as number })
+      if ('weight' in campo && campo.weight !== undefined)
+        setApplyAll({ field: 'weight', sIdx, value: campo.weight as number })
+      else if ('reps' in campo && campo.reps !== undefined)
+        setApplyAll({ field: 'reps', sIdx, value: campo.reps as number })
     }
   }
 
   const applyAllSeries = (toAll: boolean) => {
     if (!applyAll) return
     onUpdate(e => {
-      const s = (e.seriesDetalhadas ?? []).map((sr, i) =>
+      const s = (e.setsDetail ?? []).map((sr, i) =>
         toAll || i > applyAll.sIdx ? { ...sr, [applyAll.field]: applyAll.value } : sr
       )
-      return { ...e, seriesDetalhadas: s }
+      return { ...e, setsDetail: s }
     })
     setApplyAll(null)
   }
@@ -99,16 +99,16 @@ export function ExerciseEditCard({
   const addSerie = () =>
     onUpdate(e => {
       const last =
-        (e.seriesDetalhadas ?? [])[e.seriesDetalhadas!.length - 1] ?? { peso: 0, repeticoes: 12 }
-      const s = [...(e.seriesDetalhadas ?? []), { ...last }]
-      return { ...e, seriesDetalhadas: s, series: s.length }
+        (e.setsDetail ?? [])[e.setsDetail!.length - 1] ?? { weight: 0, reps: 12 }
+      const s = [...(e.setsDetail ?? []), { ...last }]
+      return { ...e, setsDetail: s, series: s.length }
     })
 
   const removeSerie = (sIdx: number) =>
     onUpdate(e => {
-      const s = (e.seriesDetalhadas ?? []).filter((_, i) => i !== sIdx)
+      const s = (e.setsDetail ?? []).filter((_, i) => i !== sIdx)
       if (s.length === 0) return e
-      return { ...e, seriesDetalhadas: s, series: s.length, repeticoesMeta: s[0]?.repeticoes ?? 1 }
+      return { ...e, setsDetail: s, series: s.length, targetReps: s[0]?.reps ?? 1 }
     })
 
   const ciclo: SetType[] = ['reps', 'tempo', 'falha']
@@ -123,10 +123,10 @@ export function ExerciseEditCard({
           {idx + 1}
         </span>
         <button type="button" className="flex-1 text-left min-w-0" onClick={onToggle}>
-          <p className="text-sm font-medium text-text truncate">{ex.exercicio.nome}</p>
+          <p className="text-sm font-medium text-text truncate">{ex.exercise.name}</p>
           <p className="text-xs text-text-muted mt-0.5">
-            {series.length} série{series.length !== 1 ? 's' : ''} · {ex.exercicio.grupoMuscular} ·
-            ⏱ {ex.descansoSegundos}s
+            {series.length} série{series.length !== 1 ? 's' : ''} · {ex.exercise.muscleGroup} ·
+            ⏱ {ex.restSeconds}s
           </p>
         </button>
         <button type="button" onClick={onRemove} className="p-1.5 text-danger opacity-60 hover:opacity-100 shrink-0">
@@ -143,7 +143,7 @@ export function ExerciseEditCard({
             <label className="label-xs">NOME DO EXERCÍCIO</label>
             <input
               className="input mt-1"
-              value={ex.exercicio.nome}
+              value={ex.exercise.name}
               onChange={e => setField('nome', e.target.value)}
             />
           </div>
@@ -153,7 +153,7 @@ export function ExerciseEditCard({
               <label className="label-xs">GRUPO MUSCULAR</label>
               <select
                 className="input mt-1 text-sm"
-                value={ex.exercicio.grupoMuscular}
+                value={ex.exercise.muscleGroup}
                 onChange={e => setField('grupoMuscular', e.target.value)}
               >
                 {MUSCLE_GROUPS.map(g => (
@@ -169,7 +169,7 @@ export function ExerciseEditCard({
                 className="input mt-1"
                 type="number"
                 min={0}
-                value={ex.descansoSegundos}
+                value={ex.restSeconds}
                 onChange={e =>
                   onUpdate(ex => ({ ...ex, descansoSegundos: parseInt(e.target.value, 10) || 0 }))
                 }
@@ -209,7 +209,7 @@ export function ExerciseEditCard({
                     type="button"
                     onClick={() => setField('gifUrl', url)}
                     className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
-                      ex.exercicio.gifUrl === url
+                      ex.exercise.gifUrl === url
                         ? 'border-accent  opacity-100'
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
@@ -226,13 +226,13 @@ export function ExerciseEditCard({
                 <input
                   className="input flex-1"
                   placeholder="https://exemplo.com/exercicio.gif"
-                  value={ex.exercicio.gifUrl ?? ''}
+                  value={ex.exercise.gifUrl ?? ''}
                   onChange={e => setField('gifUrl', e.target.value || undefined)}
                 />
-                {ex.exercicio.gifUrl && (
+                {ex.exercise.gifUrl && (
                   <img
-                    src={ex.exercicio.gifUrl}
-                    alt={ex.exercicio.nome}
+                    src={ex.exercise.gifUrl}
+                    alt={ex.exercise.name}
                     className="w-14 h-14 rounded-xl object-cover shrink-0 bg-surface-2"
                     onError={e => {
                       ;(e.target as HTMLImageElement).style.display = 'none'
@@ -249,10 +249,10 @@ export function ExerciseEditCard({
               className="input mt-1 text-sm leading-relaxed"
               rows={3}
               placeholder="Ex: Deite no banco&#10;Desça a barra devagar"
-              value={(ex.exercicio.instrucoes ?? []).join('\n')}
+              value={(ex.exercise.instructions ?? []).join('\n')}
               onChange={e =>
                 setField(
-                  'instrucoes',
+                  'instructions',
                   e.target.value
                     .split('\n')
                     .map(s => s.trim())
@@ -267,8 +267,8 @@ export function ExerciseEditCard({
             <input
               className="input mt-1"
               placeholder="Ex: Focar na contração"
-              value={ex.notas ?? ''}
-              onChange={e => onUpdate(ex => ({ ...ex, notas: e.target.value || undefined }))}
+              value={ex.notes ?? ''}
+              onChange={e => onUpdate(ex => ({ ...ex, notes: e.target.value || undefined }))}
             />
           </div>
 
@@ -281,9 +281,9 @@ export function ExerciseEditCard({
                 <button
                   type="button"
                   onClick={() => {
-                    const updates: Partial<ExerciseInPlan> = { tipoSerie: proximoTipo }
+                    const updates: Partial<ExerciseInPlan> = { setType: proximoTipo }
                     if (proximoTipo === 'tempo')
-                      updates.seriesDetalhadas = series.map(s => ({ ...s, repeticoes: 1 }))
+                      updates.setsDetail = series.map(s => ({ ...s, reps: 1 }))
                     onUpdate(e => ({ ...e, ...updates }))
                     setApplyAll(null)
                   }}
@@ -312,10 +312,10 @@ export function ExerciseEditCard({
                     <input
                       type="number"
                       className="set-input h-9! py-0! text-sm!"
-                      value={sr.peso === 0 ? '' : sr.peso}
+                      value={sr.weight === 0 ? '' : sr.weight}
                       onChange={e =>
                         updateSerie(sIdx, {
-                          peso: e.target.value === '' ? 0 : parseFloat(e.target.value),
+                          weight: e.target.value === '' ? 0 : parseFloat(e.target.value),
                         })
                       }
                       onFocus={e => e.target.select()}
@@ -325,10 +325,10 @@ export function ExerciseEditCard({
                     <input
                       type="number"
                       className="set-input h-9! py-0! text-sm!"
-                      value={sr.repeticoes === 0 ? '' : sr.repeticoes}
+                      value={sr.reps === 0 ? '' : sr.reps}
                       onChange={e =>
                         updateSerie(sIdx, {
-                          repeticoes:
+                          reps:
                             e.target.value === ''
                               ? 0
                               : tipo === 'tempo'
@@ -360,7 +360,7 @@ export function ExerciseEditCard({
                     <p className="text-xs text-text-muted">
                       Repetir{' '}
                       <strong className="text-text">
-                        {applyAll.field === 'peso'
+                        {applyAll.field === 'weight'
                           ? `${applyAll.value} kg`
                           : tipo === 'tempo'
                             ? `${applyAll.value} min`

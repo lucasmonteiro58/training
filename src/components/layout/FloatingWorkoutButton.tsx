@@ -9,7 +9,6 @@ export function FloatingWorkoutButton() {
   const started = useActiveWorkoutStore((s) => s.started)
   const paused = useActiveWorkoutStore((s) => s.paused)
   const session = useActiveWorkoutStore((s) => s.session)
-  const currentExerciseIndex = useActiveWorkoutStore((s) => s.currentExerciseIndex)
   const totalTimerSeconds = useActiveWorkoutStore((s) => s.totalTimerSeconds)
   const tickTotal = useActiveWorkoutStore((s) => s.tickTotal)
 
@@ -25,12 +24,10 @@ export function FloatingWorkoutButton() {
     return null
   }
 
-  const exercicioAtual = session.exercicios[currentExerciseIndex]
-
   return (
     <Link
       to="/active-workout/$planId"
-      params={{ planId: session.planoId }}
+      params={{ planId: session.planId }}
       className="fixed right-4 z-[60] animate-fade-up"
       style={{
         bottom: `calc(90px + env(safe-area-inset-bottom, 0px))`,

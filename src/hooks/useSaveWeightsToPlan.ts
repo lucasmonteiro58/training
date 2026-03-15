@@ -14,29 +14,29 @@ export function useSaveWeightsToPlan(
     (exIdx?: number) => {
       if (!plan || !session) return
       const idx = exIdx ?? currentExerciseIndex
-      const exInSession = session.exercicios[idx]
+      const exInSession = session.exercises[idx]
       if (!exInSession) return
-      const planExIdx = plan.exercicios.findIndex(
-        (e) => e.exercicioId === exInSession.exercicioId
+      const planExIdx = plan.exercises.findIndex(
+        (e) => e.exerciseId === exInSession.exerciseId
       )
       if (planExIdx === -1) return
-      const planEx = plan.exercicios[planExIdx]
-      const seriesDetalhadas = exInSession.series.map((s, i) => ({
-        ...(planEx.seriesDetalhadas?.[i] ?? {}),
-        peso: s.peso,
-        repeticoes: s.repeticoes,
+      const planEx = plan.exercises[planExIdx]
+      const setsDetail = exInSession.sets.map((s, i) => ({
+        ...(planEx.setsDetail?.[i] ?? {}),
+        weight: s.weight,
+        reps: s.reps,
       }))
-      const changed = seriesDetalhadas.some((sd, i) => {
-        const old = planEx.seriesDetalhadas?.[i]
+      const changed = setsDetail.some((sd, i) => {
+        const old = planEx.setsDetail?.[i]
         return (
-          !old || old.peso !== sd.peso || old.repeticoes !== sd.repeticoes
+          !old || old.weight !== sd.weight || old.reps !== sd.reps
         )
       })
       if (!changed) return
-      const exercicios = plan.exercicios.map((ex, i) =>
-        i === planExIdx ? { ...ex, seriesDetalhadas } : ex
+      const exercises = plan.exercises.map((ex, i) =>
+        i === planExIdx ? { ...ex, setsDetail } : ex
       )
-      updatePlanById({ ...plan, exercicios })
+      updatePlanById({ ...plan, exercises })
     },
     [plan, session, currentExerciseIndex, updatePlanById]
   )

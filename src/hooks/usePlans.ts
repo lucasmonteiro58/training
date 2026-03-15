@@ -4,7 +4,7 @@ import { usePlansStore } from '../stores'
 import { useAuthStore } from '../stores'
 import { getPlans, savePlan, deletePlan } from '../lib/db/dexie'
 import { syncPlanToFirestore, deletePlanFromFirestore, subscribeToPlans, subscribeToExercises, fetchPlans } from '../lib/firestore/sync'
-import type { WorkoutPlan, ExerciseInPlan } from '../types'
+import type { WorkoutPlan } from '../types'
 import { PLAN_COLORS } from '../types'
 
 export function usePlans() {
@@ -34,16 +34,16 @@ export function usePlans() {
   }, [user, setPlans, setLoading])
 
   const createPlan = useCallback(
-    async (nome: string, descricao?: string): Promise<WorkoutPlan> => {
+    async (name: string, description?: string): Promise<WorkoutPlan> => {
       if (!user) throw new Error('Usuário não autenticado')
       const randomColor = PLAN_COLORS[Math.floor(Math.random() * PLAN_COLORS.length)]
       const plan: WorkoutPlan = {
         id: uuidv4(),
         userId: user.uid,
-        nome,
-        descricao,
-        exercicios: [],
-        cor: randomColor,
+        name,
+        description,
+        exercises: [],
+        color: randomColor,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       }
@@ -84,7 +84,7 @@ export function usePlans() {
     async (id: string): Promise<void> => {
       const plan = plans.find(p => p.id === id)
       if (!plan) return
-      const updated = { ...plan, arquivado: true, updatedAt: Date.now() }
+      const updated = { ...plan, archived: true, updatedAt: Date.now() }
       await savePlan(updated)
       updatePlan(updated)
       syncPlanToFirestore(updated)
@@ -96,7 +96,7 @@ export function usePlans() {
     async (id: string): Promise<void> => {
       const plan = plans.find(p => p.id === id)
       if (!plan) return
-      const updated = { ...plan, arquivado: false, updatedAt: Date.now() }
+      const updated = { ...plan, archived: false, updatedAt: Date.now() }
       await savePlan(updated)
       updatePlan(updated)
       syncPlanToFirestore(updated)
@@ -109,7 +109,7 @@ export function usePlans() {
       const updatedList = plans.map((p) => {
         const idx = orderedIds.indexOf(p.id)
         if (idx === -1) return p
-        const updated = { ...p, ordem: idx, updatedAt: Date.now() }
+        const updated = { ...p, order: idx, updatedAt: Date.now() }
         savePlan(updated)
         syncPlanToFirestore(updated)
         return updated
@@ -127,12 +127,12 @@ export function usePlans() {
       const clone: WorkoutPlan = {
         ...original,
         id: uuidv4(),
-        nome: `${original.nome} (cópia)`,
-        exercicios: original.exercicios.map(ex => ({
+        name: `${original.name} (cópia)`,
+        exercises: original.exercises.map((ex) => ({
           ...ex,
           id: uuidv4(),
         })),
-        arquivado: false,
+        archived: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
         syncedAt: undefined,
@@ -146,9 +146,9 @@ export function usePlans() {
   )
 
   const activePlans = plans
-    .filter((p) => !p.arquivado)
-    .sort((a, b) => (a.ordem ?? a.createdAt) - (b.ordem ?? b.createdAt))
-  const archivedPlans = plans.filter((p) => p.arquivado)
+    .filter((p) => !p.archived)
+    .sort((a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt))
+  const archivedPlans = plans.filter((p) => p.archived)
 
   return {
     plans,

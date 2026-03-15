@@ -14,51 +14,51 @@ interface ExercisePickerProps {
 
 export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
   const user = useAuthStore((s) => s.user)
-  const [exercicios, setExercises] = useState<Exercise[]>([])
-  const [filtrados, setFiltrados] = useState<Exercise[]>([])
+  const [exercises, setExercises] = useState<Exercise[]>([])
+  const [filtered, setFiltered] = useState<Exercise[]>([])
   const [query, setQuery] = useState('')
-  const [grupo, setGrupo] = useState('')
+  const [group, setGroup] = useState('')
   const [loading, setLoading] = useState(true)
-  const [showCriar, setShowCriar] = useState(false)
-  const [favoritoIds, setFavoritoIds] = useState<Set<string>>(new Set())
-  const [showFavoritos, setShowFavoritos] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
+  const [showFavorites, setShowFavorites] = useState(false)
 
   const parentRef = useRef<HTMLDivElement>(null)
 
-  const carregarTudo = async () => {
+  const loadAll = async () => {
     setLoading(true)
     const base = await carregarExercicios()
     let custom: Exercise[] = []
     if (user) {
       custom = await getPersonalizedExercises(user.uid)
     }
-    const todos = [...custom, ...base].sort((a, b) => a.nome.localeCompare(b.nome))
-    setExercises(todos)
-    setFiltrados(todos)
+    const all = [...custom, ...base].sort((a, b) => a.name.localeCompare(b.name))
+    setExercises(all)
+    setFiltered(all)
     const favIds = await getFavoritoIds()
-    setFavoritoIds(favIds)
+    setFavoriteIds(favIds)
     setLoading(false)
   }
 
   useEffect(() => {
-    carregarTudo()
+    loadAll()
   }, [user])
 
   useEffect(() => {
-    let result = buscarExercicios(exercicios, query, grupo || undefined)
-    if (showFavoritos) {
-      result = result.filter(ex => favoritoIds.has(ex.id))
+    let result = buscarExercicios(exercises, query, group || undefined)
+    if (showFavorites) {
+      result = result.filter(ex => favoriteIds.has(ex.id))
     }
-    setFiltrados(result)
-  }, [query, grupo, exercicios, showFavoritos, favoritoIds])
+    setFiltered(result)
+  }, [query, group, exercises, showFavorites, favoriteIds])
 
-  const gruposUnicos = useMemo(() => {
-    const setGrupos = new Set(exercicios.map(ex => ex.grupoMuscular).filter(Boolean))
-    return Array.from(setGrupos).sort((a, b) => a.localeCompare(b))
-  }, [exercicios])
+  const uniqueGroups = useMemo(() => {
+    const groupSet = new Set(exercises.map(ex => ex.muscleGroup).filter(Boolean))
+    return Array.from(groupSet).sort((a, b) => a.localeCompare(b))
+  }, [exercises])
 
   const rowVirtualizer = useVirtualizer({
-    count: filtrados.length,
+    count: filtered.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 84,
     overscan: 10,
@@ -66,15 +66,15 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
 
   useEffect(() => {
     rowVirtualizer.scrollToOffset(0)
-  }, [query, grupo, showFavoritos])
+  }, [query, group, showFavorites])
 
-  const handleToggleFavorito = async (e: React.MouseEvent, exId: string) => {
+  const handleToggleFavorite = async (e: React.MouseEvent, exId: string) => {
     e.stopPropagation()
-    const novoValor = !favoritoIds.has(exId)
-    await toggleExerciseFavorite(exId, novoValor)
-    setFavoritoIds(prev => {
+    const newValue = !favoriteIds.has(exId)
+    await toggleExerciseFavorite(exId, newValue)
+    setFavoriteIds(prev => {
       const next = new Set(prev)
-      if (novoValor) next.add(exId)
+      if (newValue) next.add(exId)
       else next.delete(exId)
       return next
     })
@@ -88,7 +88,7 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
           <h2 className="text-lg font-bold text-text">Adicionar Exercício</h2>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setShowCriar(true)}
+              onClick={() => setShowCreate(true)}
               className="px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-bold hover:bg-accent/20 transition-colors"
             >
               Novo
@@ -110,35 +110,35 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
           />
         </div>
 
-        {/* Grupo filter */}
+        {/* Group filter */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide shrink-0 items-center min-h-[40px]">
           <button
-            onClick={() => setShowFavoritos(!showFavoritos)}
+            onClick={() => setShowFavorites(!showFavorites)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              showFavoritos
+              showFavorites
                 ? 'bg-red-500/15 text-red-400 border border-red-500/30'
                 : 'bg-surface-2 text-text-muted'
             }`}
           >
-            <Heart size={11} className={showFavoritos ? 'fill-red-400' : ''} />
+            <Heart size={11} className={showFavorites ? 'fill-red-400' : ''} />
             Favoritos
           </button>
           <button
-            onClick={() => setGrupo('')}
+            onClick={() => setGroup('')}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap capitalize ${
-              grupo === ''
+              group === ''
                 ? 'bg-accent text-white'
                 : 'bg-surface-2 text-text-muted'
             }`}
           >
             Todos
           </button>
-          {gruposUnicos.map((g) => (
+          {uniqueGroups.map((g) => (
             <button
               key={g}
-              onClick={() => setGrupo(g)}
+              onClick={() => setGroup(g)}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap capitalize ${
-                grupo === g
+                group === g
                   ? 'bg-accent text-white'
                   : 'bg-surface-2 text-text-muted'
               }`}
@@ -155,7 +155,7 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
                 <div key={i} className="skeleton h-16 rounded-xl" />
               ))}
             </div>
-          ) : filtrados.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <p className="text-center text-text-muted py-8 text-sm">
               Nenhum exercício encontrado
             </p>
@@ -168,7 +168,7 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
               }}
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const ex = filtrados[virtualRow.index]
+                const ex = filtered[virtualRow.index]
                 return (
                   <div
                     key={virtualRow.key}
@@ -190,7 +190,7 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
                       {ex.gifUrl ? (
                         <img
                           src={ex.gifUrl}
-                          alt={ex.nome}
+                          alt={ex.name}
                           className="w-12 h-12 rounded-lg object-cover bg-surface-3 shrink-0"
                           loading="lazy"
                         />
@@ -201,19 +201,19 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-text text-sm font-medium line-clamp-2">
-                          {ex.nome}
+                          {ex.name}
                         </p>
                         <p className="text-text-muted text-xs mt-0.5">
-                          {ex.grupoMuscular}
-                          {ex.equipamento ? ` · ${ex.equipamento}` : ''}
+                          {ex.muscleGroup}
+                          {ex.equipment ? ` · ${ex.equipment}` : ''}
                         </p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
-                          onClick={(e) => handleToggleFavorito(e, ex.id)}
+                          onClick={(e) => handleToggleFavorite(e, ex.id)}
                           className="p-1.5 rounded-lg hover:bg-surface-3 transition-colors"
                         >
-                          <Heart size={16} className={favoritoIds.has(ex.id) ? 'fill-red-400 text-red-400' : 'text-text-subtle'} />
+                          <Heart size={16} className={favoriteIds.has(ex.id) ? 'fill-red-400 text-red-400' : 'text-text-subtle'} />
                         </button>
                         <Plus size={18} className="text-accent" />
                       </div>
@@ -226,12 +226,12 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
         </div>
       </div>
 
-      {showCriar && (
+      {showCreate && (
         <CreateExerciseModal
-          gruposExistentes={gruposUnicos}
-          onClose={() => setShowCriar(false)}
+          existingGroups={uniqueGroups}
+          onClose={() => setShowCreate(false)}
           onSuccess={(ex) => {
-            setShowCriar(false)
+            setShowCreate(false)
             onSelect(ex)
           }}
         />

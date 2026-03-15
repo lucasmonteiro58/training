@@ -10,10 +10,10 @@ export function useStartWorkout() {
   const [pendingId, setPendingId] = useState<string | null>(null)
 
   const handleIniciar = (planoId: string) => {
-    if (treinoAtivo && session?.planoId !== planoId) {
+    if (treinoAtivo && session?.planId !== planoId) {
       setPendingId(planoId)
     } else {
-      navigate({ to: '/active-workout/$planId', params: { planId } })
+      navigate({ to: '/active-workout/$planId', params: { planId: planoId } })
     }
   }
 

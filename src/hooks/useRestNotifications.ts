@@ -26,12 +26,12 @@ export function useRestNotifications({
 
   useEffect(() => {
     if (restTimerActive && session) {
-      const ex = session.exercicios[currentExerciseIndex]
+      const ex = session.exercises[currentExerciseIndex]
       restEndedNaturalRef.current = true
 
       if (!restEndAgendadoRef.current) {
         restEndAgendadoRef.current = true
-        agendarNotificacaoDescanso(restTimerSeconds, ex?.exercicioNome)
+        agendarNotificacaoDescanso(restTimerSeconds, ex?.exerciseName)
       }
     }
 

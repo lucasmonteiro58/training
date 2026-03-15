@@ -42,7 +42,7 @@ export function MeasurementsChart({ campoGrafico, dados, onCampoChange }: Measur
                 borderRadius: 12,
                 fontSize: 12,
               }}
-              formatter={(v: number) => [`${v} ${campoAtual?.unidade ?? ''}`, campoAtual?.label ?? '']}
+              formatter={(v: unknown) => [`${Number(v)} ${campoAtual?.unidade ?? ''}`, campoAtual?.label ?? '']}
             />
             <Line
               type="monotone"

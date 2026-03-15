@@ -48,9 +48,9 @@ export function PlanSortableCard({
           {!reordenando && (
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: `${plano.cor ?? '#6366f1'}22` }}
+              style={{ background: `${plano.color ?? '#6366f1'}22` }}
             >
-              <Dumbbell size={20} style={{ color: plano.cor ?? '#6366f1' }} />
+              <Dumbbell size={20} style={{ color: plano.color ?? '#6366f1' }} />
             </div>
           )}
 
@@ -60,9 +60,9 @@ export function PlanSortableCard({
             className="flex-1 min-w-0"
             style={{ textDecoration: 'none' }}
           >
-            <p className="text-text font-semibold truncate">{plano.nome}</p>
+            <p className="text-text font-semibold truncate">{plano.name}</p>
             <div className="flex items-center gap-3 mt-1">
-              <span className="text-xs text-text-muted">{plano.exercicios.length} exercícios</span>
+              <span className="text-xs text-text-muted">{plano.exercises.length} exercícios</span>
             </div>
           </Link>
 
@@ -88,9 +88,9 @@ export function PlanSortableCard({
           )}
         </div>
 
-        {!reordenando && plano.exercicios.length > 0 && (
+        {!reordenando && plano.exercises.length > 0 && (
           <div className="mt-3 flex gap-2 flex-wrap">
-            {[...new Set(plano.exercicios.map(e => e.exercicio.grupoMuscular))]
+            {[...new Set(plano.exercises.map((e: { exercise: { muscleGroup: string } }) => e.exercise.muscleGroup))]
               .slice(0, 4)
               .map(grupo => (
                 <span

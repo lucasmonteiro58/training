@@ -58,7 +58,7 @@ function TreinoAtivoPage() {
   const timerRef = useRef<number | null>(null)
   const descansoRef = useRef<number | null>(null)
 
-  const [applyAll, setApplyAll] = useState<{ field: 'peso' | 'repeticoes'; sIdx: number; value: number } | null>(null)
+  const [applyAll, setApplyAll] = useState<{ field: 'weight' | 'reps'; sIdx: number; value: number } | null>(null)
   const { saveWeightsToPlan } = useSaveWeightsToPlan(
     plan ?? undefined,
     session,
@@ -145,9 +145,9 @@ function TreinoAtivoPage() {
     return () => { if (descansoRef.current) clearInterval(descansoRef.current) }
   }, [restTimerActive, tickRest])
 
-  const exercicioAtual = session?.exercicios[currentExerciseIndex]
-  const planExercise = plan?.exercicios.find(ex => ex.exercicioId === exercicioAtual?.exercicioId)
-  const totalExercicios = session?.exercicios.length ?? 0
+  const exercicioAtual = session?.exercises[currentExerciseIndex]
+  const planExercise = plan?.exercises.find((ex) => ex.exerciseId === exercicioAtual?.exerciseId)
+  const totalExercicios = session?.exercises.length ?? 0
   const progresso = totalExercicios ? (currentExerciseIndex / totalExercicios) * 100 : 0
 
   const handleFinalizar = async () => {
@@ -178,13 +178,13 @@ function TreinoAtivoPage() {
       const file = new File([blob], `treino-${Date.now()}.png`, { type: 'image/png' })
 
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: `Treino: ${s.planoNome}` })
+        await navigator.share({ files: [file], title: `Treino: ${s.planName}` })
       } else {
         // Fallback: download the image
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `treino-${s.planoNome.replace(/\s+/g, '-')}.png`
+        a.download = `treino-${s.planName.replace(/\s+/g, '-')}.png`
         a.click()
         URL.revokeObjectURL(url)
         setCopiado(true)
@@ -219,7 +219,7 @@ function TreinoAtivoPage() {
     )
   }
 
-  const seriesCompletadas = exercicioAtual.series.filter((s) => s.completada).length
+  const seriesCompletadas = exercicioAtual.sets.filter((s) => s.completed).length
 
   return (
     <div className="flex flex-col min-h-dvh bg-bg max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
@@ -235,11 +235,11 @@ function TreinoAtivoPage() {
         totalExercicios={totalExercicios}
         onPrev={previousExercise}
         onNext={nextExercise}
-        onNotas={() => { setNotasTemp(session?.notas ?? ''); setShowNotas(true) }}
+        onNotas={() => { setNotasTemp(session?.notes ?? ''); setShowNotas(true) }}
         onFinalizar={() => setShowConfirmFinalizar(true)}
         onClose={() => navigate({ to: '/workouts' })}
         onInfo={() => setShowInfo(true)}
-        hasNotas={!!session?.notas}
+        hasNotas={!!session?.notes}
         finalizando={finalizando}
         progresso={progresso}
       />
@@ -250,7 +250,7 @@ function TreinoAtivoPage() {
           <div className="aspect-video max-h-48  rounded-2xl overflow-hidden bg-surface">
             <img
               src={exercicioAtual.gifUrl}
-              alt={exercicioAtual.exercicioNome}
+              alt={exercicioAtual.exerciseName}
               className="w-full h-full object-cover"
             />
           </div>
@@ -276,11 +276,11 @@ function TreinoAtivoPage() {
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {/* 1RM estimate */}
         {(() => {
-          const seriesCompletas = exercicioAtual.series.filter(s => s.completada && s.peso > 0 && s.repeticoes > 0)
+          const seriesCompletas = exercicioAtual.sets.filter((s) => s.completed && s.weight > 0 && s.reps > 0)
           if (seriesCompletas.length === 0) return null
           const melhor = seriesCompletas.reduce((best, s) => {
-            const rm = calcular1RM(s.peso, s.repeticoes)
-            return rm > best.rm ? { rm, peso: s.peso, reps: s.repeticoes } : best
+            const rm = calcular1RM(s.weight, s.reps)
+            return rm > best.rm ? { rm, peso: s.weight, reps: s.reps } : best
           }, { rm: 0, peso: 0, reps: 0 })
           if (melhor.rm <= 0) return null
           return (
@@ -294,7 +294,7 @@ function TreinoAtivoPage() {
 
         {/* Header */}
         {(() => {
-          const tipo = exercicioAtual.tipoSerie ?? 'reps'
+          const tipo = exercicioAtual.setType ?? 'reps'
           const labels: Record<string, string> = { reps: 'Reps', tempo: 'Min', falha: 'Falha ⚡' }
           return (
             <div className="grid grid-cols-[32px_1fr_1fr_40px] gap-2 px-3 mb-1">
@@ -305,7 +305,7 @@ function TreinoAtivoPage() {
           )
         })()}
 
-        {exercicioAtual.tipoSerie === 'falha' && (
+        {exercicioAtual.setType === 'falha' && (
           <div className="flex items-center gap-1.5 mb-2 px-1">
             <Zap size={12} className="text-yellow-400" />
             <span className="text-[10px] font-semibold text-yellow-400">Executar até a falha muscular</span>
@@ -313,16 +313,16 @@ function TreinoAtivoPage() {
         )}
 
         <div className="flex flex-col">
-          {exercicioAtual.series.map((serie, sIdx) => {
-            const tipo = exercicioAtual.tipoSerie ?? 'reps'
+          {exercicioAtual.sets.map((serie, sIdx) => {
+            const tipo = exercicioAtual.setType ?? 'reps'
             const isTimerAtivo = timerSerie?.sIdx === sIdx
             return (
             <div key={serie.id} className="contents">
             <div
-              className={`set-row ${serie.completada ? 'completed' : ''}`}
+              className={`set-row ${serie.completed ? 'completed' : ''}`}
             >
               {/* Número da série */}
-              <span className={`text-sm font-bold text-center ${serie.completada ? 'text-success' : 'text-text-subtle'}`}>
+              <span className={`text-sm font-bold text-center ${serie.completed ? 'text-success' : 'text-text-subtle'}`}>
                 {sIdx + 1}
               </span>
 
@@ -332,25 +332,25 @@ function TreinoAtivoPage() {
                 step="any"
                 lang="en"
                 className="set-input"
-                value={serie.peso === 0 ? '' : serie.peso}
+                value={serie.weight === 0 ? '' : serie.weight}
                 placeholder="0"
                 onChange={(e) => {
                   const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
-                  updateSet(currentExerciseIndex, sIdx, { peso: val })
-                  if (exercicioAtual.series.length > 1) setApplyAll({ field: 'peso', sIdx, value: val })
+                  updateSet(currentExerciseIndex, sIdx, { weight: val })
+                  if (exercicioAtual.sets.length > 1) setApplyAll({ field: 'weight', sIdx, value: val })
                 }}
                 onBlur={(e) => {
                   if (!plan) return
                   const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
-                  const exIdx = plan.exercicios.findIndex((ex) => ex.exercicioId === exercicioAtual.exercicioId)
+                  const exIdx = plan.exercises.findIndex((ex) => ex.exerciseId === exercicioAtual.exerciseId)
                   if (exIdx === -1) return
-                  const exercicios = plan.exercicios.map((ex, i) => {
+                  const exercises = plan.exercises.map((ex, i) => {
                     if (i !== exIdx) return ex
-                    const base = ex.seriesDetalhadas ?? Array.from({ length: ex.series }, () => ({ peso: ex.pesoMeta ?? 0, repeticoes: ex.repeticoesMeta }))
-                    const seriesDetalhadas = base.map((s, j) => (j === sIdx ? { ...s, peso: val } : s))
-                    return { ...ex, seriesDetalhadas }
+                    const base = ex.setsDetail ?? Array.from({ length: ex.series }, () => ({ weight: ex.targetWeight ?? 0, reps: ex.targetReps }))
+                    const setsDetail = base.map((s, j) => (j === sIdx ? { ...s, weight: val } : s))
+                    return { ...ex, setsDetail }
                   })
-                  updatePlanById({ ...plan, exercicios })
+                  updatePlanById({ ...plan, exercises })
                 }}
                 onFocus={(e) => e.target.select()}
               />
@@ -359,7 +359,7 @@ function TreinoAtivoPage() {
               {tipo === 'tempo' ? (
                 <button
                   onClick={() => {
-                    const duracaoSeg = Math.round((serie.repeticoes || 1) * 60)
+                    const duracaoSeg = Math.round((serie.reps || 1) * 60)
                     if (isTimerAtivo) {
                       pararTimerSerie()
                     } else {
@@ -373,18 +373,18 @@ function TreinoAtivoPage() {
                   <Timer size={12} />
                   {isTimerAtivo
                     ? formatarTempo(timerSerie!.restando)
-                    : formatarTempo(Math.round((serie.repeticoes || 1) * 60))}
+                    : formatarTempo(Math.round((serie.reps || 1) * 60))}
                 </button>
               ) : (
                 <input
                   type="number"
                   className="set-input"
-                  value={serie.repeticoes === 0 ? '' : serie.repeticoes}
+                  value={serie.reps === 0 ? '' : serie.reps}
                   placeholder={tipo === 'falha' ? 'Falha' : '0'}
                   onChange={(e) => {
                     const val = e.target.value === '' ? 0 : parseInt(e.target.value)
-                    updateSet(currentExerciseIndex, sIdx, { repeticoes: val })
-                    if (exercicioAtual.series.length > 1) setApplyAll({ field: 'repeticoes', sIdx, value: val })
+                    updateSet(currentExerciseIndex, sIdx, { reps: val })
+                    if (exercicioAtual.sets.length > 1) setApplyAll({ field: 'reps', sIdx, value: val })
                   }}
                   onFocus={(e) => e.target.select()}
                 />
@@ -397,7 +397,7 @@ function TreinoAtivoPage() {
                   handleCompleteSet(sIdx)
                 }}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                  serie.completada
+                  serie.completed
                     ? 'bg-success text-white'
                     : 'bg-surface-2 text-text-subtle hover:bg-[rgba(34,197,94,0.15)] hover:text-success'
                 }`}
@@ -413,7 +413,7 @@ function TreinoAtivoPage() {
                   <p className="text-xs text-text-muted">
                     Repetir{' '}
                     <strong className="text-text">
-                      {applyAll.field === 'peso' ? `${applyAll.value} kg` : `${applyAll.value} reps`}
+                      {applyAll.field === 'weight' ? `${applyAll.value} kg` : `${applyAll.value} reps`}
                     </strong>{' '}em:
                   </p>
                   <button
@@ -424,10 +424,10 @@ function TreinoAtivoPage() {
                   </button>
                 </div>
                 <div className="flex gap-1.5">
-                  {applyAll.sIdx < exercicioAtual.series.length - 1 && (
+                  {applyAll.sIdx < exercicioAtual.sets.length - 1 && (
                     <button
                       onClick={() => {
-                        exercicioAtual.series.forEach((_, i) => {
+                        exercicioAtual.sets.forEach((_, i) => {
                           if (i > applyAll.sIdx)
                             updateSet(currentExerciseIndex, i, { [applyAll.field]: applyAll.value })
                         })
@@ -440,7 +440,7 @@ function TreinoAtivoPage() {
                   )}
                   <button
                     onClick={() => {
-                      exercicioAtual.series.forEach((_, i) => {
+                      exercicioAtual.sets.forEach((_, i) => {
                         updateSet(currentExerciseIndex, i, { [applyAll.field]: applyAll.value })
                       })
                       setApplyAll(null)
@@ -461,22 +461,22 @@ function TreinoAtivoPage() {
         {/* Progresso séries */}
         <div className="mt-4 text-center">
           <p className="text-xs text-text-muted">
-            {seriesCompletadas}/{exercicioAtual.series.length} séries completadas
+            {seriesCompletadas}/{exercicioAtual.sets.length} séries completadas
           </p>
           <div className="progress-bar mt-2">
             <div className="progress-fill"
-              style={{ width: `${exercicioAtual.series.length ? (seriesCompletadas / exercicioAtual.series.length) * 100 : 0}%` }} />
+              style={{ width: `${exercicioAtual.sets.length ? (seriesCompletadas / exercicioAtual.sets.length) * 100 : 0}%` }} />
           </div>
         </div>
 
         {/* Próximo exercício */}
-        {exercicioAtualIndex < totalExercicios - 1 && (
+        {currentExerciseIndex < totalExercicios - 1 && (
           <button
-            onClick={proximoExercicio}
+            onClick={nextExercise}
             className="mt-4 w-full btn-secondary flex items-center justify-center gap-2 mb-[100px]"
           >
             <SkipForward size={16} />
-            Próximo: {session.exercicios[currentExerciseIndex + 1]?.exercicioNome}
+            Próximo: {session.exercises[currentExerciseIndex + 1]?.exerciseName}
           </button>
         )}
 

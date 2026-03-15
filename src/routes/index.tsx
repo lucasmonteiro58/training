@@ -82,7 +82,7 @@ function HomePage() {
   const hora = new Date().getHours()
   const saudacao =
     hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
-  const exercicioAtual = sessaoAtiva?.exercicios[exercicioAtualIndex]
+  const exercicioAtual = sessaoAtiva?.exercises[exercicioAtualIndex]
 
   return (
     <div
@@ -111,11 +111,11 @@ function HomePage() {
 
       {treinoAtivo && sessaoAtiva && (
         <ActiveWorkoutBanner
-          planoId={sessaoAtiva.planoId}
+          planoId={sessaoAtiva.planId}
           pausado={pausado}
           cronometroGeralSegundos={totalTimerSeconds}
-          exercicioAtualNome={exercicioAtual?.exercicioNome ?? null}
-          planoNome={sessaoAtiva.planoNome}
+          exercicioAtualNome={exercicioAtual?.exerciseName ?? null}
+          planoNome={sessaoAtiva.planName}
         />
       )}
 
@@ -170,10 +170,10 @@ function HomePage() {
       <LastWorkoutsSection
         sessoes={lastSessions.map(s => ({
           id: s.id,
-          planoNome: s.planoNome,
-          iniciadoEm: s.iniciadoEm,
-          duracaoSegundos: s.duracaoSegundos,
-          volumeTotal: s.volumeTotal,
+          planName: s.planName,
+          startedAt: s.startedAt,
+          durationSeconds: s.durationSeconds,
+          totalVolume: s.totalVolume,
         }))}
         carregando={isLoading}
       />

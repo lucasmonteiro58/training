@@ -1,16 +1,16 @@
 import { ArrowLeft, Edit2, Save, TimerOff } from 'lucide-react'
 
 interface SessionDetailHeaderProps {
-  planoNome: string
+  planName: string
   dataStr: string
   editando: boolean
   /** Treino encerrado automaticamente por inatividade */
-  autoEncerrado?: boolean
-  /** Timestamp (iniciadoEm) para edição da data; quando editando, permite alterar */
-  iniciadoEm?: number
-  /** Timestamp (finalizadoEm) para exibir hora de fim */
-  finalizadoEm?: number
-  onIniciadoEmChange?: (timestamp: number) => void
+  autoClosed?: boolean
+  /** Timestamp (startedAt) para edição da data; quando editando, permite alterar */
+  startedAt?: number
+  /** Timestamp (finishedAt) para exibir hora de fim */
+  finishedAt?: number
+  onStartedAtChange?: (timestamp: number) => void
   onVoltar: () => void
   onIniciarEdicao: () => void
   onCancelarEdicao: () => void
@@ -30,13 +30,13 @@ function formatarHora(ts: number): string {
 }
 
 export function SessionDetailHeader({
-  planoNome,
+  planName,
   dataStr,
   editando,
-  autoEncerrado,
-  iniciadoEm,
-  finalizadoEm,
-  onIniciadoEmChange,
+  autoClosed,
+  startedAt,
+  finishedAt,
+  onStartedAtChange,
   onVoltar,
   onIniciarEdicao,
   onCancelarEdicao,
@@ -52,26 +52,26 @@ export function SessionDetailHeader({
       </button>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xl font-bold text-text truncate">{planoNome}</h1>
-          {autoEncerrado && (
+          <h1 className="text-xl font-bold text-text truncate">{planName}</h1>
+          {autoClosed && (
             <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-400 text-[10px] font-medium border border-amber-500/25 shrink-0">
               <TimerOff size={10} />
               Encerrado automaticamente
             </span>
           )}
         </div>
-        {editando && iniciadoEm != null && onIniciadoEmChange ? (
+        {editando && startedAt != null && onStartedAtChange ? (
           <label className="block mt-1">
             <span className="text-xs text-text-muted block mb-1">Data do treino</span>
             <input
               type="date"
-              value={toDateInputValue(iniciadoEm)}
+              value={toDateInputValue(startedAt)}
               onChange={(e) => {
                 const v = e.target.value
                 if (!v) return
                 const [y, m, d] = v.split('-').map(Number)
                 const ts = new Date(y, m - 1, d).getTime()
-                onIniciadoEmChange(ts)
+                onStartedAtChange(ts)
               }}
               className="text-xs bg-surface-2 text-text rounded-lg px-2 py-1.5 border border-border focus:outline-none focus:ring-1 focus:ring-accent"
             />
@@ -80,9 +80,9 @@ export function SessionDetailHeader({
           <div className="mt-0.5 space-y-0.5">
             <p className="text-xs text-text-muted capitalize">{dataStr}</p>
             <p className="text-xs text-text-subtle">
-              Início {iniciadoEm != null ? formatarHora(iniciadoEm) : '–'}
-              {finalizadoEm != null && (
-                <> · Fim {formatarHora(finalizadoEm)}</>
+              Início {startedAt != null ? formatarHora(startedAt) : '–'}
+              {finishedAt != null && (
+                <> · Fim {formatarHora(finishedAt)}</>
               )}
             </p>
           </div>

@@ -49,17 +49,17 @@ async function writeOrQueue(
 }
 
 // ============================
-// Planos
+// Plans
 // ============================
-export async function syncPlanToFirestore(plano: WorkoutPlan): Promise<void> {
+export async function syncPlanToFirestore(plan: WorkoutPlan): Promise<void> {
   incrementSync()
   try {
-    const data = stripUndefined({ ...plano, syncedAt: Date.now() })
-    await writeOrQueue('planos', plano.id, 'set', data as Record<string, unknown>)
-    await savePlan({ ...plano, syncedAt: Date.now() })
+    const data = stripUndefined({ ...plan, syncedAt: Date.now() })
+    await writeOrQueue('plans', plan.id, 'set', data as Record<string, unknown>)
+    await savePlan({ ...plan, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar plano:', err)
-    await enqueueWrite('planos', plano.id, 'set', stripUndefined({ ...plano, syncedAt: Date.now() }) as Record<string, unknown>)
+    await enqueueWrite('plans', plan.id, 'set', stripUndefined({ ...plan, syncedAt: Date.now() }) as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -68,10 +68,10 @@ export async function syncPlanToFirestore(plano: WorkoutPlan): Promise<void> {
 export async function deletePlanFromFirestore(id: string): Promise<void> {
   incrementSync()
   try {
-    await writeOrQueue('planos', id, 'delete')
+    await writeOrQueue('plans', id, 'delete')
   } catch (err) {
     console.error('Erro ao deletar plano do Firestore:', err)
-    await enqueueWrite('planos', id, 'delete')
+    await enqueueWrite('plans', id, 'delete')
   } finally {
     decrementSync()
   }
@@ -79,10 +79,10 @@ export async function deletePlanFromFirestore(id: string): Promise<void> {
 
 export function subscribeToPlans(
   userId: string,
-  callback: (planos: WorkoutPlan[]) => void
+  callback: (plans: WorkoutPlan[]) => void
 ): () => void {
   const q = query(
-    collection(db, 'planos'),
+    collection(db, 'plans'),
     where('userId', '==', userId),
     orderBy('updatedAt', 'desc')
   )
@@ -90,13 +90,13 @@ export function subscribeToPlans(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const planos: WorkoutPlan[] = []
+      const plans: WorkoutPlan[] = []
       snapshot.forEach((d) => {
         const data = d.data() as WorkoutPlan
-        planos.push(data)
+        plans.push(data)
         savePlan(data)
       })
-      callback(planos)
+      callback(plans)
     },
     (err) => {
       if (err.code === 'permission-denied') {
@@ -111,17 +111,17 @@ export function subscribeToPlans(
 }
 
 // ============================
-// Sessões
+// Sessions
 // ============================
-export async function syncSessionToFirestore(sessao: WorkoutSession): Promise<void> {
+export async function syncSessionToFirestore(session: WorkoutSession): Promise<void> {
   incrementSync()
   try {
-    const data = stripUndefined({ ...sessao, syncedAt: Date.now() })
-    await writeOrQueue('sessoes', sessao.id, 'set', data as Record<string, unknown>)
-    await saveSession({ ...sessao, syncedAt: Date.now() })
+    const data = stripUndefined({ ...session, syncedAt: Date.now() })
+    await writeOrQueue('sessions', session.id, 'set', data as Record<string, unknown>)
+    await saveSession({ ...session, syncedAt: Date.now() })
   } catch (err) {
     console.error('Erro ao sincronizar sessão:', err)
-    await enqueueWrite('sessoes', sessao.id, 'set', stripUndefined({ ...sessao, syncedAt: Date.now() }) as Record<string, unknown>)
+    await enqueueWrite('sessions', session.id, 'set', stripUndefined({ ...session, syncedAt: Date.now() }) as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -130,10 +130,10 @@ export async function syncSessionToFirestore(sessao: WorkoutSession): Promise<vo
 export async function deleteSessionFromFirestore(id: string): Promise<void> {
   incrementSync()
   try {
-    await writeOrQueue('sessoes', id, 'delete')
+    await writeOrQueue('sessions', id, 'delete')
   } catch (err) {
     console.error('Erro ao deletar sessão do Firestore:', err)
-    await enqueueWrite('sessoes', id, 'delete')
+    await enqueueWrite('sessions', id, 'delete')
   } finally {
     decrementSync()
   }
@@ -141,26 +141,26 @@ export async function deleteSessionFromFirestore(id: string): Promise<void> {
 
 export function subscribeToSessions(
   userId: string,
-  callback: (sessoes: WorkoutSession[]) => void,
+  callback: (sessions: WorkoutSession[]) => void,
   limitN = 50
 ): () => void {
   const q = query(
-    collection(db, 'sessoes'),
+    collection(db, 'sessions'),
     where('userId', '==', userId),
-    orderBy('iniciadoEm', 'desc'),
+    orderBy('startedAt', 'desc'),
     limit(limitN)
   )
 
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const sessoes: WorkoutSession[] = []
+      const sessions: WorkoutSession[] = []
       snapshot.forEach((d) => {
         const data = d.data() as WorkoutSession
-        sessoes.push(data)
+        sessions.push(data)
         saveSession(data)
       })
-      callback(sessoes)
+      callback(sessions)
     },
     (err) => {
       if (err.code === 'permission-denied') {
@@ -257,18 +257,18 @@ export async function salvarConfigUsuario(
 export async function fetchPlans(userId: string): Promise<WorkoutPlan[]> {
   try {
     const q = query(
-      collection(db, 'planos'),
+      collection(db, 'plans'),
       where('userId', '==', userId),
       orderBy('updatedAt', 'desc')
     )
     const snapshot = await getDocs(q)
-    const planos: WorkoutPlan[] = []
+    const plans: WorkoutPlan[] = []
     snapshot.forEach((d) => {
       const data = d.data() as WorkoutPlan
-      planos.push(data)
+      plans.push(data)
       savePlan(data)
     })
-    return planos
+    return plans
   } catch {
     return []
   }
@@ -278,34 +278,34 @@ export async function fetchPlans(userId: string): Promise<WorkoutPlan[]> {
 export async function fetchSessions(userId: string, limitN = 50): Promise<WorkoutSession[]> {
   try {
     const q = query(
-      collection(db, 'sessoes'),
+      collection(db, 'sessions'),
       where('userId', '==', userId),
-      orderBy('iniciadoEm', 'desc'),
+      orderBy('startedAt', 'desc'),
       limit(limitN)
     )
     const snapshot = await getDocs(q)
-    const sessoes: WorkoutSession[] = []
+    const sessions: WorkoutSession[] = []
     snapshot.forEach((d) => {
-      sessoes.push(d.data() as WorkoutSession)
+      sessions.push(d.data() as WorkoutSession)
     })
-    return sessoes
+    return sessions
   } catch {
     return []
   }
 }
 
 // ============================
-// Exercícios Personalizados
+// Exercises (personalizados)
 // ============================
-export async function syncExerciseToFirestore(exercicio: Exercise): Promise<void> {
+export async function syncExerciseToFirestore(exercise: Exercise): Promise<void> {
   incrementSync()
   try {
-    const data = { ...exercicio, syncedAt: Date.now() }
-    await writeOrQueue('exercicios', exercicio.id, 'set', data as Record<string, unknown>)
-    await savePersonalizedExercise({ ...exercicio, syncedAt: Date.now() } as any)
+    const data = { ...exercise, syncedAt: Date.now() }
+    await writeOrQueue('exercises', exercise.id, 'set', data as Record<string, unknown>)
+    await savePersonalizedExercise({ ...exercise, syncedAt: Date.now() } as any)
   } catch (err) {
-    console.error('Erro ao sincronizar exercicios:', err)
-    await enqueueWrite('exercicios', exercicio.id, 'set', { ...exercicio, syncedAt: Date.now() } as Record<string, unknown>)
+    console.error('Erro ao sincronizar exercícios:', err)
+    await enqueueWrite('exercises', exercise.id, 'set', { ...exercise, syncedAt: Date.now() } as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -313,23 +313,23 @@ export async function syncExerciseToFirestore(exercicio: Exercise): Promise<void
 
 export function subscribeToExercises(
   userId: string,
-  callback: (exercicios: Exercise[]) => void
+  callback: (exercises: Exercise[]) => void
 ): () => void {
   const q = query(
-    collection(db, 'exercicios'),
+    collection(db, 'exercises'),
     where('userId', '==', userId)
   )
 
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const exercicios: Exercise[] = []
+      const exercises: Exercise[] = []
       snapshot.forEach((d) => {
         const data = d.data() as Exercise
-        exercicios.push(data)
+        exercises.push(data)
         savePersonalizedExercise(data)
       })
-      callback(exercicios)
+      callback(exercises)
     },
     (err) => {
       console.error('Erro no subscribe de Exercícios:', err)

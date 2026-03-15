@@ -31,7 +31,7 @@ function ImportarCsvPage() {
   const [salvando, setSalvando] = useState(false)
   const [sucesso, setSucesso] = useState(false)
   const [expandedExs, setExpandedExs] = useState<Set<string>>(new Set())
-  const [exerciciosDb, setExerciciosDb] = useState<Exercicio[]>([])
+  const [exerciciosDb, setExerciciosDb] = useState<Exercise[]>([])
 
   useEffect(() => {
     carregarExercicios().then(setExerciciosDb)
@@ -62,7 +62,7 @@ function ImportarCsvPage() {
 
   const salvar = async () => {
     if (!planos || !user) return
-    const validos = planos.filter(p => p.nome.trim() && p.exercicios.length > 0)
+    const validos = planos.filter((p) => p.name.trim() && p.exercises.length > 0)
     if (validos.length === 0) {
       toast.error('Nenhum plano válido para salvar.')
       return
@@ -70,17 +70,17 @@ function ImportarCsvPage() {
     setSalvando(true)
     try {
       for (const planoData of validos) {
-        const exerciciosComUser = await Promise.all(
-          planoData.exercicios.map(async ex => {
-            if (ex.exercicio.personalizado === false) return ex
-            const exFinal = { ...ex.exercicio, userId: user.uid }
+        const exercisesWithUser = await Promise.all(
+          planoData.exercises.map(async (ex) => {
+            if (ex.exercise.custom === false) return ex
+            const exFinal = { ...ex.exercise, userId: user.uid }
             await savePersonalizedExercise(exFinal)
             syncExerciseToFirestore(exFinal)
-            return { ...ex, exercicio: exFinal }
+            return { ...ex, exercise: exFinal }
           })
         )
-        const plan = await createPlan(planoData.nome.trim())
-        await updatePlanById({ ...plan, exercicios: exerciciosComUser })
+        const plan = await createPlan(planoData.name.trim())
+        await updatePlanById({ ...plan, exercises: exercisesWithUser })
       }
       setSucesso(true)
       setTimeout(() => navigate({ to: '/workouts' }), 1500)
@@ -92,7 +92,7 @@ function ImportarCsvPage() {
     }
   }
 
-  const planosValidos = planos?.filter(p => p.nome.trim() && p.exercicios.length > 0) ?? []
+  const planosValidos = planos?.filter((p) => p.name.trim() && p.exercises.length > 0) ?? []
 
   return (
     <div className="page-container pt-4 pb-[450px]">
@@ -163,7 +163,7 @@ function ImportarCsvPage() {
             {salvando
               ? 'Criando planos...'
               : planosValidos.length === 1
-                ? `Criar "${planosValidos[0].nome}"`
+                ? `Criar "${planosValidos[0].name}"`
                 : `Criar ${planosValidos.length} planos`}
           </button>
         </div>

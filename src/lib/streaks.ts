@@ -51,7 +51,7 @@ export function calcularStreaks(
   // Unique training days (YYYY-MM-DD)
   const diasTreino = new Set<string>()
   sessoes.forEach(s => {
-    diasTreino.add(new Date(s.iniciadoEm).toISOString().slice(0, 10))
+    diasTreino.add(new Date(s.startedAt).toISOString().slice(0, 10))
   })
 
   const hoje = new Date()
@@ -106,7 +106,7 @@ export function calcularStreaks(
   // Treinos esta semana (dom-sáb)
   const inicioSemana = new Date(hoje)
   inicioSemana.setDate(hoje.getDate() - hoje.getDay())
-  const treinosEstaSemana = sessoes.filter(s => s.iniciadoEm >= inicioSemana.getTime()).length
+  const treinosEstaSemana = sessoes.filter(s => s.startedAt >= inicioSemana.getTime()).length
 
   return {
     streakAtual,
@@ -121,14 +121,14 @@ export function calcularStreaks(
  * Calcula conquistas desbloqueadas.
  */
 export function calcularConquistas(sessoes: WorkoutSession[], streaks: StreakInfo): Conquista[] {
-  const totalVolume = sessoes.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
+  const totalVolume = sessoes.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0)
 
   // Máximo de treinos em uma única semana (domingo–sábado)
   let maxTreinosNaSemana = 0
   let dataSemanaIncrivel: number | undefined
   const porSemana = new Map<number, WorkoutSession[]>()
   for (const s of sessoes) {
-    const d = new Date(s.iniciadoEm)
+    const d = new Date(s.startedAt)
     d.setHours(0, 0, 0, 0)
     d.setDate(d.getDate() - d.getDay())
     const key = d.getTime()
@@ -137,7 +137,7 @@ export function calcularConquistas(sessoes: WorkoutSession[], streaks: StreakInf
     porSemana.set(key, list)
     if (list.length > maxTreinosNaSemana) {
       maxTreinosNaSemana = list.length
-      dataSemanaIncrivel = list.length >= 5 ? list[4].iniciadoEm : undefined
+      dataSemanaIncrivel = list.length >= 5 ? list[4].startedAt : undefined
     }
   }
 
@@ -148,7 +148,7 @@ export function calcularConquistas(sessoes: WorkoutSession[], streaks: StreakInf
       descricao: 'Complete seu primeiro treino',
       icone: '🎯',
       desbloqueada: sessoes.length >= 1,
-      data: sessoes.length >= 1 ? sessoes[sessoes.length - 1]?.iniciadoEm : undefined,
+      data: sessoes.length >= 1 ? sessoes[sessoes.length - 1]?.startedAt : undefined,
     },
     {
       id: '10-treinos',

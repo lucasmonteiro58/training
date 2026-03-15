@@ -38,25 +38,25 @@ export function ExerciseInPlanCard({
     zIndex: isDragging ? 50 : undefined,
   }
 
-  const series = exercicio.seriesDetalhadas || []
+  const series = exercicio.setsDetail || []
 
   const addSerie = () => {
     const ultima = series[series.length - 1]
-    const nova = ultima ? { ...ultima } : { peso: 0, repeticoes: 10 }
+    const nova = ultima ? { ...ultima } : { weight: 0, reps: 10 }
     const novasSeries = [...series, nova]
-    onUpdate({ series: novasSeries.length, seriesDetalhadas: novasSeries })
+    onUpdate({ series: novasSeries.length, setsDetail: novasSeries })
   }
 
   const removeSerie = (idx: number) => {
     const novasSeries = series.filter((_, i: number) => i !== idx)
-    onUpdate({ series: novasSeries.length, seriesDetalhadas: novasSeries })
+    onUpdate({ series: novasSeries.length, setsDetail: novasSeries })
   }
 
   const updateSerie = (idx: number, campo: Partial<PlanSet>) => {
     const novasSeries = series.map((s: PlanSet, i: number) =>
       i === idx ? { ...s, ...campo } : s
     )
-    onUpdate({ seriesDetalhadas: novasSeries })
+    onUpdate({ setsDetail: novasSeries })
     if (series.length > 1) {
       if ('peso' in campo && campo.peso !== undefined) {
         setApplyAll({ field: 'peso', sIdx: idx, value: campo.peso as number })
@@ -66,7 +66,7 @@ export function ExerciseInPlanCard({
     }
   }
 
-  const tipo = exercicio.tipoSerie ?? 'reps'
+  const tipo = exercicio.setType ?? 'reps'
   const ciclo: SetType[] = ['reps', 'tempo', 'falha']
   const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
   const labels: Record<SetType, string> = { reps: 'REPS', tempo: 'MIN', falha: 'FALHA ⚡' }
@@ -87,7 +87,7 @@ export function ExerciseInPlanCard({
         >
           <GripVertical size={16} className="text-text-subtle shrink-0" />
         </div>
-        {showSelect && !exercicio.agrupamentoId && (
+        {showSelect && !exercicio.groupingId && (
           <button
             type="button"
             onClick={e => {
@@ -101,7 +101,7 @@ export function ExerciseInPlanCard({
             {isSelected && <span className="text-xs">✓</span>}
           </button>
         )}
-        {exercicio.agrupamentoId && onRemoveFromGroup && (
+        {exercicio.groupingId && onRemoveFromGroup && (
           <button
             type="button"
             onClick={e => {
@@ -114,10 +114,10 @@ export function ExerciseInPlanCard({
             <Unlink size={14} />
           </button>
         )}
-        {exercicio.exercicio.gifUrl ? (
+        {exercicio.exercise.gifUrl ? (
           <img
-            src={exercicio.exercicio.gifUrl}
-            alt={exercicio.exercicio.nome}
+            src={exercicio.exercise.gifUrl}
+            alt={exercicio.exercise.nome}
             className="w-10 h-10 rounded-lg object-cover bg-surface-2"
           />
         ) : (
@@ -126,7 +126,7 @@ export function ExerciseInPlanCard({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-text font-semibold text-sm truncate">{exercicio.exercicio.nome}</p>
+          <p className="text-text font-semibold text-sm truncate">{exercicio.exercise.nome}</p>
           <p className="text-text-muted text-xs">
             {series.length} séries {series.length > 0 && `(Meta: ${series[0].repeticoes} reps)`}
           </p>
@@ -147,9 +147,9 @@ export function ExerciseInPlanCard({
             <button
               type="button"
               onClick={() => {
-                const updates: Partial<ExerciseInPlan> = { tipoSerie: proximo }
+                const updates: Partial<ExerciseInPlan> = { setType: proximo }
                 if (proximo === 'tempo') {
-                  updates.seriesDetalhadas = series.map(s => ({ ...s, repeticoes: 1 }))
+                  updates.seriesDetalhadas = series.map(s => ({ ...s, reps: 1 }))
                 }
                 onUpdate(updates)
                 setApplyAll(null)
@@ -179,7 +179,7 @@ export function ExerciseInPlanCard({
                   className="set-input h-9! py-0! text-sm!"
                   value={s.peso === 0 ? '' : s.peso}
                   onChange={e =>
-                    updateSerie(i, { peso: e.target.value === '' ? 0 : parseFloat(e.target.value) })
+                    updateSerie(i, { weight: e.target.value === '' ? 0 : parseFloat(e.target.value) })
                   }
                   onFocus={e => e.target.select()}
                   placeholder="0"
@@ -198,7 +198,7 @@ export function ExerciseInPlanCard({
                   }
                   onChange={e =>
                     updateSerie(i, {
-                      repeticoes:
+                      reps:
                         e.target.value === ''
                           ? 0
                           : tipo === 'tempo'
@@ -229,7 +229,7 @@ export function ExerciseInPlanCard({
                   <strong className="text-text">
                     {applyAll.field === 'peso'
                       ? `${applyAll.value} kg`
-                      : applyAll.field === 'repeticoes' && (exercicio.tipoSerie ?? 'reps') === 'tempo'
+                      : applyAll.field === 'repeticoes' && (exercicio.setType ?? 'reps') === 'tempo'
                         ? `${applyAll.value} min`
                         : `${applyAll.value} reps`}
                   </strong>{' '}
@@ -251,7 +251,7 @@ export function ExerciseInPlanCard({
                       const novasSeries = series.map((s: PlanSet, i: number) =>
                         i > applyAll.sIdx ? { ...s, [applyAll.field]: applyAll.value } : s
                       )
-                      onUpdate({ seriesDetalhadas: novasSeries })
+                      onUpdate({ setsDetail: novasSeries })
                       setApplyAll(null)
                     }}
                     className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 border border-accent /20"
@@ -266,7 +266,7 @@ export function ExerciseInPlanCard({
                       ...s,
                       [applyAll.field]: applyAll.value,
                     }))
-                    onUpdate({ seriesDetalhadas: novasSeries })
+                    onUpdate({ setsDetail: novasSeries })
                     setApplyAll(null)
                   }}
                   className="flex-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-accent"
@@ -293,8 +293,8 @@ export function ExerciseInPlanCard({
             <textarea
               className="input h-16 text-sm resize-none py-2"
               placeholder="Dica: manter cotovelos fechados..."
-              value={exercicio.notas || ''}
-              onChange={e => onUpdate({ notas: e.target.value })}
+              value={exercicio.notes || ''}
+              onChange={e => onUpdate({ notes: e.target.value })}
             />
           </div>
 
@@ -305,8 +305,8 @@ export function ExerciseInPlanCard({
             <input
               type="number"
               className="input h-10 text-sm"
-              value={exercicio.descansoSegundos}
-              onChange={e => onUpdate({ descansoSegundos: parseInt(e.target.value) || 0 })}
+              value={exercicio.restSeconds}
+              onChange={e => onUpdate({ restSeconds: parseInt(e.target.value) || 0 })}
             />
           </div>
         </div>

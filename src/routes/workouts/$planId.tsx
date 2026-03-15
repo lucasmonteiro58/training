@@ -77,7 +77,7 @@ function PlanoDetalheComponent() {
           {editing ? (
             <input className="input flex-1 text-lg font-bold py-2" value={name} onChange={(e) => setName(e.target.value)} />
           ) : (
-            <h1 className="text-xl font-bold text-text flex-1">{plan.nome}</h1>
+            <h1 className="text-xl font-bold text-text flex-1">{plan.name}</h1>
           )}
           {editing ? (
             <button onClick={saveEdit} className="btn-primary py-2 px-4 text-sm">Salvar</button>
@@ -92,9 +92,9 @@ function PlanoDetalheComponent() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-2 mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
           {[
-            { label: 'Exercícios', value: plan.exercicios.length, icon: Dumbbell },
-            { label: 'Séries tot.', value: plan.exercicios.reduce((s, e) => s + e.series, 0), icon: null },
-            { label: 'Descanso', value: `${plan.exercicios[0]?.descansoSegundos ?? '-'}s`, icon: Clock },
+            { label: 'Exercícios', value: plan.exercises.length, icon: Dumbbell },
+            { label: 'Séries tot.', value: plan.exercises.reduce((s, e) => s + e.series, 0), icon: null },
+            { label: 'Descanso', value: `${plan.exercises[0]?.restSeconds ?? '-'}s`, icon: Clock },
           ].map((stat, i) => (
             <div key={i} className="card p-3 text-center">
               <p className="text-lg font-bold text-text">{stat.value}</p>
@@ -150,12 +150,12 @@ function PlanoDetalheComponent() {
                   {(() => {
                     const rendered = new Set<string>()
                     return exercisesEdit.map((ex) => {
-                      if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
-                        rendered.add(ex.agrupamentoId)
-                        const groupExs = exercisesEdit.filter(e => e.agrupamentoId === ex.agrupamentoId)
-                        const config = GROUPING_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                      if (ex.groupingId && !rendered.has(ex.groupingId)) {
+                        rendered.add(ex.groupingId)
+                        const groupExs = exercisesEdit.filter((e) => e.groupingId === ex.groupingId)
+                        const config = GROUPING_CONFIG[ex.groupingType ?? 'superset']
                         return (
-                          <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
+                          <div key={`group-${ex.groupingId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
                             <div className="flex items-center justify-between px-2 py-1.5">
                               <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.cor }}>
                                 {config.label} ({groupExs.length})
@@ -172,7 +172,7 @@ function PlanoDetalheComponent() {
                                   onRemove={() => removeExercise(gex.id)}
                                   onUpdateSerie={(sIdx, campo) => updateSetEdit(gex.id, sIdx, campo)}
                                   onUpdateDescanso={(s) => updateRestEdit(gex.id, s)}
-                                  onUpdateTipoSerie={(tipo) => updateSetTypeEdit(gex.id, tipo)}
+                                  onUpdateSetType={(tipo: import('../../types').SetType) => updateSetTypeEdit(gex.id, tipo)}
                                   onUpdateExercicio={(campos) => updateExerciseEdit(gex.id, campos)}
                                   showSelect
                                   isSelected={selected.has(gex.id)}
@@ -184,7 +184,7 @@ function PlanoDetalheComponent() {
                           </div>
                         )
                       }
-                      if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
+                      if (ex.groupingId && rendered.has(ex.groupingId)) return null
                       return (
                         <ExerciseDetailCard
                           key={ex.id}
@@ -195,7 +195,7 @@ function PlanoDetalheComponent() {
                           onRemove={() => removeExercise(ex.id)}
                           onUpdateSerie={(sIdx, campo) => updateSetEdit(ex.id, sIdx, campo)}
                           onUpdateDescanso={(s) => updateRestEdit(ex.id, s)}
-                          onUpdateTipoSerie={(tipo) => updateSetTypeEdit(ex.id, tipo)}
+                          onUpdateSetType={(tipo: import('../../types').SetType) => updateSetTypeEdit(ex.id, tipo)}
                           onUpdateExercicio={(campos) => updateExerciseEdit(ex.id, campos)}
                           showSelect={exercisesEdit.length >= 2}
                           isSelected={selected.has(ex.id)}
@@ -211,13 +211,13 @@ function PlanoDetalheComponent() {
             <div className="flex flex-col gap-2">
               {(() => {
                 const rendered = new Set<string>()
-                return plan.exercicios.map((ex) => {
-                  if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
-                    rendered.add(ex.agrupamentoId)
-                    const groupExs = plan.exercicios.filter(e => e.agrupamentoId === ex.agrupamentoId)
-                    const config = GROUPING_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                return plan.exercises.map((ex) => {
+                  if (ex.groupingId && !rendered.has(ex.groupingId)) {
+                    rendered.add(ex.groupingId)
+                    const groupExs = plan.exercises.filter((e) => e.groupingId === ex.groupingId)
+                    const config = GROUPING_CONFIG[ex.groupingType ?? 'superset']
                     return (
-                      <div key={`group-${ex.agrupamentoId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
+                      <div key={`group-${ex.groupingId}`} className="rounded-2xl border-l-4 pl-1" style={{ borderColor: config.cor }}>
                         <div className="px-2 py-1.5">
                           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: config.cor }}>
                             {config.label} ({groupExs.length})
@@ -225,15 +225,15 @@ function PlanoDetalheComponent() {
                         </div>
                         <div className="flex flex-col gap-1">
                           {groupExs.map(gex => (
-                            <ExerciseDetailCard key={gex.id} ex={gex} editing={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
+                            <ExerciseDetailCard key={gex.id} ex={gex} editing={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateSetType={() => {}} onUpdateExercicio={() => {}} />
                           ))}
                         </div>
                       </div>
                     )
                   }
-                  if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
+                  if (ex.groupingId && rendered.has(ex.groupingId)) return null
                   return (
-                    <ExerciseDetailCard key={ex.id} ex={ex} editing={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateTipoSerie={() => {}} onUpdateExercicio={() => {}} />
+                    <ExerciseDetailCard key={ex.id} ex={ex} editing={false} isExpanded={false} onToggleExpand={() => {}} onRemove={() => {}} onUpdateSerie={() => {}} onUpdateDescanso={() => {}} onUpdateSetType={() => {}} onUpdateExercicio={() => {}} />
                   )
                 })
               })()}
@@ -255,7 +255,7 @@ function PlanoDetalheComponent() {
               onClick={async () => {
                 const clone = await clonePlan(plan.id)
                 if (clone) {
-                  toast.success(`"${clone.nome}" criado!`)
+                  toast.success(`"${clone.name}" criado!`)
                   navigate({ to: '/workouts/$planId', params: { planId: clone.id } })
                 }
               }}
@@ -266,7 +266,7 @@ function PlanoDetalheComponent() {
             </button>
             <button
               onClick={async () => {
-                if (confirm(`Excluir "${plan.nome}"?`)) {
+                if (confirm(`Excluir "${plan.name}"?`)) {
                   await deletePlanById(plan.id)
                   navigate({ to: '/workouts' })
                 }

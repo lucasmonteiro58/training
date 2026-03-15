@@ -39,9 +39,9 @@ export function WorkoutReportScreen({
           <Trophy size={36} className="text-success" />
         </div>
         <h1 className="text-2xl font-bold text-text animate-celebration-pulse">Treino Concluído!</h1>
-        <p className="text-text-muted text-sm mt-1">{relatorio.planoNome}</p>
+        <p className="text-text-muted text-sm mt-1">{relatorio.planName}</p>
         <p className="text-text-subtle text-xs mt-0.5 capitalize">
-          {new Date(relatorio.iniciadoEm).toLocaleDateString('pt-BR', {
+          {new Date(relatorio.startedAt).toLocaleDateString('pt-BR', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
@@ -53,16 +53,16 @@ export function WorkoutReportScreen({
         {[
           {
             label: 'Duração',
-            value: relatorio.duracaoSegundos ? formatarTempo(relatorio.duracaoSegundos) : '–',
+            value: relatorio.durationSeconds ? formatarTempo(relatorio.durationSeconds) : '–',
           },
           {
             label: 'Volume (kg)',
-            value: relatorio.volumeTotal ? Math.round(relatorio.volumeTotal) : '–',
+            value: relatorio.totalVolume ? Math.round(relatorio.totalVolume) : '–',
           },
           {
             label: 'Séries ✓',
-            value: relatorio.exercicios.reduce(
-              (a, ex) => a + ex.series.filter(s => s.completada).length,
+            value: relatorio.exercises.reduce(
+              (a: number, ex: { sets: { completed: boolean }[] }) => a + ex.sets.filter((s: { completed: boolean }) => s.completed).length,
               0
             ),
           },
@@ -75,23 +75,23 @@ export function WorkoutReportScreen({
       </div>
 
       <div className="flex flex-col gap-2 px-4 mb-6">
-        {relatorio.exercicios.map(ex => {
-          const seriesOk = ex.series.filter(s => s.completada)
+        {relatorio.exercises.map((ex: { exerciseId: string; exerciseName: string; sets: { weight?: number; reps?: number; completed: boolean }[] }) => {
+          const seriesOk = ex.sets.filter((s: { completed: boolean }) => s.completed)
           return (
-            <div key={ex.exercicioId} className="card p-4">
+            <div key={ex.exerciseId} className="card p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="font-semibold text-sm text-text">{ex.exercicioNome}</p>
+                <p className="font-semibold text-sm text-text">{ex.exerciseName}</p>
                 <span className="text-xs text-text-muted">
-                  {seriesOk.length}/{ex.series.length} séries
+                  {seriesOk.length}/{ex.sets.length} séries
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {seriesOk.map((sr, i) => (
+                {seriesOk.map((sr: { weight?: number; reps?: number }, i: number) => (
                   <span
                     key={i}
                     className="text-xs bg-surface-2 text-text-muted px-2 py-0.5 rounded-lg"
                   >
-                    {sr.peso ?? 0}kg × {sr.repeticoes ?? 0}
+                    {sr.weight ?? 0}kg × {sr.reps ?? 0}
                   </span>
                 ))}
                 {seriesOk.length === 0 && (

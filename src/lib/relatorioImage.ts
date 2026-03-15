@@ -17,37 +17,37 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
     border: 'rgba(255,255,255,0.08)',
   }
 
-  const totalSeries = s.exercicios.reduce((a, ex) => a + ex.series.filter(sr => sr.completada).length, 0)
-  const totalReps = s.exercicios.reduce(
-    (a, ex) => a + ex.series.filter(sr => sr.completada).reduce((b, sr) => b + (sr.repeticoes ?? 0), 0),
+  const totalSeries = s.exercises.reduce((a: number, ex) => a + ex.sets.filter(sr => sr.completed).length, 0)
+  const totalReps = s.exercises.reduce(
+    (a: number, ex) => a + ex.sets.filter(sr => sr.completed).reduce((b: number, sr) => b + (sr.reps ?? 0), 0),
     0
   )
-  const volumeKg = s.volumeTotal ? Math.round(s.volumeTotal) : 0
-  const exercFeitos = s.exercicios.filter(ex => ex.series.some(sr => sr.completada)).length
+  const volumeKg = s.totalVolume ? Math.round(s.totalVolume) : 0
+  const exercFeitos = s.exercises.filter(ex => ex.sets.some(sr => sr.completed)).length
   const mediaSerie = totalSeries > 0 && volumeKg > 0 ? `${Math.round(volumeKg / totalSeries)}kg` : '–'
-  const duracao = s.duracaoSegundos ? formatarTempo(s.duracaoSegundos) : '–'
-  const data = new Date(s.iniciadoEm).toLocaleDateString('pt-BR', {
+  const duracao = s.durationSeconds ? formatarTempo(s.durationSeconds) : '–'
+  const data = new Date(s.startedAt).toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   })
 
-  const barData = s.exercicios
-    .map(ex => ({
-      nome: ex.exercicioNome,
-      vol: ex.series
-        .filter(sr => sr.completada)
-        .reduce((a, sr) => a + (sr.peso ?? 0) * (sr.repeticoes ?? 0), 0),
-      sets: ex.series.filter(sr => sr.completada).length,
+  const barData = s.exercises
+    .map((ex: { exerciseName: string; sets: { completed: boolean; weight?: number; reps?: number }[] }) => ({
+      nome: ex.exerciseName,
+      vol: ex.sets
+        .filter(sr => sr.completed)
+        .reduce((a: number, sr) => a + (sr.weight ?? 0) * (sr.reps ?? 0), 0),
+      sets: ex.sets.filter(sr => sr.completed).length,
     }))
-    .filter(ex => ex.sets > 0)
-    .sort((a, b) => b.vol - a.vol)
+    .filter((ex: { sets: number }) => ex.sets > 0)
+    .sort((a: { vol: number }, b: { vol: number }) => b.vol - a.vol)
     .slice(0, 6)
 
   const muscleMap = new Map<string, number>()
-  s.exercicios.forEach(ex => {
-    if (ex.series.some(sr => sr.completada) && ex.grupoMuscular)
-      muscleMap.set(ex.grupoMuscular, (muscleMap.get(ex.grupoMuscular) ?? 0) + 1)
+  s.exercises.forEach((ex: { sets: { completed: boolean }[]; muscleGroup: string }) => {
+    if (ex.sets.some(sr => sr.completed) && ex.muscleGroup)
+      muscleMap.set(ex.muscleGroup, (muscleMap.get(ex.muscleGroup) ?? 0) + 1)
   })
   const muscles = [...muscleMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
 
@@ -105,7 +105,7 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
   ctx.fillText('Treino Concluído!', W / 2, y)
 
   ctx.font = '600 36px -apple-system, Inter, sans-serif'
-  const pillW = ctx.measureText(s.planoNome).width + 56
+  const pillW = ctx.measureText(s.planName).width + 56
   y += 24
   const pillY = y
   ctx.fillStyle = C.accentLight
@@ -113,7 +113,7 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
   roundRect(W / 2 - pillW / 2, pillY, pillW, 54, 27)
   ctx.fill()
   ctx.fillStyle = C.accent
-  ctx.fillText(s.planoNome, W / 2, pillY + 36)
+  ctx.fillText(s.planName, W / 2, pillY + 36)
   y = pillY + 54 + 16
 
   ctx.fillStyle = C.muted

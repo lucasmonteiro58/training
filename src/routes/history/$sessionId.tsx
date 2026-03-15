@@ -58,34 +58,34 @@ function SessaoDetalhePage() {
     )
   }
 
-  const data = new Date(displaySessao!.iniciadoEm)
+  const data = new Date(displaySessao!.startedAt)
   const dataStr = data.toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
-  const totalSeries = displaySessao!.exercicios.reduce(
-    (s, ex) => s + ex.series.length,
+  const totalSeries = displaySessao!.exercises.reduce(
+    (s, ex) => s + ex.sets.length,
     0
   )
-  const seriesOk = displaySessao!.exercicios.reduce(
-    (s, ex) => s + ex.series.filter((sr) => sr.completada).length,
+  const seriesOk = displaySessao!.exercises.reduce(
+    (s, ex) => s + ex.sets.filter((sr) => sr.completed).length,
     0
   )
 
   return (
     <div className="page-container pt-4">
       <SessionDetailHeader
-        planoNome={displaySessao!.planoNome}
+        planName={displaySessao!.planName}
         dataStr={dataStr}
         editando={editando}
-        autoEncerrado={displaySessao!.autoEncerrado}
-        iniciadoEm={
-          editando && editData ? editData.iniciadoEm : displaySessao!.iniciadoEm
+        autoClosed={displaySessao!.autoClosed}
+        startedAt={
+          editando && editData ? editData.startedAt : displaySessao!.startedAt
         }
-        finalizadoEm={displaySessao!.finalizadoEm}
-        onIniciadoEmChange={editando ? updateIniciadoEm : undefined}
+        finishedAt={displaySessao!.finishedAt}
+        onStartedAtChange={editando ? updateIniciadoEm : undefined}
         onVoltar={() => navigate({ to: '/history' })}
         onIniciarEdicao={iniciarEdicao}
         onCancelarEdicao={cancelarEdicao}
@@ -93,19 +93,17 @@ function SessaoDetalhePage() {
       />
 
       <SessionStats
-        duracaoSegundos={displaySessao!.duracaoSegundos}
-        numExercicios={displaySessao!.exercicios.length}
-        volumeTotal={displaySessao!.volumeTotal}
+        durationSeconds={displaySessao!.durationSeconds}
+        numExercicios={displaySessao!.exercises.length}
+        totalVolume={displaySessao!.totalVolume}
         editando={editando}
-        duracaoMinutos={
-          editData?.duracaoSegundos != null
-            ? Math.round(editData.duracaoSegundos / 60)
+        durationMinutes={
+          editData?.durationSeconds != null
+            ? Math.round(editData.durationSeconds / 60)
             : undefined
         }
-        onDuracaoChange={editando ? updateDuracao : undefined}
-        tempoOciosoDescontadoSegundos={
-          displaySessao!.tempoOciosoDescontadoSegundos
-        }
+        onDurationChange={editando ? updateDuracao : undefined}
+        idleSecondsDeducted={displaySessao!.idleSecondsDeducted}
       />
 
       <SetsProgress seriesOk={seriesOk} totalSeries={totalSeries} />
@@ -115,19 +113,19 @@ function SessaoDetalhePage() {
           restoreFromHistory(displaySessao!)
           navigate({
             to: '/active-workout/$planId',
-            params: { planId: displaySessao!.planoId },
+            params: { planId: displaySessao!.planId },
           })
         }}
       />
 
-      {displaySessao!.notas && (
-        <WorkoutNotes notas={displaySessao!.notas} />
+      {displaySessao!.notes && (
+        <WorkoutNotes notas={displaySessao!.notes} />
       )}
 
       <div className="flex flex-col gap-3">
-        {displaySessao!.exercicios.map((ex, eIdx) => (
+        {displaySessao!.exercises.map((ex, eIdx) => (
           <ExerciseSessionCard
-            key={`${ex.exercicioId}-${eIdx}`}
+            key={`${ex.exerciseId}-${eIdx}`}
             ex={ex}
             exIdx={eIdx}
             editando={editando}

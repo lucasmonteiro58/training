@@ -48,7 +48,7 @@ export function VolumeChart({ dados }: VolumeChartProps) {
           <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} unit=" kg" />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            formatter={(v: number) => [`${Number(v).toLocaleString('pt-BR')} kg`, 'Volume']}
+            formatter={(v: unknown) => [`${Number(v).toLocaleString('pt-BR')} kg`, 'Volume']}
             labelFormatter={(label, payload) => {
               const plano = payload?.[0]?.payload?.plano
               return plano ? `${label} · ${plano}` : label

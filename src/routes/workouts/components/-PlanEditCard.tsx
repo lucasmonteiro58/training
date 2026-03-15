@@ -1,6 +1,5 @@
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import type { PlanoImportado } from '../../../lib/csvImport'
-import type { ExerciseInPlan } from '../../../types'
 import { ExerciseEditCard } from './-ExerciseEditCard'
 
 export type PlanoEditado = PlanoImportado & { collapsed: boolean }
@@ -20,9 +19,9 @@ export function PlanEditCard({
   onChange,
   onRemove,
 }: PlanEditCardProps) {
-  const totalExs = plano.exercicios.length
-  const totalSeries = plano.exercicios.reduce(
-    (acc, e) => acc + (e.seriesDetalhadas?.length ?? e.series),
+  const totalExs = plano.exercises.length
+  const totalSeries = plano.exercises.reduce(
+    (acc, e) => acc + (e.setsDetail?.length ?? e.series),
     0
   )
 
@@ -42,8 +41,8 @@ export function PlanEditCard({
           </label>
           <input
             className="input py-1.5 text-sm font-semibold w-full"
-            value={plano.nome}
-            onChange={e => onChange(p => ({ ...p, nome: e.target.value }))}
+            value={plano.name}
+            onChange={e => onChange(p => ({ ...p, name: e.target.value }))}
             onClick={e => e.stopPropagation()}
           />
         </div>
@@ -62,7 +61,7 @@ export function PlanEditCard({
             {totalExs} exercício{totalExs !== 1 ? 's' : ''} · {totalSeries} série
             {totalSeries !== 1 ? 's' : ''} no total
           </p>
-          {plano.exercicios.map((ex, i) => (
+          {plano.exercises.map((ex, i) => (
             <ExerciseEditCard
               key={ex.id}
               ex={ex}
@@ -72,15 +71,15 @@ export function PlanEditCard({
               onUpdate={fn =>
                 onChange(p => ({
                   ...p,
-                  exercicios: p.exercicios.map(e => (e.id === ex.id ? fn(e) : e)),
+                  exercises: p.exercises.map((e) => (e.id === ex.id ? fn(e) : e)),
                 }))
               }
               onRemove={() =>
-                onChange(p => ({ ...p, exercicios: p.exercicios.filter(e => e.id !== ex.id) }))
+                onChange(p => ({ ...p, exercises: p.exercises.filter((e) => e.id !== ex.id) }))
               }
             />
           ))}
-          {plano.exercicios.length === 0 && (
+          {plano.exercises.length === 0 && (
             <p className="text-xs text-text-subtle text-center py-4">
               Nenhum exercício. Remova este plano ou adicione exercícios manualmente.
             </p>

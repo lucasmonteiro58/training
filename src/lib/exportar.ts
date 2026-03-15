@@ -13,20 +13,20 @@ function downloadFile(content: string, filename: string, mimeType: string) {
 export function exportarSessoesCSV(sessoes: WorkoutSession[]) {
   const linhas = ['Data,Plano,Exercício,Grupo Muscular,Série,Peso (kg),Repetições,Completada,Duração (s),Volume Total (kg)']
   for (const s of sessoes) {
-    const data = new Date(s.iniciadoEm).toISOString().slice(0, 10)
-    for (const ex of s.exercicios) {
-      for (const serie of ex.series) {
+    const data = new Date(s.startedAt).toISOString().slice(0, 10)
+    for (const ex of s.exercises) {
+      for (const serie of ex.sets) {
         linhas.push([
           data,
-          `"${s.planoNome.replace(/"/g, '""')}"`,
-          `"${ex.exercicioNome.replace(/"/g, '""')}"`,
-          ex.grupoMuscular,
-          serie.ordem + 1,
-          serie.peso ?? 0,
-          serie.repeticoes ?? 0,
-          serie.completada ? 'Sim' : 'Não',
-          s.duracaoSegundos ?? '',
-          s.volumeTotal ? Math.round(s.volumeTotal) : '',
+          `"${s.planName.replace(/"/g, '""')}"`,
+          `"${ex.exerciseName.replace(/"/g, '""')}"`,
+          ex.muscleGroup,
+          serie.order + 1,
+          serie.weight ?? 0,
+          serie.reps ?? 0,
+          serie.completed ? 'Sim' : 'Não',
+          s.durationSeconds ?? '',
+          s.totalVolume ? Math.round(s.totalVolume) : '',
         ].join(','))
       }
     }

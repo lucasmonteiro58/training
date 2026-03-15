@@ -109,13 +109,13 @@ function NovoPlanoPage() {
                 {(() => {
                   const rendered = new Set<string>()
                   return exercicios.map(ex => {
-                    if (ex.agrupamentoId && !rendered.has(ex.agrupamentoId)) {
-                      rendered.add(ex.agrupamentoId)
-                      const groupExs = exercicios.filter(e => e.agrupamentoId === ex.agrupamentoId)
-                      const config = GROUPING_CONFIG[ex.tipoAgrupamento ?? 'superset']
+                    if (ex.groupingId && !rendered.has(ex.groupingId)) {
+                      rendered.add(ex.groupingId)
+                      const groupExs = exercicios.filter((e) => e.groupingId === ex.groupingId)
+                      const config = GROUPING_CONFIG[ex.groupingType ?? 'superset']
                       return (
                         <div
-                          key={`group-${ex.agrupamentoId}`}
+                          key={`group-${ex.groupingId}`}
                           className="rounded-2xl border-l-4 pl-1"
                           style={{ borderColor: config.cor }}
                         >
@@ -134,7 +134,7 @@ function NovoPlanoPage() {
                                 exercicio={gex}
                                 onUpdate={campo => updateExercise(gex.id, campo)}
                                 onRemove={() => removeExercise(gex.id)}
-                                isSelected={selecionados.has(gex.id)}
+                                isSelected={selected.has(gex.id)}
                                 onToggleSelect={() => toggleSelected(gex.id)}
                                 showSelect={exercicios.length >= 2}
                                 onRemoveFromGroup={() => removeFromGrouping(gex.id)}
@@ -144,14 +144,14 @@ function NovoPlanoPage() {
                         </div>
                       )
                     }
-                    if (ex.agrupamentoId && rendered.has(ex.agrupamentoId)) return null
+                    if (ex.groupingId && rendered.has(ex.groupingId)) return null
                     return (
                       <ExerciseInPlanCard
                         key={ex.id}
                         exercicio={ex}
                         onUpdate={campo => updateExercise(ex.id, campo)}
                         onRemove={() => removeExercise(ex.id)}
-                        isSelected={selecionados.has(ex.id)}
+                        isSelected={selected.has(ex.id)}
                         onToggleSelect={() => toggleSelected(ex.id)}
                         showSelect={exercicios.length >= 2}
                       />
@@ -182,12 +182,18 @@ function NovoPlanoPage() {
           onSelect={(ex) => {
             addExercise({
               id: uuidv4(),
-              exercicioId: ex.id,
-              exercicio: ex,
+              exerciseId: ex.id,
+              exercise: ex,
               series: 3,
-              repeticoesMeta: 10,
-              pesoMeta: 0,
-              descansoSegundos: 60,
+              targetReps: 10,
+              targetWeight: 0,
+              restSeconds: 60,
+              order: exercicios.length,
+              setsDetail: [
+                { weight: 0, reps: 10 },
+                { weight: 0, reps: 10 },
+                { weight: 0, reps: 10 },
+              ],
             })
             setShowPicker(false)
           }}

@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid'
 
 export interface PlanoImportado {
   id: string
-  nome: string
-  exercicios: ExerciseInPlan[]
+  name: string
+  exercises: ExerciseInPlan[]
 }
 
 export interface ResultadoCsv {
@@ -27,7 +27,7 @@ export function parsearCsv(conteudo: string, exerciciosDb: Exercise[] = []): Res
   const dbPorNome = new Map<string, Exercise>()
   for (const ex of exerciciosDb) {
     dbPorId.set(ex.id.toLowerCase(), ex)
-    dbPorNome.set(ex.nome.toLowerCase().trim(), ex)
+    dbPorNome.set(ex.name.toLowerCase().trim(), ex)
   }
 
   const { data, errors } = Papa.parse<WorkoutCsvRow>(conteudo, {
@@ -68,9 +68,9 @@ export function parsearCsv(conteudo: string, exerciciosDb: Exercise[] = []): Res
       return
     }
 
-    const seriesDetalhadas = Array.from({ length: numSeries }).map((_, i) => ({
-      repeticoes: repsArr[i] ?? repsArr[repsArr.length - 1],
-      peso: pesosArr[i] ?? pesosArr[pesosArr.length - 1] ?? 0,
+    const setsDetail = Array.from({ length: numSeries }).map((_, i) => ({
+      reps: repsArr[i] ?? repsArr[repsArr.length - 1],
+      weight: pesosArr[i] ?? pesosArr[pesosArr.length - 1] ?? 0,
     }))
 
     const grupoEn = linha.grupo_muscular?.trim() ?? ''
@@ -87,14 +87,14 @@ export function parsearCsv(conteudo: string, exerciciosDb: Exercise[] = []): Res
       exercicioDb = dbPorNome.get(linha.nome_exercicio.trim().toLowerCase())
     }
 
-    const exercicio: Exercise = exercicioDb
-      ? { ...exercicioDb } // usar exercício do banco com todas as informações (imagens, instruções, etc.)
+    const exercise: Exercise = exercicioDb
+      ? { ...exercicioDb }
       : {
           id: `csv-${uuidv4()}`,
-          nome: linha.nome_exercicio.trim(),
-          grupoMuscular: grupoPt,
-          instrucoes: instrucoesArr,
-          personalizado: true,
+          name: linha.nome_exercicio.trim(),
+          muscleGroup: grupoPt,
+          instructions: instrucoesArr,
+          custom: true,
         }
 
     const planoNome = (linha as any).plano?.trim() || 'Meu Treino'
@@ -103,25 +103,25 @@ export function parsearCsv(conteudo: string, exerciciosDb: Exercise[] = []): Res
       planoNamesOrder.push(planoNome)
     }
 
-    const exerciciosDoPlano = planosMap.get(planoNome)!
-    exerciciosDoPlano.push({
+    const exercisesDoPlano = planosMap.get(planoNome)!
+    exercisesDoPlano.push({
       id: uuidv4(),
-      exercicioId: exercicio.id,
-      exercicio,
+      exerciseId: exercise.id,
+      exercise,
       series: numSeries,
-      repeticoesMeta: repsArr[0],
-      pesoMeta: pesosArr[0] ?? 0,
-      seriesDetalhadas,
-      descansoSegundos: isNaN(descanso) ? 60 : descanso,
-      ordem: exerciciosDoPlano.length,
-      notas: linha.notas?.trim() || undefined,
+      targetReps: repsArr[0],
+      targetWeight: pesosArr[0] ?? 0,
+      setsDetail,
+      restSeconds: isNaN(descanso) ? 60 : descanso,
+      order: exercisesDoPlano.length,
+      notes: linha.notas?.trim() || undefined,
     })
   })
 
-  resultado.planos = planoNamesOrder.map((nome) => ({
+  resultado.planos = planoNamesOrder.map((name) => ({
     id: uuidv4(),
-    nome,
-    exercicios: planosMap.get(nome)!,
+    name,
+    exercises: planosMap.get(name)!,
   }))
 
   return resultado

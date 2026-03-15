@@ -4,7 +4,7 @@ import { solicitarPermissaoNotificacao } from '../lib/notifications'
 import type { WorkoutPlan, WorkoutSession, RecordedSet, ExerciseInSession } from '../types'
 
 interface UseStartWorkoutSessionParams {
-  planoId: string
+  planId: string
   plano: WorkoutPlan | undefined
   user: { uid: string } | null
   sessions: WorkoutSession[]
@@ -14,7 +14,7 @@ interface UseStartWorkoutSessionParams {
 }
 
 export function useStartWorkoutSession({
-  planoId,
+  planId,
   plano,
   user,
   sessions,
@@ -27,64 +27,64 @@ export function useStartWorkoutSession({
   useEffect(() => {
     if (!plano || !user) return
 
-    if (iniciado && sessao?.planoId === planoId) {
-      startedForPlanoIdRef.current = planoId
+    if (iniciado && sessao?.planId === planId) {
+      startedForPlanoIdRef.current = planId
       return
     }
     // Trocar de plano: permitir iniciar sessão para o novo plano
-    if (startedForPlanoIdRef.current !== null && startedForPlanoIdRef.current !== planoId) {
+    if (startedForPlanoIdRef.current !== null && startedForPlanoIdRef.current !== planId) {
       startedForPlanoIdRef.current = null
     }
     // Não re-iniciar sessão após cancelar/finalizar: já tratamos este plano nesta visita
-    if (startedForPlanoIdRef.current === planoId) return
+    if (startedForPlanoIdRef.current === planId) return
 
     const lastSession = sessions
-      .filter((s) => s.planoId === planoId && s.finalizadoEm)
-      .sort((a, b) => (b.finalizadoEm ?? 0) - (a.finalizadoEm ?? 0))[0]
+      .filter((s) => s.planId === planId && s.finishedAt)
+      .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))[0]
 
-    const exerciciosNaSessao: ExerciseInSession[] = plano.exercicios.map((ex) => {
-      const exLastSession = lastSession?.exercicios.find(
-        (e) => e.exercicioId === ex.exercicioId
+    const exercisesInSession: ExerciseInSession[] = plano.exercises.map((ex) => {
+      const exLastSession = lastSession?.exercises.find(
+        (e) => e.exerciseId === ex.exerciseId
       )
       return {
-        exercicioId: ex.exercicioId,
-        exercicioNome: ex.exercicio.nome,
-        gifUrl: ex.exercicio.gifUrl,
-        grupoMuscular: ex.exercicio.grupoMuscular,
-        descansoSegundos: ex.descansoSegundos,
-        ordem: ex.ordem,
-        notas: ex.notas,
-        instrucoes: ex.exercicio.instrucoes,
-        tipoSerie: ex.tipoSerie,
-        duracaoMetaSegundos: ex.duracaoMetaSegundos,
-        agrupamentoId: ex.agrupamentoId,
-        tipoAgrupamento: ex.tipoAgrupamento,
-        series: Array.from({ length: ex.series }, (_, i) => {
-          const pesoPlano = ex.seriesDetalhadas?.[i]?.peso
-          const repsPlano = ex.seriesDetalhadas?.[i]?.repeticoes
-          const pesoSessao = exLastSession?.series[i]?.peso
-          const repsSessao = exLastSession?.series[i]?.repeticoes
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exercise.name,
+        gifUrl: ex.exercise.gifUrl,
+        muscleGroup: ex.exercise.muscleGroup,
+        restSeconds: ex.restSeconds,
+        order: ex.order,
+        notes: ex.notes,
+        instructions: ex.exercise.instructions,
+        setType: ex.setType,
+        targetDurationSeconds: ex.targetDurationSeconds,
+        groupingId: ex.groupingId,
+        groupingType: ex.groupingType,
+        sets: Array.from({ length: ex.series }, (_, i) => {
+          const weightPlan = ex.setsDetail?.[i]?.weight
+          const repsPlan = ex.setsDetail?.[i]?.reps
+          const weightSession = exLastSession?.sets[i]?.weight
+          const repsSession = exLastSession?.sets[i]?.reps
           return {
             id: uuidv4(),
-            ordem: i,
-            repeticoes: repsPlano || repsSessao || ex.repeticoesMeta,
-            peso: pesoPlano || pesoSessao || (ex.pesoMeta ?? 0),
-            completada: false,
+            order: i,
+            reps: repsPlan || repsSession || ex.targetReps,
+            weight: weightPlan || weightSession || (ex.targetWeight ?? 0),
+            completed: false,
           } as RecordedSet
         }),
       }
     })
 
-    const novaSessao: WorkoutSession = {
+    const newSession: WorkoutSession = {
       id: uuidv4(),
       userId: user.uid,
-      planoId: plano.id,
-      planoNome: plano.nome,
-      iniciadoEm: Date.now(),
-      exercicios: exerciciosNaSessao,
+      planId: plano.id,
+      planName: plano.name,
+      startedAt: Date.now(),
+      exercises: exercisesInSession,
     }
-    iniciarTreino(novaSessao)
-    startedForPlanoIdRef.current = planoId
+    iniciarTreino(newSession)
+    startedForPlanoIdRef.current = planId
     solicitarPermissaoNotificacao()
-  }, [plano, user, planoId, sessions, iniciado, sessao?.planoId, iniciarTreino])
+  }, [plano, user, planId, sessions, iniciado, sessao?.planId, iniciarTreino])
 }

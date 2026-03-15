@@ -95,7 +95,7 @@ export function ProgressExerciseCard({ nome, pontos }: ProgressExerciseCardProps
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.4} />
               <XAxis dataKey="data" tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} />
               <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-subtle)' }} unit=" kg" />
-              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [`${v} kg`, 'Máximo']} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: unknown) => [`${Number(v)} kg`, 'Máximo']} />
               <Line
                 type="monotone"
                 dataKey="peso"

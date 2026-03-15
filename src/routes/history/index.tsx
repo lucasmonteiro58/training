@@ -24,20 +24,20 @@ function HistoricoPage() {
 
   const sessoesNomes = useMemo(() => {
     const nomes = new Set<string>()
-    sessions.forEach(s => nomes.add(s.planoNome))
+    sessions.forEach(s => nomes.add(s.planName))
     return Array.from(nomes).sort()
   }, [sessions])
 
   const sessoesFiltradas = useMemo(() => {
     let resultado = sessions
     if (filtroPlano !== 'todos') {
-      resultado = resultado.filter(s => s.planoNome === filtroPlano)
+      resultado = resultado.filter(s => s.planName === filtroPlano)
     }
     if (filtroPeriodo !== 'todos') {
       const agora = Date.now()
       const dias = filtroPeriodo === '7d' ? 7 : filtroPeriodo === '30d' ? 30 : 90
       const limite = agora - dias * 24 * 60 * 60 * 1000
-      resultado = resultado.filter(s => s.iniciadoEm >= limite)
+      resultado = resultado.filter(s => s.startedAt >= limite)
     }
     return resultado
   }, [sessions, filtroPlano, filtroPeriodo])
@@ -47,11 +47,11 @@ function HistoricoPage() {
   const dadosGrafico = useMemo(() => {
     const semanas: Record<string, number> = {}
     sessoesFiltradas.forEach((s) => {
-      const d = new Date(s.iniciadoEm)
+      const d = new Date(s.startedAt)
       const inicio = new Date(d)
       inicio.setDate(d.getDate() - d.getDay())
       const chave = inicio.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-      semanas[chave] = (semanas[chave] ?? 0) + (s.volumeTotal ?? 0)
+      semanas[chave] = (semanas[chave] ?? 0) + (s.totalVolume ?? 0)
     })
     return Object.entries(semanas)
       .slice(-8)

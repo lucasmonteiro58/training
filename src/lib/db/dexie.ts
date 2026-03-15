@@ -1,5 +1,58 @@
-import Dexie, { type Table } from 'dexie'
+import Dexie, { type Table, type Transaction } from 'dexie'
 import type { WorkoutPlan, WorkoutSession, Exercise, BodyMeasurement } from '../../types'
+
+// Map PT → EN for local DB migration (same keys as Firestore migration)
+const KEY_MAP: Record<string, string> = {
+  nome: 'name',
+  grupoMuscular: 'muscleGroup',
+  grupoMuscularSecundario: 'secondaryMuscleGroup',
+  equipamento: 'equipment',
+  instrucoes: 'instructions',
+  personalizado: 'custom',
+  favoritado: 'favorited',
+  descricao: 'description',
+  exercicios: 'exercises',
+  cor: 'color',
+  arquivado: 'archived',
+  ordem: 'order',
+  exercicioId: 'exerciseId',
+  exercicio: 'exercise',
+  repeticoesMeta: 'targetReps',
+  pesoMeta: 'targetWeight',
+  seriesDetalhadas: 'setsDetail',
+  descansoSegundos: 'restSeconds',
+  notas: 'notes',
+  tipoSerie: 'setType',
+  duracaoMetaSegundos: 'targetDurationSeconds',
+  agrupamentoId: 'groupingId',
+  tipoAgrupamento: 'groupingType',
+  planoId: 'planId',
+  planoNome: 'planName',
+  iniciadoEm: 'startedAt',
+  finalizadoEm: 'finishedAt',
+  duracaoSegundos: 'durationSeconds',
+  volumeTotal: 'totalVolume',
+  autoEncerrado: 'autoClosed',
+  tempoOciosoDescontadoSegundos: 'idleSecondsDeducted',
+  exercicioNome: 'exerciseName',
+  series: 'sets',
+  repeticoes: 'reps',
+  peso: 'weight',
+  completada: 'completed',
+}
+
+function mapKeysRecursive(value: unknown): unknown {
+  if (value === null || value === undefined) return value
+  if (Array.isArray(value)) return value.map(mapKeysRecursive)
+  if (typeof value !== 'object') return value
+  const out: Record<string, unknown> = {}
+  for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+    const enKey = KEY_MAP[key] ?? key
+    const mapped = mapKeysRecursive(v)
+    if (mapped !== undefined) out[enKey] = mapped
+  }
+  return out
+}
 
 class TrainingDB extends Dexie {
   planos!: Table<WorkoutPlan>
@@ -31,6 +84,35 @@ class TrainingDB extends Dexie {
       medidas: 'id, userId, data',
       syncQueue: '++id, createdAt',
     })
+    this.version(4).stores({
+      planos: 'id, userId, updatedAt, syncedAt',
+      sessoes: 'id, userId, planId, startedAt, finishedAt, syncedAt',
+      exerciciosPersonalizados: 'id, userId, muscleGroup',
+      exerciciosCache: 'id, muscleGroup, name',
+      medidas: 'id, userId, data',
+      syncQueue: '++id, createdAt',
+    }).upgrade((tx) => {
+      return Promise.all([
+        migrateTable(tx, 'planos', mapKeysRecursive),
+        migrateTable(tx, 'sessoes', mapKeysRecursive),
+        migrateTable(tx, 'exerciciosPersonalizados', mapKeysRecursive),
+        migrateTable(tx, 'exerciciosCache', mapKeysRecursive),
+      ])
+    })
+  }
+}
+
+async function migrateTable(
+  tx: Transaction,
+  tableName: string,
+  mapFn: (v: unknown) => unknown
+): Promise<void> {
+  const table = tx.table(tableName)
+  const rows = await table.toArray()
+  await table.clear()
+  for (const row of rows) {
+    const mapped = mapFn(row) as Record<string, unknown>
+    if (mapped && typeof mapped === 'object') await table.add(mapped)
   }
 }
 
@@ -51,8 +133,8 @@ export async function getPlan(id: string): Promise<WorkoutPlan | undefined> {
   return localDB.planos.get(id)
 }
 
-export async function savePlan(plano: WorkoutPlan): Promise<void> {
-  await localDB.planos.put(plano)
+export async function savePlan(plan: WorkoutPlan): Promise<void> {
+  await localDB.planos.put(plan)
 }
 
 export async function deletePlan(id: string): Promise<void> {
@@ -67,7 +149,7 @@ export async function getSessions(userId: string, limit = 50): Promise<WorkoutSe
     .where('userId')
     .equals(userId)
     .reverse()
-    .sortBy('iniciadoEm')
+    .sortBy('startedAt')
   return all.slice(0, limit)
 }
 
@@ -75,8 +157,8 @@ export async function getSession(id: string): Promise<WorkoutSession | undefined
   return localDB.sessoes.get(id)
 }
 
-export async function saveSession(sessao: WorkoutSession): Promise<void> {
-  await localDB.sessoes.put(sessao)
+export async function saveSession(session: WorkoutSession): Promise<void> {
+  await localDB.sessoes.put(session)
 }
 
 export async function deleteSession(id: string): Promise<void> {
@@ -104,31 +186,29 @@ export async function getCachedExercises(): Promise<Exercise[]> {
   return localDB.exerciciosCache.toArray()
 }
 
-export async function setCachedExercises(exercicios: Exercise[]): Promise<void> {
-  await localDB.exerciciosCache.bulkPut(exercicios)
+export async function setCachedExercises(exercises: Exercise[]): Promise<void> {
+  await localDB.exerciciosCache.bulkPut(exercises)
 }
 
 // ============
 // Favoritos
 // ============
-export async function toggleExerciseFavorite(exercicioId: string, favoritado: boolean): Promise<void> {
-  // Tenta atualizar no cache
-  const cached = await localDB.exerciciosCache.get(exercicioId)
+export async function toggleExerciseFavorite(exerciseId: string, favorited: boolean): Promise<void> {
+  const cached = await localDB.exerciciosCache.get(exerciseId)
   if (cached) {
-    await localDB.exerciciosCache.put({ ...cached, favoritado })
+    await localDB.exerciciosCache.put({ ...cached, favorited })
     return
   }
-  // Se for personalizado
-  const custom = await localDB.exerciciosPersonalizados.get(exercicioId)
+  const custom = await localDB.exerciciosPersonalizados.get(exerciseId)
   if (custom) {
-    await localDB.exerciciosPersonalizados.put({ ...custom, favoritado })
+    await localDB.exerciciosPersonalizados.put({ ...custom, favorited })
   }
 }
 
 export async function getFavoritoIds(): Promise<Set<string>> {
-  const cached = await localDB.exerciciosCache.filter(ex => ex.favoritado === true).toArray()
-  const custom = await localDB.exerciciosPersonalizados.filter(ex => ex.favoritado === true).toArray()
-  return new Set([...cached, ...custom].map(ex => ex.id))
+  const cached = await localDB.exerciciosCache.filter((ex) => ex.favorited === true).toArray()
+  const custom = await localDB.exerciciosPersonalizados.filter((ex) => ex.favorited === true).toArray()
+  return new Set([...cached, ...custom].map((ex) => ex.id))
 }
 
 // ============

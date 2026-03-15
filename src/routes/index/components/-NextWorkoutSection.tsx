@@ -2,8 +2,8 @@ import { Zap, Play } from 'lucide-react'
 import { useStartWorkout } from '../../../hooks/useStartWorkout'
 
 interface NextWorkoutSectionProps {
-  proximoPlano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] }
-  ultimaSessao: { planoId: string } | undefined
+  proximoPlano: { id: string; name: string; color?: string | null; exercises: unknown[] }
+  ultimaSessao: { planId: string } | undefined
 }
 
 export function NextWorkoutSection({
@@ -27,14 +27,14 @@ export function NextWorkoutSection({
           <div className="flex items-center gap-3">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center"
-              style={{ background: proximoPlano.cor ?? '#6366f1' }}
+              style={{ background: proximoPlano.color ?? '#6366f1' }}
             >
               <Zap size={20} className="text-white" />
             </div>
             <div>
-              <p className="text-text font-bold text-sm">{proximoPlano.nome}</p>
+              <p className="text-text font-bold text-sm">{proximoPlano.name}</p>
               <p className="text-text-muted text-xs mt-0.5">
-                {proximoPlano.exercicios.length} exercícios
+                {proximoPlano.exercises.length} exercícios
               </p>
             </div>
           </div>

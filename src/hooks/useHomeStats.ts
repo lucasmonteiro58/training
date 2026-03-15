@@ -30,11 +30,11 @@ export function useHomeStats({
   }, [today])
 
   const workoutsThisWeek = useMemo(
-    () => sessions.filter((s) => s.iniciadoEm >= weekStart.getTime()).length,
+    () => sessions.filter((s) => s.startedAt >= weekStart.getTime()).length,
     [sessions, weekStart]
   )
   const totalVolume = useMemo(
-    () => sessions.reduce((acc, s) => acc + (s.volumeTotal ?? 0), 0),
+    () => sessions.reduce((acc, s) => acc + (s.totalVolume ?? 0), 0),
     [sessions]
   )
   const lastSessions = useMemo(() => sessions.slice(0, 3), [sessions])
@@ -49,7 +49,7 @@ export function useHomeStats({
   const nextPlan = useMemo(() => {
     if (!activePlans.length) return null
     if (!lastSession) return activePlans[0]
-    const idx = activePlans.findIndex((p) => p.id === lastSession.planoId)
+    const idx = activePlans.findIndex((p) => p.id === lastSession.planId)
     if (idx === -1) return activePlans[0]
     return activePlans[(idx + 1) % activePlans.length]
   }, [activePlans, lastSession])
@@ -58,9 +58,9 @@ export function useHomeStats({
     const now = Date.now()
     const groupMap: Record<string, number> = {}
     sessions.forEach((s) => {
-      if (!s.finalizadoEm) return
-      s.exercicios.forEach((ex) => {
-        const g = ex.grupoMuscular
+      if (!s.finishedAt) return
+      s.exercises.forEach((ex) => {
+        const g = ex.muscleGroup
         if (
           !g ||
           g === 'Outro' ||
@@ -69,7 +69,7 @@ export function useHomeStats({
         )
           return
         const last = groupMap[g]
-        if (!last || s.finalizadoEm! > last) groupMap[g] = s.finalizadoEm!
+        if (!last || s.finishedAt! > last) groupMap[g] = s.finishedAt!
       })
     })
     return Object.entries(groupMap)

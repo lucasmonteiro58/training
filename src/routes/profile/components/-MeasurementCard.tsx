@@ -27,11 +27,11 @@ export function MeasurementCard({ medida, onExcluir }: MeasurementCardProps) {
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        {MEASUREMENT_FIELDS.filter(c => (medida as Record<string, unknown>)[c.key] != null).map(c => (
+        {MEASUREMENT_FIELDS.filter(c => medida[c.key] != null).map(c => (
           <div key={c.key} className="bg-surface-2 rounded-lg px-2 py-1.5">
             <p className="text-[10px] text-text-muted uppercase">{c.label}</p>
             <p className="text-sm font-bold text-text">
-              {(medida as Record<string, unknown>)[c.key]}{' '}
+              {String(medida[c.key] ?? '')}{' '}
               <span className="text-xs font-normal text-text-muted">{c.unidade}</span>
             </p>
           </div>

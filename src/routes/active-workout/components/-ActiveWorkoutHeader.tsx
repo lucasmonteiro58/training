@@ -109,17 +109,17 @@ export function ActiveWorkoutHeader({
           <p className="text-[10px] text-text-subtle font-medium">
             {exercicioAtualIndex + 1} / {totalExercicios}
           </p>
-          <p className="text-text font-bold text-sm">{exercicioAtual.exercicioNome}</p>
-          <p className="text-[10px] text-text-muted">{exercicioAtual.grupoMuscular}</p>
-          {exercicioAtual.agrupamentoId && (
+          <p className="text-text font-bold text-sm">{exercicioAtual.exerciseName}</p>
+          <p className="text-[10px] text-text-muted">{exercicioAtual.muscleGroup}</p>
+          {exercicioAtual.groupingId && (
             <span
               className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
               style={{
-                color: GROUPING_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.cor,
-                background: GROUPING_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.corBg,
+                color: GROUPING_CONFIG[exercicioAtual.groupingType ?? 'superset']?.cor,
+                background: GROUPING_CONFIG[exercicioAtual.groupingType ?? 'superset']?.corBg,
               }}
             >
-              {GROUPING_CONFIG[exercicioAtual.tipoAgrupamento ?? 'superset']?.label}
+              {GROUPING_CONFIG[exercicioAtual.groupingType ?? 'superset']?.label}
             </span>
           )}
         </div>

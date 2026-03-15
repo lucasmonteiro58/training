@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from 'react'
+import type { RefObject } from 'react'
 import { FileUp } from 'lucide-react'
 
 interface ImportDropZoneProps {

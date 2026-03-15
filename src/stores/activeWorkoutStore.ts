@@ -4,30 +4,30 @@ import type { WorkoutSession } from '../types'
 import { syncWorkoutProgressToFirestore, clearWorkoutProgressFromFirestore } from '../lib/firestore/sync'
 import type { AutoClosedSnapshot } from './historyStore'
 
-export function calcularVolume(sessao: WorkoutSession): number {
-  return sessao.exercicios.reduce((total, ex) => {
+export function calcularVolume(session: WorkoutSession): number {
+  return session.exercises.reduce((total, ex) => {
     return (
       total +
-      ex.series
-        .filter(s => s.completada)
-        .reduce((sum, s) => sum + s.peso * s.repeticoes, 0)
+      ex.sets
+        .filter((s) => s.completed)
+        .reduce((sum, s) => sum + s.weight * s.reps, 0)
     )
   }, 0)
 }
 
 export const INATIVIDADE_AUTO_ENCERRAR_MS = 20 * 60 * 1000 // 20 minutos
 
-/** Payload shape sent to Firestore "ativo" doc (keys kept for backward compatibility). */
+/** Payload shape sent to Firestore "ativo" doc (English keys). */
 export interface ActiveWorkoutSyncPayload {
-  sessao: WorkoutSession
-  exercicioAtualIndex: number
-  serieAtualIndex: number
-  cronometroGeralSegundos?: number
-  iniciado?: boolean
-  pausado?: boolean
-  tempoPausadoTotal?: number
-  ultimaPausaRecordada?: number | null
-  timestampDescansoFim?: number | null
+  session: WorkoutSession
+  currentExerciseIndex: number
+  currentSetIndex: number
+  totalTimerSeconds?: number
+  started?: boolean
+  paused?: boolean
+  totalPausedTime?: number
+  lastPauseRecorded?: number | null
+  restEndTimestamp?: number | null
 }
 
 export interface ActiveWorkoutStoreState {
@@ -52,7 +52,7 @@ export interface ActiveWorkoutStoreState {
   updateSet: (
     exercicioIdx: number,
     serieIdx: number,
-    dados: Partial<{ repeticoes: number; peso: number; completada: boolean }>
+    dados: Partial<{ reps: number; weight: number; completed: boolean }>
   ) => void
   markSetCompleted: (exercicioIdx: number, serieIdx: number) => void
   undoLastSet: () => void
@@ -73,15 +73,15 @@ export interface ActiveWorkoutStoreState {
 const syncActiveToFirestore = (state: ActiveWorkoutStoreState) => {
   if (state.started && state.session?.userId && state.session) {
     syncWorkoutProgressToFirestore(state.session.userId, {
-      sessao: state.session,
-      exercicioAtualIndex: state.currentExerciseIndex,
-      serieAtualIndex: state.currentSetIndex,
-      cronometroGeralSegundos: state.totalTimerSeconds,
-      iniciado: state.started,
-      pausado: state.paused,
-      tempoPausadoTotal: state.totalPausedTime,
-      ultimaPausaRecordada: state.lastPauseRecorded,
-      timestampDescansoFim: state.restEndTimestamp,
+      session: state.session,
+      currentExerciseIndex: state.currentExerciseIndex,
+      currentSetIndex: state.currentSetIndex,
+      totalTimerSeconds: state.totalTimerSeconds,
+      started: state.started,
+      paused: state.paused,
+      totalPausedTime: state.totalPausedTime,
+      lastPauseRecorded: state.lastPauseRecorded,
+      restEndTimestamp: state.restEndTimestamp,
       updatedAt: Date.now(),
     } as ActiveWorkoutSyncPayload & { updatedAt: number })
   }
@@ -91,27 +91,39 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
   persist(
     (set, get) => {
       const mapPayloadToState = (d: {
-        sessao: WorkoutSession
+        session?: WorkoutSession
+        sessao?: WorkoutSession
+        currentExerciseIndex?: number
         exercicioAtualIndex?: number
+        currentSetIndex?: number
         serieAtualIndex?: number
+        totalTimerSeconds?: number
         cronometroGeralSegundos?: number
+        paused?: boolean
         pausado?: boolean
+        totalPausedTime?: number
         tempoPausadoTotal?: number
+        lastPauseRecorded?: number | null
         ultimaPausaRecordada?: number | null
+        restEndTimestamp?: number | null
         timestampDescansoFim?: number | null
-      }) => ({
-        session: d.sessao,
-        currentExerciseIndex: d.exercicioAtualIndex ?? 0,
-        currentSetIndex: d.serieAtualIndex ?? 0,
-        totalTimerSeconds: d.cronometroGeralSegundos ?? 0,
-        restTimerSeconds: 0,
-        restTimerActive: (d.timestampDescansoFim != null && d.timestampDescansoFim > Date.now()) ?? false,
-        paused: d.pausado ?? false,
-        totalPausedTime: d.tempoPausadoTotal ?? 0,
-        lastPauseRecorded: d.ultimaPausaRecordada ?? null,
-        restEndTimestamp: d.timestampDescansoFim ?? null,
-        started: true,
-      })
+      }) => {
+        const session = d.session ?? d.sessao
+        if (!session) return {}
+        return {
+          session,
+          currentExerciseIndex: d.currentExerciseIndex ?? d.exercicioAtualIndex ?? 0,
+          currentSetIndex: d.currentSetIndex ?? d.serieAtualIndex ?? 0,
+          totalTimerSeconds: d.totalTimerSeconds ?? d.cronometroGeralSegundos ?? 0,
+          restTimerSeconds: 0,
+          restTimerActive: ((d.restEndTimestamp ?? d.timestampDescansoFim) != null && (d.restEndTimestamp ?? d.timestampDescansoFim)! > Date.now()) ?? false,
+          paused: d.paused ?? d.pausado ?? false,
+          totalPausedTime: d.totalPausedTime ?? d.tempoPausadoTotal ?? 0,
+          lastPauseRecorded: d.lastPauseRecorded ?? d.ultimaPausaRecordada ?? null,
+          restEndTimestamp: d.restEndTimestamp ?? d.timestampDescansoFim ?? null,
+          started: true,
+        }
+      }
       return {
         session: null,
         currentExerciseIndex: 0,
@@ -148,11 +160,11 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
           const { session, totalTimerSeconds } = get()
           if (!session) return null
           const userId = session.userId
-          const finalizada: WorkoutSession = {
+          const finished: WorkoutSession = {
             ...session,
-            finalizadoEm: Date.now(),
-            duracaoSegundos: totalTimerSeconds,
-            volumeTotal: calcularVolume(session),
+            finishedAt: Date.now(),
+            durationSeconds: totalTimerSeconds,
+            totalVolume: calcularVolume(session),
           }
           set({
             session: null,
@@ -167,7 +179,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
             lastSetCompleted: null,
           })
           if (userId) clearWorkoutProgressFromFirestore(userId)
-          return finalizada
+          return finished
         },
 
         pauseWorkout: () => {
@@ -188,7 +200,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
 
         nextExercise: () => {
           set(s => {
-            const total = s.session?.exercicios.length ?? 0
+            const total = s.session?.exercises.length ?? 0
             const next = Math.min(s.currentExerciseIndex + 1, total - 1)
             return { currentExerciseIndex: next, currentSetIndex: 0 }
           })
@@ -206,17 +218,17 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
         updateSet: (exercicioIdx, serieIdx, dados) => {
           set(s => {
             if (!s.session) return {}
-            const exercicios = s.session.exercicios.map((ex, eIdx) => {
+            const exercises = s.session.exercises.map((ex, eIdx) => {
               if (eIdx !== exercicioIdx) return ex
               return {
                 ...ex,
-                series: ex.series.map((serie, sIdx) => {
-                  if (sIdx !== serieIdx) return serie
-                  return { ...serie, ...dados }
+                sets: ex.sets.map((set, sIdx) => {
+                  if (sIdx !== serieIdx) return set
+                  return { ...set, ...dados }
                 }),
               }
             })
-            return { session: { ...s.session, exercicios } }
+            return { session: { ...s.session, exercises } }
           })
           syncActiveToFirestore(get())
         },
@@ -224,18 +236,18 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
         markSetCompleted: (exercicioIdx, serieIdx) => {
           set(s => {
             if (!s.session) return {}
-            const exercicios = s.session.exercicios.map((ex, eIdx) => {
+            const exercises = s.session.exercises.map((ex, eIdx) => {
               if (eIdx !== exercicioIdx) return ex
               return {
                 ...ex,
-                series: ex.series.map((serie, sIdx) => {
-                  if (sIdx !== serieIdx) return serie
-                  return { ...serie, completada: true }
+                sets: ex.sets.map((set, sIdx) => {
+                  if (sIdx !== serieIdx) return set
+                  return { ...set, completed: true }
                 }),
               }
             })
             return {
-              session: { ...s.session, exercicios },
+              session: { ...s.session, exercises },
               lastSetCompleted: { exercicioIdx, serieIdx },
             }
           })
@@ -248,18 +260,18 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
           const { exercicioIdx, serieIdx } = lastSetCompleted
           set(s => {
             if (!s.session) return {}
-            const exercicios = s.session.exercicios.map((ex, eIdx) => {
+            const exercises = s.session.exercises.map((ex, eIdx) => {
               if (eIdx !== exercicioIdx) return ex
               return {
                 ...ex,
-                series: ex.series.map((serie, sIdx) => {
-                  if (sIdx !== serieIdx) return serie
-                  return { ...serie, completada: false }
+                sets: ex.sets.map((set, sIdx) => {
+                  if (sIdx !== serieIdx) return set
+                  return { ...set, completed: false }
                 }),
               }
             })
             return {
-              session: { ...s.session, exercicios },
+              session: { ...s.session, exercises },
               lastSetCompleted: null,
               restTimerActive: false,
               restTimerSeconds: 0,
@@ -298,7 +310,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
               acum += agora - s.lastPauseRecorded
             }
 
-            const tempoAtivoMs = agora - s.session.iniciadoEm - acum
+            const tempoAtivoMs = agora - s.session.startedAt - acum
             const novosSegundos = Math.max(0, Math.floor(tempoAtivoMs / 1000))
 
             if (novosSegundos === s.totalTimerSeconds) return {}
@@ -332,10 +344,10 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
             ...mapPayloadToState(dados),
           }),
 
-        updateNotes: notas => {
+        updateNotes: notes => {
           set(s => {
             if (!s.session) return {}
-            return { session: { ...s.session, notas } }
+            return { session: { ...s.session, notes } }
           })
           syncActiveToFirestore(get())
         },
@@ -357,16 +369,15 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
 
         restoreFromAutoClosed: snapshot => {
           const tempoOciosoSegundos = Math.floor(INATIVIDADE_AUTO_ENCERRAR_MS / 1000)
-          const cronometroAtivo = Math.max(0, snapshot.totalTimerSeconds - tempoOciosoSegundos)
-          const sessaoAtiva = {
+          const sessionActive = {
             ...snapshot.session,
-            finalizadoEm: undefined,
-            duracaoSegundos: undefined,
-            tempoOciosoDescontadoSegundos: undefined,
-            autoEncerrado: undefined,
+            finishedAt: undefined,
+            durationSeconds: undefined,
+            idleSecondsDeducted: undefined,
+            autoClosed: undefined,
           }
           set({
-            session: sessaoAtiva,
+            session: sessionActive,
             currentExerciseIndex: snapshot.currentExerciseIndex,
             currentSetIndex: snapshot.currentSetIndex,
             totalTimerSeconds: snapshot.totalTimerSeconds,
@@ -387,18 +398,18 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
         },
 
         restoreFromHistory: session => {
-          const duracaoSegundos = session.duracaoSegundos ?? 0
-          const sessaoAtiva = {
+          const durationSeconds = session.durationSeconds ?? 0
+          const sessionActive = {
             ...session,
-            finalizadoEm: undefined,
-            duracaoSegundos: undefined,
-            autoEncerrado: undefined,
+            finishedAt: undefined,
+            durationSeconds: undefined,
+            autoClosed: undefined,
           }
           set({
-            session: sessaoAtiva,
+            session: sessionActive,
             currentExerciseIndex: 0,
             currentSetIndex: 0,
-            totalTimerSeconds: duracaoSegundos,
+            totalTimerSeconds: durationSeconds,
             restTimerSeconds: 0,
             restTimerActive: false,
             paused: false,

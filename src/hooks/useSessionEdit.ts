@@ -19,15 +19,15 @@ export function useSessionEdit(
 
   const salvarEdicao = useCallback(async () => {
     if (!editData) return
-    const volumeTotal = editData.exercicios.reduce(
+    const totalVolume = editData.exercises.reduce(
       (sum, ex) =>
         sum +
-        ex.series
-          .filter((s) => s.completada)
-          .reduce((s, sr) => s + (sr.peso ?? 0) * (sr.repeticoes ?? 0), 0),
+        ex.sets
+          .filter((s) => s.completed)
+          .reduce((s, sr) => s + (sr.weight ?? 0) * (sr.reps ?? 0), 0),
       0
     )
-    await saveSessionComplete({ ...editData, volumeTotal })
+    await saveSessionComplete({ ...editData, totalVolume })
     setEditando(false)
     setEditData(null)
     toast.success('Sessão atualizada!')
@@ -43,18 +43,18 @@ export function useSessionEdit(
       exIdx: number,
       sIdx: number,
       campo: Partial<{
-        peso: number
-        repeticoes: number
-        completada: boolean
+        weight: number
+        reps: number
+        completed: boolean
       }>
     ) => {
       if (!editData) return
       const updated = { ...editData }
-      updated.exercicios = updated.exercicios.map((ex, eI) => {
+      updated.exercises = updated.exercises.map((ex, eI) => {
         if (eI !== exIdx) return ex
         return {
           ...ex,
-          series: ex.series.map((s, sI) =>
+          sets: ex.sets.map((s, sI) =>
             sI === sIdx ? { ...s, ...campo } : s
           ),
         }
@@ -64,12 +64,12 @@ export function useSessionEdit(
     [editData]
   )
 
-  const updateDuracao = useCallback((duracaoSegundos: number) => {
-    setEditData((prev) => (prev ? { ...prev, duracaoSegundos } : null))
+  const updateDuracao = useCallback((durationSeconds: number) => {
+    setEditData((prev) => (prev ? { ...prev, durationSeconds } : null))
   }, [])
 
-  const updateIniciadoEm = useCallback((iniciadoEm: number) => {
-    setEditData((prev) => (prev ? { ...prev, iniciadoEm } : null))
+  const updateIniciadoEm = useCallback((startedAt: number) => {
+    setEditData((prev) => (prev ? { ...prev, startedAt } : null))
   }, [])
 
   return {

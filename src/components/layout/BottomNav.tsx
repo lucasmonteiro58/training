@@ -17,14 +17,14 @@ export function BottomNav() {
       <div className="flex items-center justify-around py-2 max-w-[480px] mx-auto">
         {navItems.map((item) => {
           const isActive = matchRoute({ to: item.to, fuzzy: !item.exact })
-          const isTreinar = item.to === '/active-workout'
+          const isWorkout = item.to === '/active-workout'
 
           return (
             <Link
               key={item.to}
               to={item.to}
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ${
-                isTreinar
+                isWorkout
                   ? `relative bg-accent text-white rounded-2xl px-5 py-3 -mt-4 shadow-lg ${
                       isActive ? 'scale-105 shadow-[0_0_20px_var(--color-accent-glow)]' : ''
                     } hover:bg-accent-hover active:scale-95`
@@ -34,9 +34,9 @@ export function BottomNav() {
               }`}
               style={{ textDecoration: 'none' }}
             >
-              <item.icon size={isTreinar ? 22 : 20} strokeWidth={isActive ? 2.5 : 2} />
+              <item.icon size={isWorkout ? 22 : 20} strokeWidth={isActive ? 2.5 : 2} />
               <span
-                className={`text-[10px] font-medium ${isTreinar ? 'font-semibold' : ''}`}
+                className={`text-[10px] font-medium ${isWorkout ? 'font-semibold' : ''}`}
               >
                 {item.label}
               </span>

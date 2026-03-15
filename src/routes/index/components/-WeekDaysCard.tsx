@@ -2,7 +2,7 @@ interface WeekDaysCardProps {
   diasDaSemana: string[]
   inicioSemana: Date
   hoje: Date
-  sessoes: { iniciadoEm: number }[]
+  sessoes: { startedAt: number }[]
   /** Dias da semana opcionais (0=dom, ..., 6=sáb). Indicação sutil no widget. */
   diasOpcionais?: number[]
 }
@@ -22,7 +22,7 @@ export function WeekDaysCard({
           const diaDate = new Date(inicioSemana)
           diaDate.setDate(inicioSemana.getDate() + idx)
           const temTreino = sessoes.some(s => {
-            const d = new Date(s.iniciadoEm)
+            const d = new Date(s.startedAt)
             return d.toDateString() === diaDate.toDateString()
           })
           const isHoje = diaDate.toDateString() === hoje.toDateString()

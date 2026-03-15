@@ -25,7 +25,7 @@ export function ExerciseGridCard({ ex, isFavorito, onSelect, onToggleFavorito }:
       {ex.gifUrl ? (
         <img
           src={ex.gifUrl}
-          alt={ex.nome}
+          alt={ex.name}
           className="w-full aspect-square object-cover bg-surface-2"
           loading="lazy"
         />
@@ -36,8 +36,8 @@ export function ExerciseGridCard({ ex, isFavorito, onSelect, onToggleFavorito }:
       )}
       <div className="p-3 pb-4 flex flex-col gap-1 min-h-0">
         <div className="flex-1 min-w-0">
-          <p className="text-text text-sm font-bold line-clamp-2 leading-tight">{ex.nome}</p>
-          <p className="text-text-muted text-xs mt-1 capitalize">{ex.grupoMuscular}</p>
+          <p className="text-text text-sm font-bold line-clamp-2 leading-tight">{ex.name}</p>
+          <p className="text-text-muted text-xs mt-1 capitalize">{ex.muscleGroup}</p>
         </div>
       </div>
     </button>

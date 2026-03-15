@@ -1,4 +1,3 @@
-import { GROUP_COLORS } from '../../../types'
 
 interface AlertaGrupo {
   grupo: string

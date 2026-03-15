@@ -19,9 +19,9 @@ function TreinoAtivoIndexPage() {
           </div>
           <div className="text-center">
             <p className="text-text-muted text-sm">Treino em andamento</p>
-            <h2 className="text-xl font-bold text-text mt-1">{session.planoNome}</h2>
+            <h2 className="text-xl font-bold text-text mt-1">{session.planName}</h2>
           </div>
-          <Link to="/active-workout/$planId" params={{ planId: session.planoId }} style={{ textDecoration: 'none' }}>
+          <Link to="/active-workout/$planId" params={{ planId: session.planId }} style={{ textDecoration: 'none' }}>
             <button className="btn-primary flex items-center gap-2">
               <Play size={18} />
               Continuar Treino

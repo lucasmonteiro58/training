@@ -18,7 +18,7 @@ export function AutoClosedBanner() {
     setAutoClosedSnapshot(null)
     navigate({
       to: '/active-workout/$planId',
-      params: { planId: autoClosedSnapshot.session.planoId },
+      params: { planId: autoClosedSnapshot.session.planId },
     })
   }
 

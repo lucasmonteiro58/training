@@ -31,7 +31,7 @@ export const useHistoryStore = create<HistoryState>(set => ({
       const next = exists
         ? s.sessions.map(x => (x.id === session.id ? session : x))
         : [session, ...s.sessions]
-      return { sessions: next.sort((a, b) => b.iniciadoEm - a.iniciadoEm) }
+      return { sessions: next.sort((a, b) => b.startedAt - a.startedAt) }
     }),
   removeSession: id => set(s => ({ sessions: s.sessions.filter(s2 => s2.id !== id) })),
   setLoading: loading => set({ loading }),

@@ -13,7 +13,7 @@ interface UseCompleteWorkoutSetParams {
   updateSet: (
     exercicioIdx: number,
     serieIdx: number,
-    dados: Partial<{ repeticoes: number; peso: number; completada: boolean }>
+    dados: Partial<{ reps: number; weight: number; completed: boolean }>
   ) => void
   startRest: (segundos: number) => void
   nextExercise: () => void
@@ -45,37 +45,37 @@ export function useCompleteWorkoutSet({
 
   const handleCompleteSet = useCallback(
     (serieIdx: number) => {
-      const currentExercise = session?.exercicios[currentExerciseIndex]
+      const currentExercise = session?.exercises[currentExerciseIndex]
       if (!currentExercise || !session) return
-      const serie = currentExercise.series[serieIdx]
-      const newlyCompleted = !serie.completada
+      const set = currentExercise.sets[serieIdx]
+      const newlyCompleted = !set.completed
 
       if (newlyCompleted) {
         markSetCompleted(currentExerciseIndex, serieIdx)
         setTimeout(() => saveWeightsToPlan(), 0)
 
-        const currentSet = currentExercise.series[serieIdx]
-        const exId = currentExercise.exercicioId
+        const currentSet = currentExercise.sets[serieIdx]
+        const exId = currentExercise.exerciseId
         const pesoCelebrado = prExibidoRef.current.get(exId) ?? 0
-        if (currentSet.peso > pesoCelebrado) {
+        if (currentSet.weight > pesoCelebrado) {
           const prCheck = detectarNovoPR(
-            { ...currentSet, completada: true },
+            { ...currentSet, completed: true },
             exId,
             recordes,
           )
           if (prCheck && prCheck.tipo === 'peso') {
-            prExibidoRef.current.set(exId, currentSet.peso)
+            prExibidoRef.current.set(exId, currentSet.weight)
             onPrDetected?.()
           }
         }
 
         prepararAudio()
 
-        const isInGroup = !!currentExercise.agrupamentoId
+        const isInGroup = !!currentExercise.groupingId
         const groupExercises = isInGroup
-          ? session.exercicios
+          ? session.exercises
               .map((ex, idx) => ({ ex, idx }))
-              .filter(({ ex }) => ex.agrupamentoId === currentExercise.agrupamentoId)
+              .filter(({ ex }) => ex.groupingId === currentExercise.groupingId)
           : []
         const currentGroupPos = groupExercises.findIndex(
           (g) => g.idx === currentExerciseIndex
@@ -85,8 +85,8 @@ export function useCompleteWorkoutSet({
             ? groupExercises[currentGroupPos + 1]
             : null
 
-        const allSetsInExerciseComplete = currentExercise.series.every((s, i) =>
-          i === serieIdx ? true : s.completada
+        const allSetsInExerciseComplete = currentExercise.sets.every((s, i) =>
+          i === serieIdx ? true : s.completed
         )
 
         if (allSetsInExerciseComplete && isInGroup && nextInGroup) {
@@ -97,20 +97,20 @@ export function useCompleteWorkoutSet({
           }, 600)
         } else if (allSetsInExerciseComplete && isInGroup && !nextInGroup) {
           prepararAudio()
-          startRest(currentExercise.descansoSegundos)
+          startRest(currentExercise.restSeconds)
           const allGroupDone = groupExercises.every(({ idx }) =>
-            session.exercicios[idx].series.every((s, i) =>
+            session.exercises[idx].sets.every((s, i) =>
               idx === currentExerciseIndex
                 ? i === serieIdx
                   ? true
-                  : s.completada
-                : s.completada
+                  : s.completed
+                : s.completed
             )
           )
           if (allGroupDone) {
             const lastGroupIdx = groupExercises[groupExercises.length - 1].idx
             const isLastExercise =
-              lastGroupIdx === session.exercicios.length - 1
+              lastGroupIdx === session.exercises.length - 1
             if (!isLastExercise) {
               setTimeout(() => {
                 const target = lastGroupIdx + 1
@@ -118,11 +118,11 @@ export function useCompleteWorkoutSet({
                 for (let i = 0; i < diff; i++) nextExercise()
               }, 800)
             } else {
-              const wholeWorkoutComplete = session.exercicios.every((ex, eIdx) =>
-                ex.series.every((s, i) =>
+              const wholeWorkoutComplete = session.exercises.every((ex, eIdx) =>
+                ex.sets.every((s, i) =>
                   eIdx === currentExerciseIndex && i === serieIdx
                     ? true
-                    : s.completada
+                    : s.completed
                 )
               )
               if (wholeWorkoutComplete) {
@@ -138,21 +138,21 @@ export function useCompleteWorkoutSet({
           }
         } else {
           prepararAudio()
-          startRest(currentExercise.descansoSegundos)
+          startRest(currentExercise.restSeconds)
 
           const isLastExercise =
-            currentExerciseIndex === session.exercicios.length - 1
+            currentExerciseIndex === session.exercises.length - 1
           if (allSetsInExerciseComplete) {
             if (!isLastExercise) {
               setTimeout(() => nextExercise(), 800)
             } else {
-              const wholeWorkoutComplete = session.exercicios.every((ex, eIdx) => {
+              const wholeWorkoutComplete = session.exercises.every((ex, eIdx) => {
                 if (eIdx === currentExerciseIndex) {
-                  return ex.series.every((s, i) =>
-                    i === serieIdx ? true : s.completada
+                  return ex.sets.every((s, i) =>
+                    i === serieIdx ? true : s.completed
                   )
                 }
-                return ex.series.every((s) => s.completada)
+                return ex.sets.every((s) => s.completed)
               })
               if (wholeWorkoutComplete) {
                 setTimeout(() => onWorkoutComplete?.(), 800)
@@ -161,7 +161,7 @@ export function useCompleteWorkoutSet({
           }
         }
       } else {
-        updateSet(currentExerciseIndex, serieIdx, { completada: false })
+        updateSet(currentExerciseIndex, serieIdx, { completed: false })
         restEndedNaturalRef.current = false
         cancelRestNotification()
         stopRest()

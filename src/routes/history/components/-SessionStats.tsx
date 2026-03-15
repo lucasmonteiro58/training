@@ -2,44 +2,44 @@ import { Clock, Dumbbell, TrendingUp } from 'lucide-react'
 import { formatarTempo } from '../../../lib/notifications'
 
 interface SessionStatsProps {
-  duracaoSegundos: number | undefined
+  durationSeconds: number | undefined
   numExercicios: number
-  volumeTotal: number | undefined
+  totalVolume: number | undefined
   editando: boolean
-  duracaoMinutos?: number
-  onDuracaoChange?: (minutos: number) => void
+  durationMinutes?: number
+  onDurationChange?: (minutos: number) => void
   /** Quando o treino foi auto-encerrado: segundos de inatividade já descontados da duração */
-  tempoOciosoDescontadoSegundos?: number
+  idleSecondsDeducted?: number
 }
 
 export function SessionStats({
-  duracaoSegundos,
+  durationSeconds,
   numExercicios,
-  volumeTotal,
+  totalVolume,
   editando,
-  duracaoMinutos = 0,
-  onDuracaoChange,
-  tempoOciosoDescontadoSegundos,
+  durationMinutes = 0,
+  onDurationChange,
+  idleSecondsDeducted,
 }: SessionStatsProps) {
   const tempoOcioMin =
-    tempoOciosoDescontadoSegundos != null && tempoOciosoDescontadoSegundos > 0
-      ? Math.round(tempoOciosoDescontadoSegundos / 60)
+    idleSecondsDeducted != null && idleSecondsDeducted > 0
+      ? Math.round(idleSecondsDeducted / 60)
       : 0
 
   return (
     <div className="grid grid-cols-3 gap-2 mb-5 animate-fade-up" style={{ animationDelay: '50ms' }}>
       <div className="card p-3 text-center">
         <Clock size={16} className="text-accent mx-auto mb-1" />
-        {editando && onDuracaoChange ? (
+        {editando && onDurationChange ? (
           <div className="flex flex-col gap-1">
             <input
               type="number"
               min={0}
               className="w-full text-lg font-bold text-text bg-surface-2 rounded-lg px-2 py-1 text-center"
-              value={duracaoMinutos}
+              value={durationMinutes}
               onChange={(e) => {
                 const min = e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0
-                onDuracaoChange(min * 60)
+                onDurationChange(min * 60)
               }}
               onFocus={(e) => e.target.select()}
             />
@@ -48,7 +48,7 @@ export function SessionStats({
         ) : (
           <>
             <p className="text-lg font-bold text-text">
-              {duracaoSegundos != null ? formatarTempo(duracaoSegundos) : '–'}
+              {durationSeconds != null ? formatarTempo(durationSeconds) : '–'}
             </p>
             {tempoOcioMin > 0 && (
               <p className="text-[10px] text-amber-400/90 mt-0.5">
@@ -67,7 +67,7 @@ export function SessionStats({
       <div className="card p-3 text-center">
         <TrendingUp size={16} className="text-accent mx-auto mb-1" />
         <p className="text-lg font-bold text-text">
-          {volumeTotal != null ? Math.round(volumeTotal) : '–'}
+          {totalVolume != null ? Math.round(totalVolume) : '–'}
         </p>
         <p className="text-[10px] text-text-muted">Volume (kg)</p>
       </div>

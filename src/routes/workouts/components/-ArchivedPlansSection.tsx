@@ -46,8 +46,8 @@ export function ArchivedPlansSection({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-text font-semibold truncate text-sm">{plano.nome}</p>
-                  <p className="text-xs text-text-muted mt-0.5">{plano.exercicios.length} exercícios</p>
+                  <p className="text-text font-semibold truncate text-sm">{plano.name}</p>
+                  <p className="text-xs text-text-muted mt-0.5">{plano.exercises.length} exercícios</p>
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
@@ -63,7 +63,7 @@ export function ArchivedPlansSection({
                   <button
                     type="button"
                     className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center text-text-subtle hover:text-danger transition-colors"
-                    onClick={() => onDelete(plano.id, plano.nome)}
+                    onClick={() => onDelete(plano.id, plano.name)}
                     disabled={deletando === plano.id}
                     title="Excluir Permanentemente"
                   >

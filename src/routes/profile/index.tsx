@@ -42,8 +42,8 @@ function PerfilPage() {
   )
   const conquistas = useMemo(() => calcularConquistas(sessions, streaks), [sessions, streaks])
 
-  const totalDuracao = sessions.reduce((sum, s) => sum + (s.duracaoSegundos ?? 0), 0)
-  const totalVolume = sessions.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
+  const totalDuracao = sessions.reduce((sum, s) => sum + (s.durationSeconds ?? 0), 0)
+  const totalVolume = sessions.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0)
 
   const handleNotif = async () => {
     const permissao = typeof Notification !== 'undefined' ? Notification.permission : 'denied'

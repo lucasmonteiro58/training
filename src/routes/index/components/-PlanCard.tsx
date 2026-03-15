@@ -3,7 +3,7 @@ import { Dumbbell, Play } from 'lucide-react'
 import { useStartWorkout } from '../../../hooks/useStartWorkout'
 
 interface PlanCardProps {
-  plano: { id: string; nome: string; cor?: string | null; exercicios: unknown[] }
+  plano: { id: string; name: string; color?: string | null; exercises: unknown[] }
 }
 
 export function PlanCard({ plano }: PlanCardProps) {
@@ -16,13 +16,13 @@ export function PlanCard({ plano }: PlanCardProps) {
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: plano.cor ?? '#6366f1' }}
+              style={{ background: plano.color ?? '#6366f1' }}
             >
               <Dumbbell size={18} className="text-white" />
             </div>
             <div>
-              <p className="text-text font-semibold text-sm">{plano.nome}</p>
-              <p className="text-text-muted text-xs mt-0.5">{plano.exercicios.length} exercícios</p>
+              <p className="text-text font-semibold text-sm">{plano.name}</p>
+              <p className="text-text-muted text-xs mt-0.5">{plano.exercises.length} exercícios</p>
             </div>
           </div>
           <button

@@ -20,47 +20,46 @@ import {
 interface CreateExerciseModalProps {
   onClose: () => void
   onSuccess: (ex: Exercise) => void
-  gruposExistentes?: string[]
+  existingGroups?: string[]
 }
 
-export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUSCLE_GROUPS }: CreateExerciseModalProps) {
+export function CreateExerciseModal({ onClose, onSuccess, existingGroups = MUSCLE_GROUPS }: CreateExerciseModalProps) {
   const user = useAuthStore((s) => s.user)
-  const [nome, setNome] = useState('')
-  const [grupoSelecionado, setGrupoSelecionado] = useState<string>(MUSCLE_GROUPS[0])
-  const [isNovoGrupo, setIsNovoGrupo] = useState(false)
-  const [novoGrupoTexto, setNovoGrupoTexto] = useState('')
-  const [equipamento, setEquipamento] = useState('')
+  const [name, setName] = useState('')
+  const [selectedGroup, setSelectedGroup] = useState<string>(MUSCLE_GROUPS[0])
+  const [isNewGroup, setIsNewGroup] = useState(false)
+  const [newGroupText, setNewGroupText] = useState('')
+  const [equipment, setEquipment] = useState('')
   const [gifUrl, setGifUrl] = useState('')
 
-  const [instrucoesTexto, setInstrucoesTexto] = useState('')
-  const [buscandoImagem, setBuscandoImagem] = useState(false)
-  const [imagensWeb, setImagensWeb] = useState<string[]>([])
-  const [termoBusca, setTermoBusca] = useState('')
-  const [termoBuscaModificado, setTermoBuscaModificado] = useState(false)
+  const [instructionsText, setInstructionsText] = useState('')
+  const [searchingImage, setSearchingImage] = useState(false)
+  const [webImages, setWebImages] = useState<string[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTermModified, setSearchTermModified] = useState(false)
 
-  // Auto-preencher busca de imagem se o usuário não tiver alterado manualmente
   useEffect(() => {
-    if (!termoBuscaModificado && nome.trim()) {
-      setTermoBusca(nome)
+    if (!searchTermModified && name.trim()) {
+      setSearchTerm(name)
     }
-  }, [nome, termoBuscaModificado])
+  }, [name, searchTermModified])
 
-  const handleBuscarImagem = async () => {
-    if (!termoBusca) return
-    setBuscandoImagem(true)
-    setImagensWeb([])
+  const handleSearchImage = async () => {
+    if (!searchTerm) return
+    setSearchingImage(true)
+    setWebImages([])
     try {
       const key = import.meta.env.VITE_GIPHY_API_KEY
       if (!key) {
         toast.error('Chave da API Giphy não configurada. Adicione VITE_GIPHY_API_KEY no .env')
         return
       }
-      const apiUrl = `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(termoBusca)}&limit=12&rating=g`
+      const apiUrl = `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(searchTerm)}&limit=12&rating=g`
       const res = await fetch(apiUrl)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const urls: string[] = (data.data ?? []).map((gif: any) => gif?.images?.original?.url ?? gif?.images?.downsized?.url).filter(Boolean)
-      setImagensWeb(urls)
+      setWebImages(urls)
       if (urls.length === 0) {
         toast.info('Nenhuma imagem encontrada. Tente outro termo.')
       }
@@ -68,31 +67,31 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
       console.error(e)
       toast.error('Erro ao buscar imagens. Verifique sua conexão.')
     } finally {
-      setBuscandoImagem(false)
+      setSearchingImage(false)
     }
   }
 
-  const handleSalvar = async () => {
-    const grupoFinal = isNovoGrupo ? novoGrupoTexto.trim() : grupoSelecionado
-    if (!nome.trim() || !grupoFinal || !user) return
+  const handleSave = async () => {
+    const finalGroup = isNewGroup ? newGroupText.trim() : selectedGroup
+    if (!name.trim() || !finalGroup || !user) return
 
-    const instrucoesArray = instrucoesTexto.split('\n').map(l => l.trim()).filter(Boolean)
+    const instructionsArray = instructionsText.split('\n').map(l => l.trim()).filter(Boolean)
 
-    const novoExercise: Exercise = {
+    const newExercise: Exercise = {
       id: `custom-${uuidv4()}`,
-      nome: nome.trim(),
-      grupoMuscular: grupoFinal,
-      equipamento: equipamento.trim() || undefined,
+      name: name.trim(),
+      muscleGroup: finalGroup,
+      equipment: equipment.trim() || undefined,
       gifUrl: gifUrl || undefined,
-      instrucoes: instrucoesArray.length > 0 ? instrucoesArray : undefined,
-      personalizado: true,
+      instructions: instructionsArray.length > 0 ? instructionsArray : undefined,
+      custom: true,
       userId: user.uid,
     }
 
-    await savePersonalizedExercise(novoExercise)
-    syncExerciseToFirestore(novoExercise)
+    await savePersonalizedExercise(newExercise)
+    syncExerciseToFirestore(newExercise)
 
-    onSuccess(novoExercise)
+    onSuccess(newExercise)
   }
 
   return (
@@ -110,8 +109,8 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
             <label className="text-xs font-semibold text-text-muted mb-1.5 block">NOME *</label>
             <input
               className="input w-full"
-              value={nome}
-              onChange={e => setNome(e.target.value)}
+              value={name}
+              onChange={e => setName(e.target.value)}
               placeholder="Ex: Supino Inclinado com Halteres"
             />
           </div>
@@ -119,29 +118,29 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-semibold text-text-muted block">GRUPO MUSCULAR *</label>
-              {isNovoGrupo && (
-                <button type="button" onClick={() => setIsNovoGrupo(false)} className="text-accent text-xs font-medium">
+              {isNewGroup && (
+                <button type="button" onClick={() => setIsNewGroup(false)} className="text-accent text-xs font-medium">
                   Voltar para lista
                 </button>
               )}
             </div>
 
-            {isNovoGrupo ? (
+            {isNewGroup ? (
               <input
                 className="input w-full"
-                value={novoGrupoTexto}
-                onChange={e => setNovoGrupoTexto(e.target.value)}
+                value={newGroupText}
+                onChange={e => setNewGroupText(e.target.value)}
                 placeholder="Ex: Lombar, Antebraço..."
                 autoFocus
               />
             ) : (
               <Select
-                value={grupoSelecionado}
+                value={selectedGroup}
                 onValueChange={(value) => {
                   if (value === '___NOVO___') {
-                    setIsNovoGrupo(true)
+                    setIsNewGroup(true)
                   } else {
-                    setGrupoSelecionado(value)
+                    setSelectedGroup(value)
                   }
                 }}
               >
@@ -150,7 +149,7 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {gruposExistentes.map(g => (
+                    {existingGroups.map(g => (
                       <SelectItem key={g} value={g} className="capitalize">{g}</SelectItem>
                     ))}
                     <SelectSeparator />
@@ -167,8 +166,8 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
             <label className="text-xs font-semibold text-text-muted mb-1.5 block">EQUIPAMENTO</label>
             <input
               className="input w-full"
-              value={equipamento}
-              onChange={e => setEquipamento(e.target.value)}
+              value={equipment}
+              onChange={e => setEquipment(e.target.value)}
               placeholder="Ex: Halteres (Opcional)"
             />
           </div>
@@ -177,8 +176,8 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
             <label className="text-xs font-semibold text-text-muted mb-1.5 block">INSTRUÇÕES (UMA POR LINHA)</label>
             <textarea
               className="input w-full h-24 py-2 resize-none"
-              value={instrucoesTexto}
-              onChange={e => setInstrucoesTexto(e.target.value)}
+              value={instructionsText}
+              onChange={e => setInstructionsText(e.target.value)}
               placeholder="Ex: Mantenha as costas retas&#10;Desça a barra devagar"
             />
           </div>
@@ -188,24 +187,24 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
             <div className="flex gap-2">
               <input
                 className="input flex-1"
-                value={termoBusca}
+                value={searchTerm}
                 onChange={e => {
-                  setTermoBusca(e.target.value)
-                  setTermoBuscaModificado(true)
+                  setSearchTerm(e.target.value)
+                  setSearchTermModified(true)
                 }}
-                onKeyDown={e => e.key === 'Enter' && handleBuscarImagem()}
+                onKeyDown={e => e.key === 'Enter' && handleSearchImage()}
                 placeholder="Ex: bench press"
               />
-              <button onClick={handleBuscarImagem} disabled={buscandoImagem} className="btn-secondary px-4 shrink-0">
-                {buscandoImagem
+              <button onClick={handleSearchImage} disabled={searchingImage} className="btn-secondary px-4 shrink-0">
+                {searchingImage
                   ? <RefreshCw size={16} className="animate-spin" />
                   : <Search size={16} />}
               </button>
             </div>
 
-            {imagensWeb.length > 0 && (
+            {webImages.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mt-3 p-2 bg-surface-2 rounded-xl max-h-48 overflow-y-auto">
-                {imagensWeb.map((url, i) => (
+                {webImages.map((url, i) => (
                   <button
                     key={i}
                     onClick={() => setGifUrl(url)}
@@ -219,7 +218,6 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
               </div>
             )}
 
-            {/* URL manual */}
             <div className="mt-3">
                <label className="text-xs font-semibold text-text-muted mb-1.5 block">URL DA IMAGEM/GIF</label>
                <input
@@ -234,8 +232,8 @@ export function CreateExerciseModal({ onClose, onSuccess, gruposExistentes = MUS
 
         <div className="pt-4 border-t border-border mt-auto">
           <button
-            onClick={handleSalvar}
-            disabled={!nome.trim() || (isNovoGrupo && !novoGrupoTexto.trim())}
+            onClick={handleSave}
+            disabled={!name.trim() || (isNewGroup && !newGroupText.trim())}
             className="btn-primary w-full disabled:opacity-40"
           >
             Salvar Exercício

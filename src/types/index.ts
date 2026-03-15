@@ -4,31 +4,31 @@
 
 export interface Exercise {
   id: string
-  nome: string
-  grupoMuscular: string
-  grupoMuscularSecundario?: string
-  equipamento?: string
+  name: string
+  muscleGroup: string
+  secondaryMuscleGroup?: string
+  equipment?: string
   gifUrl?: string
-  instrucoes?: string[]
-  personalizado?: boolean
+  instructions?: string[]
+  custom?: boolean
   userId?: string
-  favoritado?: boolean
+  favorited?: boolean
 }
 
 export interface RecordedSet {
   id: string
-  ordem: number
-  repeticoes: number
-  peso: number // kg
-  completada: boolean
-  duracaoSegundos?: number
+  order: number
+  reps: number
+  weight: number // kg
+  completed: boolean
+  durationSeconds?: number
   rpe?: number // Rate of Perceived Exertion 1-10
-  notas?: string
+  notes?: string
 }
 
 export interface PlanSet {
-  peso: number
-  repeticoes: number
+  weight: number
+  reps: number
 }
 
 export type SetType = 'reps' | 'tempo' | 'falha'
@@ -36,89 +36,89 @@ export type GroupingType = 'superset' | 'dropset' | 'giantset'
 
 export interface ExerciseInPlan {
   id: string
-  exercicioId: string
-  exercicio: Exercise
+  exerciseId: string
+  exercise: Exercise
   series: number
-  repeticoesMeta: number
-  pesoMeta?: number
-  seriesDetalhadas?: PlanSet[]
-  descansoSegundos: number
-  ordem: number
-  notas?: string
-  tipoSerie?: SetType
-  duracaoMetaSegundos?: number // usado quando tipoSerie === 'tempo'
-  agrupamentoId?: string // ID compartilhado entre exercícios do mesmo grupo (superset/dropset/giantset)
-  tipoAgrupamento?: GroupingType
+  targetReps: number
+  targetWeight?: number
+  setsDetail?: PlanSet[]
+  restSeconds: number
+  order: number
+  notes?: string
+  setType?: SetType
+  targetDurationSeconds?: number // usado quando setType === 'tempo'
+  groupingId?: string // ID compartilhado entre exercícios do mesmo grupo (superset/dropset/giantset)
+  groupingType?: GroupingType
 }
 
 export interface WorkoutPlan {
   id: string
   userId: string
-  nome: string
-  descricao?: string
-  exercicios: ExerciseInPlan[]
-  cor?: string // hex color para card
-  arquivado?: boolean
-  ordem?: number // posição na lista
+  name: string
+  description?: string
+  exercises: ExerciseInPlan[]
+  color?: string // hex color para card
+  archived?: boolean
+  order?: number // posição na lista
   createdAt: number // timestamp
   updatedAt: number
   syncedAt?: number
 }
 
 export interface ExerciseInSession {
-  exercicioId: string
-  exercicioNome: string
+  exerciseId: string
+  exerciseName: string
   gifUrl?: string
-  grupoMuscular: string
-  series: RecordedSet[]
-  descansoSegundos: number
-  ordem: number
-  notas?: string // Observação vinda do plano
-  instrucoes?: string[] // Instruções originais do exercício
-  tipoSerie?: SetType
-  duracaoMetaSegundos?: number
-  agrupamentoId?: string
-  tipoAgrupamento?: GroupingType
+  muscleGroup: string
+  sets: RecordedSet[]
+  restSeconds: number
+  order: number
+  notes?: string // Observação vinda do plano
+  instructions?: string[] // Instruções originais do exercício
+  setType?: SetType
+  targetDurationSeconds?: number
+  groupingId?: string
+  groupingType?: GroupingType
 }
 
 export interface WorkoutSession {
   id: string
   userId: string
-  planoId: string
-  planoNome: string
-  iniciadoEm: number // timestamp
-  finalizadoEm?: number
-  duracaoSegundos?: number
-  exercicios: ExerciseInSession[]
-  notas?: string
-  volumeTotal?: number // soma de (peso x reps) de todas as séries
+  planId: string
+  planName: string
+  startedAt: number // timestamp
+  finishedAt?: number
+  durationSeconds?: number
+  exercises: ExerciseInSession[]
+  notes?: string
+  totalVolume?: number // soma de (peso x reps) de todas as séries
   syncedAt?: number
   /** true quando o treino foi encerrado automaticamente por inatividade (20 min) */
-  autoEncerrado?: boolean
-  /** quando autoEncerrado: segundos de inatividade descontados do tempo total (ex: 1200 = 20 min) */
-  tempoOciosoDescontadoSegundos?: number
+  autoClosed?: boolean
+  /** quando autoClosed: segundos de inatividade descontados do tempo total (ex: 1200 = 20 min) */
+  idleSecondsDeducted?: number
 }
 
 // Stats calculados do histórico
 export interface WorkoutStats {
-  totalTreinos: number
+  totalWorkouts: number
   totalVolume: number
-  treinosEssaSemana: number
-  streakAtual: number
-  melhorStreak: number
-  ultimoTreino?: WorkoutSession
+  workoutsThisWeek: number
+  currentStreak: number
+  bestStreak: number
+  lastWorkout?: WorkoutSession
 }
 
 // Estado do treino ativo (em memória / zustand)
 export interface ActiveWorkoutState {
-  sessao: WorkoutSession | null
-  exercicioAtualIndex: number
-  serieAtualIndex: number
-  cronometroGeralSegundos: number
-  cronometroDescansoSegundos: number
-  cronometroDescansoAtivo: boolean
-  pausado: boolean
-  iniciado: boolean
+  session: WorkoutSession | null
+  currentExerciseIndex: number
+  currentSetIndex: number
+  totalTimerSeconds: number
+  restTimerSeconds: number
+  restTimerActive: boolean
+  paused: boolean
+  started: boolean
 }
 
 // CSV Import

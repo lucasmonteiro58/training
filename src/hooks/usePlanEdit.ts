@@ -12,6 +12,7 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import type {
   WorkoutPlan,
   ExerciseInPlan,
+  Exercise,
   PlanSet,
   SetType,
   GroupingType,
@@ -22,9 +23,9 @@ export function usePlanEdit(
   updatePlanById: (plan: WorkoutPlan) => Promise<void>
 ) {
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState(plan?.nome ?? '')
+  const [name, setName] = useState(plan?.name ?? '')
   const [exercisesEdit, setExercisesEdit] = useState<ExerciseInPlan[]>(
-    plan?.exercicios ?? []
+    plan?.exercises ?? []
   )
   const [expandedEx, setExpandedEx] = useState<Set<string>>(new Set())
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -32,8 +33,8 @@ export function usePlanEdit(
 
   useEffect(() => {
     if (plan) {
-      setName(plan.nome)
-      setExercisesEdit(plan.exercicios)
+      setName(plan.name)
+      setExercisesEdit(plan.exercises)
     }
   }, [plan?.id])
 
@@ -49,33 +50,33 @@ export function usePlanEdit(
 
   const saveEdit = useCallback(async () => {
     if (!plan) return
-    await updatePlanById({ ...plan, nome: name, exercicios: exercisesEdit })
+    await updatePlanById({ ...plan, name, exercises: exercisesEdit })
     setEditing(false)
   }, [plan, name, exercisesEdit, updatePlanById])
 
   const startEdit = useCallback(() => {
     if (!plan) return
     setEditing(true)
-    setName(plan.nome)
-    setExercisesEdit(plan.exercicios)
+    setName(plan.name)
+    setExercisesEdit(plan.exercises)
   }, [plan])
 
-  const addExercise = useCallback((ex: { id: string; [key: string]: any }) => {
+  const addExercise = useCallback((ex: Exercise) => {
     setExercisesEdit((prev) => [
       ...prev,
       {
         id: uuidv4(),
-        exercicioId: ex.id,
-        exercicio: ex,
+        exerciseId: ex.id,
+        exercise: ex,
         series: 3,
-        repeticoesMeta: 10,
-        pesoMeta: 0,
-        descansoSegundos: 60,
-        ordem: prev.length,
-        seriesDetalhadas: [
-          { peso: 0, repeticoes: 10 },
-          { peso: 0, repeticoes: 10 },
-          { peso: 0, repeticoes: 10 },
+        targetReps: 10,
+        targetWeight: 0,
+        restSeconds: 60,
+        order: prev.length,
+        setsDetail: [
+          { weight: 0, reps: 10 },
+          { weight: 0, reps: 10 },
+          { weight: 0, reps: 10 },
         ],
       },
     ])
@@ -91,15 +92,15 @@ export function usePlanEdit(
         prev.map((ex) => {
           if (ex.id !== exId) return ex
           const base =
-            ex.seriesDetalhadas ??
+            ex.setsDetail ??
             Array.from({ length: ex.series }, () => ({
-              peso: ex.pesoMeta ?? 0,
-              repeticoes: ex.repeticoesMeta,
+              weight: ex.targetWeight ?? 0,
+              reps: ex.targetReps,
             }))
           const novas = base.map((s, i) =>
             i === sIdx ? { ...s, ...campo } : s
           )
-          return { ...ex, seriesDetalhadas: novas }
+          return { ...ex, setsDetail: novas }
         })
       )
     },
@@ -107,11 +108,11 @@ export function usePlanEdit(
   )
 
   const updateExerciseEdit = useCallback(
-    (exId: string, campos: Partial<ExerciseInPlan['exercicio']>) => {
+    (exId: string, campos: Partial<ExerciseInPlan['exercise']>) => {
       setExercisesEdit((prev) =>
         prev.map((ex) =>
           ex.id === exId
-            ? { ...ex, exercicio: { ...ex.exercicio, ...campos } }
+            ? { ...ex, exercise: { ...ex.exercise, ...campos } }
             : ex
         )
       )
@@ -122,7 +123,7 @@ export function usePlanEdit(
   const updateRestEdit = useCallback((exId: string, segundos: number) => {
     setExercisesEdit((prev) =>
       prev.map((ex) =>
-        ex.id === exId ? { ...ex, descansoSegundos: segundos } : ex
+        ex.id === exId ? { ...ex, restSeconds: segundos } : ex
       )
     )
   }, [])
@@ -132,14 +133,14 @@ export function usePlanEdit(
       prev.map((ex) => {
         if (ex.id !== exId) return ex
         const base =
-          ex.seriesDetalhadas ??
+          ex.setsDetail ??
           Array.from({ length: ex.series }, () => ({
-            peso: ex.pesoMeta ?? 0,
-            repeticoes: ex.repeticoesMeta,
+            weight: ex.targetWeight ?? 0,
+            reps: ex.targetReps,
           }))
-        const seriesDetalhadas =
-          tipo === 'tempo' ? base.map((s) => ({ ...s, repeticoes: 1 })) : base
-        return { ...ex, tipoSerie: tipo, seriesDetalhadas }
+        const setsDetail =
+          tipo === 'tempo' ? base.map((s) => ({ ...s, reps: 1 })) : base
+        return { ...ex, setType: tipo, setsDetail }
       })
     )
   }, [])
@@ -152,7 +153,7 @@ export function usePlanEdit(
         const newIndex = items.findIndex((i) => i.id === over.id)
         return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({
           ...ex,
-          ordem: idx,
+          order: idx,
         }))
       })
     }
@@ -173,7 +174,7 @@ export function usePlanEdit(
     const sel = selected
     setExercisesEdit((prev) =>
       prev.map((ex) =>
-        sel.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex
+        sel.has(ex.id) ? { ...ex, groupingId: agrupamentoId, groupingType: tipo } : ex
       )
     )
     setSelected(new Set())
@@ -184,7 +185,7 @@ export function usePlanEdit(
     setExercisesEdit((prev) =>
       prev.map((ex) =>
         ex.id === exId
-          ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined }
+          ? { ...ex, groupingId: undefined, groupingType: undefined }
           : ex
       )
     )

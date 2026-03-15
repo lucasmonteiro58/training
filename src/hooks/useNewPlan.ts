@@ -51,7 +51,7 @@ export function useNewPlan() {
       const agrupamentoId = uuidv4()
       const sel = selected
       return prev.map((ex) =>
-        sel.has(ex.id) ? { ...ex, agrupamentoId, tipoAgrupamento: tipo } : ex
+        sel.has(ex.id) ? { ...ex, groupingId: agrupamentoId, groupingType: tipo } : ex
       )
     })
     setSelected(new Set())
@@ -62,7 +62,7 @@ export function useNewPlan() {
     setExercicios((prev) =>
       prev.map((ex) =>
         ex.id === exId
-          ? { ...ex, agrupamentoId: undefined, tipoAgrupamento: undefined }
+          ? { ...ex, groupingId: undefined, groupingType: undefined }
           : ex
       )
     )
@@ -78,16 +78,15 @@ export function useNewPlan() {
   }, [])
 
   const addExercise = useCallback(
-    (ex: Partial<ExerciseInPlan> & { exercicio: any }) => {
-      const seriesPadrao = Array(3).fill({ peso: 0, repeticoes: 10 })
+    (ex: Partial<ExerciseInPlan> & { exercise?: any }) => {
+      const defaultSets = Array(3).fill({ weight: 0, reps: 10 })
       setExercicios((prev) => [
         ...prev,
         {
           ...ex,
           id: ex.id ?? uuidv4(),
-          seriesDetalhadas:
-            (ex as ExerciseInPlan).seriesDetalhadas ?? seriesPadrao,
-          ordem: ex.ordem ?? prev.length,
+          setsDetail: (ex as ExerciseInPlan).setsDetail ?? defaultSets,
+          order: ex.order ?? prev.length,
         } as ExerciseInPlan,
       ])
     },
@@ -129,7 +128,7 @@ export function useNewPlan() {
         name.trim(),
         description.trim() || undefined
       )
-      await updatePlanById({ ...plan, exercicios, cor: selectedColor })
+      await updatePlanById({ ...plan, exercises: exercicios, color: selectedColor })
       savedRef.current = true
       navigate({ to: '/workouts' })
     } catch (err) {

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   GripVertical,
   ChevronDown,
@@ -22,7 +21,7 @@ export interface ExerciseDetailCardProps {
   onUpdateSerie: (sIdx: number, campo: Partial<PlanSet>) => void
   onUpdateDescanso: (segundos: number) => void
   onUpdateSetType: (tipo: SetType) => void
-  onUpdateExercicio: (campos: Partial<ExerciseInPlan['exercicio']>) => void
+  onUpdateExercicio: (campos: Partial<ExerciseInPlan['exercise']>) => void
   showSelect?: boolean
   isSelected?: boolean
   onToggleSelect?: () => void
@@ -50,7 +49,7 @@ export function ExerciseDetailCard({
     webImages,
     searchingImage,
     searchImage,
-  } = useGiphyImageSearch(ex.exercicio.nome)
+  } = useGiphyImageSearch(ex.exercise.name)
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: ex.id })
@@ -61,7 +60,7 @@ export function ExerciseDetailCard({
     zIndex: isDragging ? 50 : undefined,
   }
 
-  const tipo = ex.tipoSerie ?? 'reps'
+  const tipo = ex.setType ?? 'reps'
   const ciclo: SetType[] = ['reps', 'tempo', 'falha']
   const proximo = ciclo[(ciclo.indexOf(tipo) + 1) % ciclo.length]
   const tipoLabels: Record<SetType, string> = {
@@ -72,18 +71,18 @@ export function ExerciseDetailCard({
 
   const displayReps =
     tipo === 'tempo'
-      ? `${ex.seriesDetalhadas?.[0]?.repeticoes ?? 1} min`
+      ? `${ex.setsDetail?.[0]?.reps ?? 1} min`
       : tipo === 'falha'
         ? 'Falha ⚡'
-        : `${ex.repeticoesMeta} reps`
+        : `${ex.targetReps} reps`
 
   const seriesEdit = isExpanded
-    ? (ex.seriesDetalhadas ??
+    ? (ex.setsDetail ??
         Array.from(
           { length: ex.series },
-          (_, i) => ({
-            peso: ex.pesoMeta ?? 0,
-            repeticoes: tipo === 'tempo' ? 1 : ex.repeticoesMeta,
+          () => ({
+            weight: ex.targetWeight ?? 0,
+            reps: tipo === 'tempo' ? 1 : ex.targetReps,
           })
         ))
     : []
@@ -105,7 +104,7 @@ export function ExerciseDetailCard({
             <GripVertical size={16} className="text-text-subtle shrink-0" />
           </div>
         )}
-        {showSelect && !ex.agrupamentoId && (
+        {showSelect && !ex.groupingId && (
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -118,7 +117,7 @@ export function ExerciseDetailCard({
             {isSelected && <span className="text-xs">✓</span>}
           </button>
         )}
-        {ex.agrupamentoId && onRemoveFromGroup && (
+        {ex.groupingId && onRemoveFromGroup && (
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -130,10 +129,10 @@ export function ExerciseDetailCard({
             <Unlink size={14} />
           </button>
         )}
-        {ex.exercicio.gifUrl ? (
-          <img
-            src={ex.exercicio.gifUrl}
-            alt={ex.exercicio.nome}
+{ex.exercise.gifUrl ? (
+            <img
+              src={ex.exercise.gifUrl}
+              alt={ex.exercise.name}
             className="w-12 h-12 rounded-xl object-cover bg-surface-2 shrink-0"
           />
         ) : (
@@ -143,13 +142,13 @@ export function ExerciseDetailCard({
         )}
         <div className="flex-1 min-w-0">
           <p className="text-text font-semibold text-sm truncate">
-            {ex.exercicio.nome}
+            {ex.exercise.name}
           </p>
           <div className="flex gap-3 mt-1 flex-wrap">
             <span className="text-xs text-text-muted">{ex.series} séries</span>
             <span className="text-xs text-text-muted">{displayReps}</span>
             <span className="text-xs text-text-muted">
-              ⏱ {ex.descansoSegundos}s
+              ⏱ {ex.restSeconds}s
             </span>
           </div>
         </div>
@@ -180,8 +179,8 @@ export function ExerciseDetailCard({
             </label>
             <input
               className="input text-sm w-full"
-              value={ex.exercicio.nome}
-              onChange={(e) => onUpdateExercicio({ nome: e.target.value })}
+              value={ex.exercise.name}
+              onChange={(e) => onUpdateExercicio({ name: e.target.value })}
             />
           </div>
 
@@ -191,9 +190,9 @@ export function ExerciseDetailCard({
             </label>
             <select
               className="input text-sm w-full"
-              value={ex.exercicio.grupoMuscular}
+              value={ex.exercise.muscleGroup}
               onChange={(e) =>
-                onUpdateExercicio({ grupoMuscular: e.target.value })
+                onUpdateExercicio({ muscleGroup: e.target.value })
               }
             >
               {MUSCLE_GROUPS.map((g) => (
@@ -235,7 +234,7 @@ export function ExerciseDetailCard({
                     key={i}
                     onClick={() => onUpdateExercicio({ gifUrl: url })}
                     className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
-                      ex.exercicio.gifUrl === url
+                      ex.exercise.gifUrl === url
                         ? 'border-accent  opacity-100'
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
@@ -257,17 +256,17 @@ export function ExerciseDetailCard({
                 <input
                   className="input text-sm flex-1"
                   placeholder="https://exemplo.com/exercicio.gif"
-                  value={ex.exercicio.gifUrl ?? ''}
+                  value={ex.exercise.gifUrl ?? ''}
                   onChange={(e) =>
                     onUpdateExercicio({
                       gifUrl: e.target.value || undefined,
                     })
                   }
                 />
-                {ex.exercicio.gifUrl && (
+                {ex.exercise.gifUrl && (
                   <img
-                    src={ex.exercicio.gifUrl}
-                    alt={ex.exercicio.nome}
+                    src={ex.exercise.gifUrl}
+                    alt={ex.exercise.name}
                     className="w-12 h-12 rounded-xl object-cover shrink-0 bg-surface-2"
                     onError={(e) => {
                       ;(e.target as HTMLImageElement).style.display = 'none'
@@ -300,7 +299,7 @@ export function ExerciseDetailCard({
             <input
               type="number"
               className="set-input h-8! py-0! text-sm! flex-1"
-              value={ex.descansoSegundos}
+              value={ex.restSeconds}
               min={0}
               step={15}
               onChange={(e) =>
@@ -327,10 +326,10 @@ export function ExerciseDetailCard({
               <input
                 type="number"
                 className="set-input h-9! py-0! text-sm!"
-                value={s.peso === 0 ? '' : s.peso}
+                value={s.weight === 0 ? '' : s.weight}
                 onChange={(e) =>
                   onUpdateSerie(i, {
-                    peso:
+                    weight:
                       e.target.value === '' ? 0 : parseFloat(e.target.value),
                   })
                 }
@@ -340,10 +339,10 @@ export function ExerciseDetailCard({
               <input
                 type="number"
                 className="set-input h-9! py-0! text-sm!"
-                value={s.repeticoes === 0 ? '' : s.repeticoes}
+                value={s.reps === 0 ? '' : s.reps}
                 onChange={(e) =>
                   onUpdateSerie(i, {
-                    repeticoes:
+                    reps:
                       e.target.value === ''
                         ? 0
                         : tipo === 'tempo'

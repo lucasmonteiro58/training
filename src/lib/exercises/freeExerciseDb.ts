@@ -35,15 +35,15 @@ function convertRawToExercicio(raw: RawExercise): Exercise {
 
   return {
     id: raw.id,
-    nome: raw.name,
-    grupoMuscular: mapearGrupo(primaryMuscle),
-    grupoMuscularSecundario: raw.secondaryMuscles?.[0]
+    name: raw.name,
+    muscleGroup: mapearGrupo(primaryMuscle),
+    secondaryMuscleGroup: raw.secondaryMuscles?.[0]
       ? mapearGrupo(raw.secondaryMuscles[0])
       : undefined,
-    equipamento: raw.equipment,
+    equipment: raw.equipment,
     gifUrl,
-    instrucoes: raw.instructions,
-    personalizado: false,
+    instructions: raw.instructions,
+    custom: false,
   }
 }
 
@@ -82,9 +82,9 @@ export function buscarExercicios(
 ): Exercise[] {
   const q = query.toLowerCase().trim()
   return exercicios.filter((ex) => {
-    const matchQuery = !q || ex.nome.toLowerCase().includes(q) ||
-      ex.grupoMuscular.toLowerCase().includes(q)
-    const matchGrupo = !grupo || ex.grupoMuscular === grupo
+    const matchQuery = !q || ex.name.toLowerCase().includes(q) ||
+      ex.muscleGroup.toLowerCase().includes(q)
+    const matchGrupo = !grupo || ex.muscleGroup === grupo
     return matchQuery && matchGrupo
   })
 }

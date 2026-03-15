@@ -19,9 +19,9 @@ function EvolucaoPage() {
   const exercicios = useMemo(() => {
     const map = new Map<string, string>()
     sessions.forEach(s => {
-      s.exercicios.forEach(ex => {
-        if (ex.series.some(sr => sr.completada && sr.peso > 0))
-          map.set(ex.exercicioId, ex.exercicioNome)
+      s.exercises.forEach((ex: { exerciseId: string; exerciseName: string; sets: { completed: boolean; weight: number }[] }) => {
+        if (ex.sets.some((sr: { completed: boolean; weight: number }) => sr.completed && sr.weight > 0))
+          map.set(ex.exerciseId, ex.exerciseName)
       })
     })
     return Array.from(map.entries())
@@ -33,22 +33,22 @@ function EvolucaoPage() {
     const result = new Map<string, { data: string; peso: number; iniciadoEm: number }[]>()
     exercicios.forEach(({ id }) => {
       const pontos = sessions
-        .filter(s => s.exercicios.some(ex => ex.exercicioId === id))
-        .sort((a, b) => a.iniciadoEm - b.iniciadoEm)
-        .flatMap(s => {
-          const ex = s.exercicios.find(e => e.exercicioId === id)!
-          const pesos = ex.series
-            .filter(sr => sr.completada && sr.peso > 0)
-            .map(sr => sr.peso)
+        .filter((s: { exercises: { exerciseId: string }[] }) => s.exercises.some((ex: { exerciseId: string }) => ex.exerciseId === id))
+        .sort((a: { startedAt: number }, b: { startedAt: number }) => a.startedAt - b.startedAt)
+        .flatMap((s: { startedAt: number; exercises: { exerciseId: string; sets: { completed: boolean; weight: number }[] }[] }) => {
+          const ex = s.exercises.find((e: { exerciseId: string }) => e.exerciseId === id)!
+          const pesos = ex.sets
+            .filter((sr: { completed: boolean; weight: number }) => sr.completed && sr.weight > 0)
+            .map((sr: { weight: number }) => sr.weight)
           if (!pesos.length) return []
           return [
             {
-              data: new Date(s.iniciadoEm).toLocaleDateString('pt-BR', {
+              data: new Date(s.startedAt).toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: '2-digit',
               }),
               peso: Math.max(...pesos),
-              iniciadoEm: s.iniciadoEm,
+              iniciadoEm: s.startedAt,
             },
           ]
         })
@@ -61,15 +61,15 @@ function EvolucaoPage() {
     () =>
       sessions
         .slice()
-        .sort((a, b) => a.iniciadoEm - b.iniciadoEm)
+        .sort((a: { startedAt: number }, b: { startedAt: number }) => a.startedAt - b.startedAt)
         .slice(-20)
-        .map(s => ({
-          data: new Date(s.iniciadoEm).toLocaleDateString('pt-BR', {
+        .map((s: { startedAt: number; totalVolume?: number; planName: string }) => ({
+          data: new Date(s.startedAt).toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
           }),
-          volume: Math.round(s.volumeTotal ?? 0),
-          plano: s.planoNome,
+          volume: Math.round(s.totalVolume ?? 0),
+          plano: s.planName,
         })),
     [sessions]
   )
