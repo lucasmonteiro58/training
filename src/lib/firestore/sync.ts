@@ -29,7 +29,10 @@ import { savePlan, saveSession, savePersonalizedExercise, saveMeasurement } from
 import type { WorkoutPlan, WorkoutSession, Exercise, BodyMeasurement } from '../../types'
 import { incrementSync, decrementSync, enqueueWrite } from '../syncQueue'
 
-// Helper: tenta escrita online, senão enfileira
+/** Timeout para escrita no Firestore. No PWA a requisição pode ficar pendente (throttling/background);
+ * ao estourar, enfileiramos e retornamos para o indicador "Sincronizando" não ficar preso. */
+const FIRESTORE_WRITE_TIMEOUT_MS = 15_000
+
 async function writeOrQueue(
   collectionName: string,
   docId: string,
@@ -40,11 +43,26 @@ async function writeOrQueue(
     await enqueueWrite(collectionName, docId, operation, data)
     return
   }
-  if (operation === 'set' && data) {
-    const ref = doc(db, collectionName, docId)
-    await setDoc(ref, data)
-  } else if (operation === 'delete') {
-    await deleteDoc(doc(db, collectionName, docId))
+  const withTimeout = <T>(p: Promise<T>): Promise<T> =>
+    Promise.race([
+      p,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('SYNC_TIMEOUT')), FIRESTORE_WRITE_TIMEOUT_MS)
+      ),
+    ])
+  try {
+    if (operation === 'set' && data) {
+      const ref = doc(db, collectionName, docId)
+      await withTimeout(setDoc(ref, data))
+    } else if (operation === 'delete') {
+      await withTimeout(deleteDoc(doc(db, collectionName, docId)))
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message === 'SYNC_TIMEOUT') {
+      await enqueueWrite(collectionName, docId, operation, data)
+      return
+    }
+    throw err
   }
 }
 
