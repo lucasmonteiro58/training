@@ -18,8 +18,9 @@ export const Route = createFileRoute('/history/$sessionId')({
 function SessaoDetalhePage() {
   const { sessionId } = Route.useParams()
   const navigate = useNavigate()
-  const { sessions, saveSessionComplete } = useHistory()
+  const { sessions, saveSessionComplete, deleteSessionById } = useHistory()
   const allSessions = useHistoryStore((s) => s.sessions)
+  const removeSession = useHistoryStore((s) => s.removeSession)
   const session = sessions.find((s) => s.id === sessionId)
   const restoreFromHistory = useActiveWorkoutStore(
     (s) => s.restoreFromHistory
@@ -110,7 +111,9 @@ function SessaoDetalhePage() {
 
       <ReturnToWorkoutButton
         onClick={() => {
+          removeSession(displaySession!.id)
           restoreFromHistory(displaySession!)
+          deleteSessionById(displaySession!.id)
           navigate({
             to: '/active-workout/$planId',
             params: { planId: displaySession!.planId },

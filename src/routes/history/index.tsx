@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useHistory } from '../../hooks/useHistory'
-import { useActiveWorkoutStore } from '../../stores'
+import { useActiveWorkoutStore, useHistoryStore } from '../../stores'
 import { useMemo, useState } from 'react'
 import { HistoryHeader } from './components/-HistoryHeader'
 import { HistoryFilters, type Period } from './components/-HistoryFilters'
@@ -17,6 +17,7 @@ function HistoryPage() {
   const navigate = useNavigate()
   const { sessions, loading, deleteSessionById } = useHistory()
   const restoreFromHistory = useActiveWorkoutStore(s => s.restoreFromHistory)
+  const removeSession = useHistoryStore(s => s.removeSession)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [planFilter, setPlanFilter] = useState<string>('todos')
   const [periodFilter, setPeriodFilter] = useState<Period>('todos')
@@ -105,7 +106,11 @@ function HistoryPage() {
               session={session}
               index={idx}
               onDelete={setConfirmDeleteId}
-              onRestore={restoreFromHistory}
+              onRestore={(session) => {
+                removeSession(session.id)
+                restoreFromHistory(session)
+                deleteSessionById(session.id)
+              }}
             />
           ))}
         </div>
