@@ -7,6 +7,7 @@ interface SessionCardProps {
   session: WorkoutSession
   index: number
   onDelete: (id: string) => void
+  /** Chamado ao clicar em Retornar. O responsável por navegar é o pai. */
   onRestore: (session: WorkoutSession) => void
 }
 
@@ -82,10 +83,7 @@ export function SessionCard({ session, index, onDelete, onRestore }: SessionCard
       <div className="flex gap-2" onClick={e => e.stopPropagation()}>
         <button
           type="button"
-          onClick={() => {
-            onRestore(session)
-            navigate({ to: '/active-workout/$planId', params: { planId: session.planId } })
-          }}
+          onClick={() => onRestore(session)}
           className="flex-1 py-2 text-xs rounded-xl flex items-center justify-center gap-1 bg-accent/15 text-accent font-medium"
         >
           <RotateCcw size={13} /> Retornar

@@ -3,13 +3,14 @@ import { useHistory } from '../../hooks/useHistory'
 import { useHistoryStore, useActiveWorkoutStore } from '../../stores'
 import { calculateRecords } from '../../lib/records'
 import { useSessionEdit } from '../../hooks/useSessionEdit'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { SessionDetailHeader } from './components/-SessionDetailHeader'
 import { SessionStats } from './components/-SessionStats'
 import { SetsProgress } from './components/-SetsProgress'
 import { ReturnToWorkoutButton } from './components/-ReturnToWorkoutButton'
 import { WorkoutNotes } from './components/-WorkoutNotes'
 import { ExerciseSessionCard } from './components/-ExerciseSessionCard'
+import { ConfirmReplaceWorkoutModal } from './components/-ConfirmReplaceWorkoutModal'
 
 export const Route = createFileRoute('/history/$sessionId')({
   component: SessaoDetalhePage,
@@ -25,6 +26,19 @@ function SessaoDetalhePage() {
   const restoreFromHistory = useActiveWorkoutStore(
     (s) => s.restoreFromHistory
   )
+  const hasActiveWorkout = useActiveWorkoutStore((s) => s.started && s.session != null)
+  const [showReplaceConfirm, setShowReplaceConfirm] = useState(false)
+
+  const doRestoreAndNavigate = () => {
+    if (!displaySession) return
+    removeSession(displaySession.id)
+    restoreFromHistory(displaySession)
+    deleteSessionById(displaySession.id)
+    navigate({
+      to: '/active-workout/$planId',
+      params: { planId: displaySession.planId },
+    })
+  }
 
   const edicao = useSessionEdit(session, saveSessionComplete)
   const {
@@ -111,15 +125,23 @@ function SessaoDetalhePage() {
 
       <ReturnToWorkoutButton
         onClick={() => {
-          removeSession(displaySession!.id)
-          restoreFromHistory(displaySession!)
-          deleteSessionById(displaySession!.id)
-          navigate({
-            to: '/active-workout/$planId',
-            params: { planId: displaySession!.planId },
-          })
+          if (hasActiveWorkout) {
+            setShowReplaceConfirm(true)
+          } else {
+            doRestoreAndNavigate()
+          }
         }}
       />
+
+      {showReplaceConfirm && (
+        <ConfirmReplaceWorkoutModal
+          onConfirm={() => {
+            doRestoreAndNavigate()
+            setShowReplaceConfirm(false)
+          }}
+          onCancel={() => setShowReplaceConfirm(false)}
+        />
+      )}
 
       {displaySession!.notes && (
         <WorkoutNotes notas={displaySession!.notes} />

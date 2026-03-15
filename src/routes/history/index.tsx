@@ -8,6 +8,8 @@ import { VolumeChart } from './components/-VolumeChart'
 import { EmptyHistory } from './components/-EmptyHistory'
 import { SessionCard } from './components/-SessionCard'
 import { ConfirmDeleteModal } from './components/-ConfirmDeleteModal'
+import { ConfirmReplaceWorkoutModal } from './components/-ConfirmReplaceWorkoutModal'
+import type { WorkoutSession } from '../../types'
 
 export const Route = createFileRoute('/history/')({
   component: HistoryPage,
@@ -18,7 +20,16 @@ function HistoryPage() {
   const { sessions, loading, deleteSessionById } = useHistory()
   const restoreFromHistory = useActiveWorkoutStore(s => s.restoreFromHistory)
   const removeSession = useHistoryStore(s => s.removeSession)
+  const hasActiveWorkout = useActiveWorkoutStore(s => s.started && s.session != null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [sessionToRestore, setSessionToRestore] = useState<WorkoutSession | null>(null)
+
+  const doRestoreAndNavigate = (session: WorkoutSession) => {
+    removeSession(session.id)
+    restoreFromHistory(session)
+    deleteSessionById(session.id)
+    navigate({ to: '/active-workout/$planId', params: { planId: session.planId } })
+  }
   const [planFilter, setPlanFilter] = useState<string>('todos')
   const [periodFilter, setPeriodFilter] = useState<Period>('todos')
   const [showFilters, setShowFilters] = useState(false)
@@ -107,9 +118,11 @@ function HistoryPage() {
               index={idx}
               onDelete={setConfirmDeleteId}
               onRestore={(session) => {
-                removeSession(session.id)
-                restoreFromHistory(session)
-                deleteSessionById(session.id)
+                if (hasActiveWorkout) {
+                  setSessionToRestore(session)
+                } else {
+                  doRestoreAndNavigate(session)
+                }
               }}
             />
           ))}
@@ -123,6 +136,16 @@ function HistoryPage() {
             setConfirmDeleteId(null)
           }}
           onCancel={() => setConfirmDeleteId(null)}
+        />
+      )}
+
+      {sessionToRestore && (
+        <ConfirmReplaceWorkoutModal
+          onConfirm={() => {
+            doRestoreAndNavigate(sessionToRestore)
+            setSessionToRestore(null)
+          }}
+          onCancel={() => setSessionToRestore(null)}
         />
       )}
     </div>

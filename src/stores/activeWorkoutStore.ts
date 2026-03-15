@@ -368,18 +368,21 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
           }),
 
         restoreFromAutoClosed: snapshot => {
+          const idleDeducted = snapshot.session.idleSecondsDeducted ?? 0
+          const activeTimerSeconds = Math.max(0, snapshot.totalTimerSeconds - idleDeducted)
           const sessionActive = {
             ...snapshot.session,
             finishedAt: undefined,
             durationSeconds: undefined,
             idleSecondsDeducted: undefined,
             autoClosed: undefined,
+            startedAt: Date.now() - activeTimerSeconds * 1000,
           }
           set({
             session: sessionActive,
             currentExerciseIndex: snapshot.currentExerciseIndex,
             currentSetIndex: snapshot.currentSetIndex,
-            totalTimerSeconds: snapshot.totalTimerSeconds,
+            totalTimerSeconds: activeTimerSeconds,
             restTimerSeconds: 0,
             restTimerActive: false,
             paused: false,
@@ -403,6 +406,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
             finishedAt: undefined,
             durationSeconds: undefined,
             autoClosed: undefined,
+            startedAt: Date.now() - durationSeconds * 1000,
           }
           set({
             session: sessionActive,
