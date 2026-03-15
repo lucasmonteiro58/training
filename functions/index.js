@@ -4,29 +4,35 @@ const { getFirestore } = require('firebase-admin/firestore');
 
 initializeApp();
 
-const INATIVIDADE_MS = 20 * 60 * 1000; // 20 minutos
+const INACTIVITY_MS = 20 * 60 * 1000; // 20 minutes
 
 /**
- * Calcula o volume total (peso × reps) das séries completadas da sessão.
- * Mesma lógica do app (stores/index.ts).
+ * Calculates total volume (weight × reps) of completed sets in the session.
+ * Same logic as the app (stores/activeWorkoutStore.ts).
+ * Supports both English (exercises, sets, completed, weight, reps) and legacy Portuguese keys.
  */
-function calcularVolume(sessao) {
-  if (!sessao || !sessao.exercicios || !Array.isArray(sessao.exercicios)) {
-    return 0;
-  }
-  return sessao.exercicios.reduce((total, ex) => {
-    if (!ex.series || !Array.isArray(ex.series)) return total;
+function calculateVolume(session) {
+  if (!session) return 0;
+  const exercises = session.exercises || session.exercicios;
+  if (!exercises || !Array.isArray(exercises)) return 0;
+  return exercises.reduce((total, ex) => {
+    const sets = ex.sets || ex.series;
+    if (!sets || !Array.isArray(sets)) return total;
     return (
       total +
-      ex.series
-        .filter((s) => s && s.completada)
-        .reduce((sum, s) => sum + (s.peso || 0) * (s.repeticoes || 0), 0)
+      sets
+        .filter((s) => s && (s.completed === true || s.completada === true))
+        .reduce(
+          (sum, s) =>
+            sum + (s.weight ?? s.peso ?? 0) * (s.reps ?? s.repeticoes ?? 0),
+          0
+        )
     );
   }, 0);
 }
 
 /**
- * Remove campos undefined (Firestore não aceita).
+ * Removes undefined fields (Firestore does not accept them).
  */
 function stripUndefined(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
@@ -39,16 +45,16 @@ function stripUndefined(obj) {
 }
 
 /**
- * Encerra treinos ativos que estão inativos há mais de 20 minutos.
- * Roda a cada 5 minutos via Cloud Scheduler.
+ * Closes active workouts that have been inactive for more than 20 minutes.
+ * Runs every 10 minutes via Cloud Scheduler.
  */
-exports.encerrarTreinosInativos = onSchedule(
+exports.closeInactiveWorkouts = onSchedule(
   {
-    schedule: 'every 5 minutes',
+    schedule: 'every 10 minutes',
     timeZone: 'America/Sao_Paulo',
     region: 'southamerica-east1',
   },
-  async (event) => {
+  async () => {
     const db = getFirestore();
     const activeRef = db.collection('active');
     const snap = await activeRef.get();
@@ -57,28 +63,30 @@ exports.encerrarTreinosInativos = onSchedule(
     const batch = db.batch();
     let hasWrites = false;
 
-    for (const doc of snap.docs) {
-      const d = doc.data();
-      const updatedAt = d.updatedAt || 0;
-      const sessao = d.sessao;
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      const updatedAt = data.updatedAt || 0;
+      const session = data.session || data.sessao;
 
-      if (now - updatedAt <= INATIVIDADE_MS) continue;
-      if (!d.iniciado || !sessao || !sessao.id) continue;
+      if (now - updatedAt <= INACTIVITY_MS) continue;
+      if (!data.started && !data.iniciado) continue;
+      if (!session || !session.id) continue;
 
       hasWrites = true;
-      const cronometroGeralSegundos = d.cronometroGeralSegundos ?? 0;
-      const finalizada = {
-        ...sessao,
-        finalizadoEm: now,
-        duracaoSegundos: cronometroGeralSegundos,
-        volumeTotal: calcularVolume(sessao),
-        autoEncerrado: true,
+      const totalTimerSeconds =
+        data.totalTimerSeconds ?? data.cronometroGeralSegundos ?? 0;
+      const closedSession = {
+        ...session,
+        finishedAt: now,
+        durationSeconds: totalTimerSeconds,
+        totalVolume: calculateVolume(session),
+        autoClosed: true,
         syncedAt: now,
       };
 
-      const sessionsRef = db.collection('sessions').doc(finalizada.id);
-      batch.set(sessionsRef, stripUndefined(finalizada));
-      batch.delete(doc.ref);
+      const sessionsRef = db.collection('sessions').doc(closedSession.id);
+      batch.set(sessionsRef, stripUndefined(closedSession));
+      batch.delete(docSnap.ref);
     }
 
     if (hasWrites) {
