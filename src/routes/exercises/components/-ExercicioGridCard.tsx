@@ -3,12 +3,12 @@ import type { Exercise } from '../../../types'
 
 interface ExerciseGridCardProps {
   ex: Exercise
-  isFavorito: boolean
+  isFavorite: boolean
   onSelect: () => void
-  onToggleFavorito: (e: React.MouseEvent) => void
+  onToggleFavorite: (e: React.MouseEvent) => void
 }
 
-export function ExerciseGridCard({ ex, isFavorito, onSelect, onToggleFavorito }: ExerciseGridCardProps) {
+export function ExerciseGridCard({ ex, isFavorite, onSelect, onToggleFavorite }: ExerciseGridCardProps) {
   return (
     <button
       type="button"
@@ -17,10 +17,10 @@ export function ExerciseGridCard({ ex, isFavorito, onSelect, onToggleFavorito }:
     >
       <button
         type="button"
-        onClick={onToggleFavorito}
+        onClick={onToggleFavorite}
         className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-colors hover:bg-black/60"
       >
-        <Heart size={16} className={isFavorito ? 'fill-red-400 text-red-400' : 'text-white/70'} />
+        <Heart size={16} className={isFavorite ? 'fill-red-400 text-red-400' : 'text-white/70'} />
       </button>
       {ex.gifUrl ? (
         <img

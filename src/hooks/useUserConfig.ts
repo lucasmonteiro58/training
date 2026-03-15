@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getConfigUsuario, salvarConfigUsuario } from '../lib/firestore/sync'
+import { getUserConfig, saveUserConfig } from '../lib/firestore/sync'
 import { toast } from 'sonner'
 
 export function useUserConfig(user: { uid: string } | null) {
-  const [metaSemanal, setMetaSemanal] = useState(() => {
-    const saved = localStorage.getItem('metaSemanal')
+  const [weeklyGoal, setWeeklyGoal] = useState(() => {
+    const saved = localStorage.getItem('weeklyGoal')
     return saved ? parseInt(saved, 10) : 4
   })
-  const [diasOpcionais, setDiasOpcionais] = useState<number[]>(() => {
+  const [optionalDays, setOptionalDays] = useState<number[]>(() => {
     try {
-      const v = localStorage.getItem('diasOpcionais')
+      const v = localStorage.getItem('optionalDays')
       if (!v) return []
       const arr = JSON.parse(v) as unknown
       return Array.isArray(arr)
@@ -24,36 +24,36 @@ export function useUserConfig(user: { uid: string } | null) {
 
   useEffect(() => {
     if (!user) return
-    getConfigUsuario(user.uid).then((config) => {
+    getUserConfig(user.uid).then((config) => {
       if (config.metaSemanal != null) {
-        setMetaSemanal(config.metaSemanal)
-        localStorage.setItem('metaSemanal', String(config.metaSemanal))
+        setWeeklyGoal(config.metaSemanal)
+        localStorage.setItem('weeklyGoal', String(config.metaSemanal))
       }
       if (config.diasOpcionais && Array.isArray(config.diasOpcionais)) {
-        setDiasOpcionais(config.diasOpcionais)
+        setOptionalDays(config.diasOpcionais)
         localStorage.setItem(
-          'diasOpcionais',
+          'optionalDays',
           JSON.stringify(config.diasOpcionais)
         )
       }
     })
   }, [user])
 
-  const handleSaveMeta = useCallback(
-    (valor: number) => {
-      setMetaSemanal(valor)
-      localStorage.setItem('metaSemanal', String(valor))
-      if (user) salvarConfigUsuario(user.uid, { metaSemanal: valor })
-      toast.success(`Meta atualizada para ${valor}x por semana`)
+  const handleSaveGoal = useCallback(
+    (value: number) => {
+      setWeeklyGoal(value)
+      localStorage.setItem('weeklyGoal', String(value))
+      if (user) saveUserConfig(user.uid, { metaSemanal: value })
+      toast.success(`Meta atualizada para ${value}x por semana`)
     },
     [user]
   )
 
   return {
-    metaSemanal,
-    setMetaSemanal,
-    diasOpcionais,
-    setDiasOpcionais,
-    handleSaveMeta,
+    weeklyGoal,
+    setWeeklyGoal,
+    optionalDays,
+    setOptionalDays,
+    handleSaveGoal,
   }
 }

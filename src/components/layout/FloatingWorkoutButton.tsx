@@ -2,7 +2,7 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useActiveWorkoutStore } from '../../stores'
 import { Clock } from 'lucide-react'
-import { formatarTempo } from '../../lib/notifications'
+import { formatDuration } from '../../lib/notifications'
 
 export function FloatingWorkoutButton() {
   const location = useLocation()
@@ -41,7 +41,7 @@ export function FloatingWorkoutButton() {
       }`}>
         <Clock size={18} className="text-white" />
         <span className="text-white text-[9px] font-bold tabular-nums leading-none">
-          {formatarTempo(totalTimerSeconds)}
+          {formatDuration(totalTimerSeconds)}
         </span>
       </div>
     </Link>

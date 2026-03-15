@@ -1,16 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuthStore } from '../../stores'
-import { getConfigUsuario, salvarConfigUsuario } from '../../lib/firestore/sync'
+import { getUserConfig, saveUserConfig } from '../../lib/firestore/sync'
 import { useState, useEffect } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { Link } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/profile/optional-days')({
-  component: DiasOpcionaisPage,
+  component: OptionalDaysPage,
 })
 
-const DIAS_NOMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 const STORAGE_KEY = 'diasOpcionais'
 
 function parseSaved(value: string | null): number[] {
@@ -24,26 +24,26 @@ function parseSaved(value: string | null): number[] {
   }
 }
 
-function DiasOpcionaisPage() {
+function OptionalDaysPage() {
   const user = useAuthStore((s) => s.user)
-  const [dias, setDias] = useState<number[]>(() => parseSaved(localStorage.getItem(STORAGE_KEY)))
+  const [days, setDays] = useState<number[]>(() => parseSaved(localStorage.getItem(STORAGE_KEY)))
 
   useEffect(() => {
     if (!user) return
-    getConfigUsuario(user.uid).then(config => {
+    getUserConfig(user.uid).then(config => {
       if (config.diasOpcionais && config.diasOpcionais.length > 0) {
-        setDias(config.diasOpcionais)
+        setDays(config.diasOpcionais)
         localStorage.setItem(STORAGE_KEY, JSON.stringify(config.diasOpcionais))
       }
     })
   }, [user])
 
-  const toggle = (dia: number) => {
-    const next = dias.includes(dia) ? dias.filter(d => d !== dia) : [...dias, dia].sort((a, b) => a - b)
-    setDias(next)
+  const toggle = (day: number) => {
+    const next = days.includes(day) ? days.filter(d => d !== day) : [...days, day].sort((a, b) => a - b)
+    setDays(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     if (user) {
-      salvarConfigUsuario(user.uid, { diasOpcionais: next }).catch(() => {
+      saveUserConfig(user.uid, { diasOpcionais: next }).catch(() => {
         toast.error('Falha ao sincronizar. Tente de novo.')
       })
     }
@@ -72,8 +72,8 @@ function DiasOpcionaisPage() {
         <p className="text-xs text-text-muted px-4 py-3">
           Toque para marcar os dias que você pode pular. Eles não contam para a meta nem para as conquistas.
         </p>
-        {DIAS_NOMES.map((nome, idx) => {
-          const isOptional = dias.includes(idx)
+        {DAY_NAMES.map((name, idx) => {
+          const isOptional = days.includes(idx)
           return (
             <button
               key={idx}
@@ -81,7 +81,7 @@ function DiasOpcionaisPage() {
               onClick={() => toggle(idx)}
               className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-surface-2 rounded-xl transition-colors text-left"
             >
-              <span className="text-text font-medium">{nome}</span>
+              <span className="text-text font-medium">{name}</span>
               <div
                 className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
                   isOptional ? 'bg-accent' : 'bg-border-strong'

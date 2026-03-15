@@ -1,26 +1,26 @@
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
-import type { PlanoImportado } from '../../../lib/csvImport'
+import type { ImportedPlan } from '../../../lib/csvImport'
 import { ExerciseEditCard } from './-ExerciseEditCard'
 
-export type PlanoEditado = PlanoImportado & { collapsed: boolean }
+export type EditedPlan = ImportedPlan & { collapsed: boolean }
 
 interface PlanEditCardProps {
-  plano: PlanoEditado
+  plan: EditedPlan
   expandedExs: Set<string>
   onToggleEx: (id: string) => void
-  onChange: (fn: (p: PlanoEditado) => PlanoEditado) => void
+  onChange: (fn: (p: EditedPlan) => EditedPlan) => void
   onRemove: () => void
 }
 
 export function PlanEditCard({
-  plano,
+  plan,
   expandedExs,
   onToggleEx,
   onChange,
   onRemove,
 }: PlanEditCardProps) {
-  const totalExs = plano.exercises.length
-  const totalSeries = plano.exercises.reduce(
+  const totalExs = plan.exercises.length
+  const totalSeries = plan.exercises.reduce(
     (acc, e) => acc + (e.setsDetail?.length ?? e.series),
     0
   )
@@ -33,7 +33,7 @@ export function PlanEditCard({
           onClick={() => onChange(p => ({ ...p, collapsed: !p.collapsed }))}
           className="text-text-muted"
         >
-          {plano.collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+          {plan.collapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
         </button>
         <div className="flex-1 min-w-0">
           <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1 block">
@@ -41,7 +41,7 @@ export function PlanEditCard({
           </label>
           <input
             className="input py-1.5 text-sm font-semibold w-full"
-            value={plano.name}
+            value={plan.name}
             onChange={e => onChange(p => ({ ...p, name: e.target.value }))}
             onClick={e => e.stopPropagation()}
           />
@@ -55,13 +55,13 @@ export function PlanEditCard({
         </button>
       </div>
 
-      {!plano.collapsed && (
+      {!plan.collapsed && (
         <div className="p-3 flex flex-col gap-2">
           <p className="text-xs text-text-muted mb-1">
             {totalExs} exercício{totalExs !== 1 ? 's' : ''} · {totalSeries} série
             {totalSeries !== 1 ? 's' : ''} no total
           </p>
-          {plano.exercises.map((ex, i) => (
+          {plan.exercises.map((ex, i) => (
             <ExerciseEditCard
               key={ex.id}
               ex={ex}
@@ -79,7 +79,7 @@ export function PlanEditCard({
               }
             />
           ))}
-          {plano.exercises.length === 0 && (
+          {plan.exercises.length === 0 && (
             <p className="text-xs text-text-subtle text-center py-4">
               Nenhum exercício. Remova este plano ou adicione exercícios manualmente.
             </p>

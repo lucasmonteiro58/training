@@ -2,11 +2,11 @@ import { useAuth as useAuthHook } from '../../../hooks/useAuth'
 import { toast } from 'sonner'
 
 export function LoginPage() {
-  const { loginComGoogle } = useAuthHook()
+  const { loginWithGoogle } = useAuthHook()
 
   const handleLogin = async () => {
     try {
-      await loginComGoogle()
+      await loginWithGoogle()
     } catch {
       toast.error('Erro ao fazer login. Tente novamente.')
     }

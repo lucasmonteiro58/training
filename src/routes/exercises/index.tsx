@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
+import { loadExercises, searchExercises } from '../../lib/exercises/freeExerciseDb'
 import type { Exercise } from '../../types'
-import { getPersonalizedExercises, toggleExerciseFavorite, getFavoritoIds } from '../../lib/db/dexie'
+import { getPersonalizedExercises, toggleExerciseFavorite, getFavoriteIds } from '../../lib/db/dexie'
 import { useAuthStore } from '../../stores'
 import { CreateExerciseModal } from '../../components/common/CreateExerciseModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -33,7 +33,7 @@ function ExercisesPage() {
 
   const loadAll = async () => {
     setLoading(true)
-    const base = await carregarExercicios()
+    const base = await loadExercises()
     let custom: Exercise[] = []
     if (user) {
       custom = await getPersonalizedExercises(user.uid)
@@ -41,7 +41,7 @@ function ExercisesPage() {
     const all = [...custom, ...base].sort((a, b) => a.name.localeCompare(b.name))
     setExercises(all)
     setFiltered(all)
-    const favIds = await getFavoritoIds()
+    const favIds = await getFavoriteIds()
     setFavoriteIds(favIds)
     setLoading(false)
   }
@@ -51,7 +51,7 @@ function ExercisesPage() {
   }, [user])
 
   useEffect(() => {
-    let result = buscarExercicios(exercises, query, group || undefined)
+    let result = searchExercises(exercises, query, group || undefined)
     if (showFavorites) {
       result = result.filter(ex => favoriteIds.has(ex.id))
     }
@@ -152,9 +152,9 @@ function ExercisesPage() {
                     <ExerciseGridCard
                       key={ex.id}
                       ex={ex}
-                      isFavorito={favoriteIds.has(ex.id)}
+                      isFavorite={favoriteIds.has(ex.id)}
                       onSelect={() => setSelectedExercise(ex)}
-                      onToggleFavorito={(e) => handleToggleFavorite(e, ex.id)}
+                      onToggleFavorite={(e) => handleToggleFavorite(e, ex.id)}
                     />
                   ))}
                 </div>
@@ -165,7 +165,7 @@ function ExercisesPage() {
       </div>
 
       {selectedExercise && (
-        <ExerciseDetailModal exercicio={selectedExercise} onClose={() => setSelectedExercise(null)} />
+        <ExerciseDetailModal exercise={selectedExercise} onClose={() => setSelectedExercise(null)} />
       )}
 
       {showCreate && (

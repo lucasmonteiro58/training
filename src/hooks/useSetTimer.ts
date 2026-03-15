@@ -1,38 +1,38 @@
 import { useState, useRef, useEffect } from 'react'
 
-export interface TimerSerieState {
+export interface TimerSetState {
   sIdx: number
-  restando: number
+  remaining: number
 }
 
 export function useSetTimer(resetWhenExerciseIndexChanges?: number) {
-  const [timerSerie, setTimerSerie] = useState<TimerSerieState | null>(null)
-  const timerSerieRef = useRef<number | null>(null)
+  const [timerSet, setTimerSet] = useState<TimerSetState | null>(null)
+  const timerSetRef = useRef<number | null>(null)
 
-  const iniciarTimerSerie = (sIdx: number, duracaoSegundos: number) => {
-    if (timerSerieRef.current) clearInterval(timerSerieRef.current)
-    setTimerSerie({ sIdx, restando: duracaoSegundos })
-    timerSerieRef.current = window.setInterval(() => {
-      setTimerSerie((prev) => {
-        if (!prev || prev.restando <= 1) {
-          if (timerSerieRef.current) clearInterval(timerSerieRef.current)
-          timerSerieRef.current = null
+  const startSetTimer = (sIdx: number, durationSeconds: number) => {
+    if (timerSetRef.current) clearInterval(timerSetRef.current)
+    setTimerSet({ sIdx, remaining: durationSeconds })
+    timerSetRef.current = window.setInterval(() => {
+      setTimerSet((prev) => {
+        if (!prev || prev.remaining <= 1) {
+          if (timerSetRef.current) clearInterval(timerSetRef.current)
+          timerSetRef.current = null
           return null
         }
-        return { ...prev, restando: prev.restando - 1 }
+        return { ...prev, remaining: prev.remaining - 1 }
       })
     }, 1000)
   }
 
-  const pararTimerSerie = () => {
-    if (timerSerieRef.current) clearInterval(timerSerieRef.current)
-    timerSerieRef.current = null
-    setTimerSerie(null)
+  const stopSetTimer = () => {
+    if (timerSetRef.current) clearInterval(timerSetRef.current)
+    timerSetRef.current = null
+    setTimerSet(null)
   }
 
   useEffect(() => {
-    pararTimerSerie()
+    stopSetTimer()
   }, [resetWhenExerciseIndexChanges])
 
-  return { timerSerie, iniciarTimerSerie, pararTimerSerie }
+  return { timerSet, startSetTimer, stopSetTimer }
 }

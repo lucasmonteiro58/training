@@ -179,11 +179,11 @@ export function subscribeToSessions(
 // ============================
 export async function syncWorkoutProgressToFirestore(
   userId: string,
-  dados: any
+  data: any
 ): Promise<void> {
   try {
     const ref = doc(db, 'ativo', userId)
-    await setDoc(ref, stripUndefined({ ...dados, updatedAt: Date.now() }))
+    await setDoc(ref, stripUndefined({ ...data, updatedAt: Date.now() }))
   } catch (err) {
     console.error('Erro ao sincronizar progresso ativo:', err)
   }
@@ -191,7 +191,7 @@ export async function syncWorkoutProgressToFirestore(
 
 export function subscribeToWorkoutProgress(
   userId: string,
-  callback: (dados: any) => void
+  callback: (data: any) => void
 ): () => void {
   const ref = doc(db, 'ativo', userId)
   return onSnapshot(
@@ -224,26 +224,25 @@ export async function clearWorkoutProgressFromFirestore(userId: string): Promise
 // ============================
 // Configurações do Usuário
 // ============================
-export interface ConfigUsuario {
+export interface UserConfig {
   metaSemanal?: number
-  /** Dias da semana marcados como opcionais (0=dom, 1=seg, ..., 6=sáb). Não treinar nesses dias não quebra o streak. */
   diasOpcionais?: number[]
 }
 
-export async function getConfigUsuario(userId: string): Promise<ConfigUsuario> {
+export async function getUserConfig(userId: string): Promise<UserConfig> {
   try {
     const ref = doc(db, 'configuracoes', userId)
     const snap = await getDoc(ref)
-    if (snap.exists()) return snap.data() as ConfigUsuario
+    if (snap.exists()) return snap.data() as UserConfig
     return {}
   } catch {
     return {}
   }
 }
 
-export async function salvarConfigUsuario(
+export async function saveUserConfig(
   userId: string,
-  config: Partial<ConfigUsuario>
+  config: Partial<UserConfig>
 ): Promise<void> {
   try {
     const ref = doc(db, 'configuracoes', userId)
@@ -342,14 +341,14 @@ export function subscribeToExercises(
 // ============================
 // Medidas Corporais
 // ============================
-export async function syncMeasurementToFirestore(medida: BodyMeasurement): Promise<void> {
+export async function syncMeasurementToFirestore(measurement: BodyMeasurement): Promise<void> {
   incrementSync()
   try {
-    const data = stripUndefined({ ...medida, syncedAt: Date.now() })
-    await writeOrQueue('medidas', medida.id, 'set', data as Record<string, unknown>)
+    const data = stripUndefined({ ...measurement, syncedAt: Date.now() })
+    await writeOrQueue('medidas', measurement.id, 'set', data as Record<string, unknown>)
   } catch (err) {
     console.error('Erro ao sincronizar medida:', err)
-    await enqueueWrite('medidas', medida.id, 'set', stripUndefined({ ...medida, syncedAt: Date.now() }) as Record<string, unknown>)
+    await enqueueWrite('medidas', measurement.id, 'set', stripUndefined({ ...measurement, syncedAt: Date.now() }) as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -369,7 +368,7 @@ export async function deleteMeasurementFromFirestore(id: string): Promise<void> 
 
 export function subscribeToMeasurements(
   userId: string,
-  callback: (medidas: BodyMeasurement[]) => void
+  callback: (measurements: BodyMeasurement[]) => void
 ): () => void {
   const q = query(
     collection(db, 'medidas'),
@@ -380,13 +379,13 @@ export function subscribeToMeasurements(
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
-      const medidas: BodyMeasurement[] = []
+      const measurements: BodyMeasurement[] = []
       snapshot.forEach((d) => {
         const data = d.data() as BodyMeasurement
-        medidas.push(data)
+        measurements.push(data)
         saveMeasurement(data)
       })
-      callback(medidas)
+      callback(measurements)
     },
     (err) => {
       if (err.code === 'permission-denied') {

@@ -22,10 +22,10 @@ import { PlanSortableCard } from './components/-PlanSortableCard'
 import { ArchivedPlansSection } from './components/-ArchivedPlansSection'
 
 export const Route = createFileRoute('/workouts/')({
-  component: TreinosPage,
+  component: WorkoutsPage,
 })
 
-function TreinosPage() {
+function WorkoutsPage() {
   const {
     activePlans,
     archivedPlans,
@@ -35,13 +35,13 @@ function TreinosPage() {
     unarchivePlan,
     reorderPlans,
   } = usePlans()
-  const [deletando, setDeletando] = useState<string | null>(null)
-  const [processando, setProcessando] = useState<string | null>(null)
-  const [mostrarArquivados, setMostrarArquivados] = useState(false)
-  const [reordenando, setReordenando] = useState(false)
-  const [ordemLocal, setOrdemLocal] = useState<WorkoutPlan[]>([])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [processingId, setProcessingId] = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
+  const [isReordering, setIsReordering] = useState(false)
+  const [localOrder, setLocalOrder] = useState<WorkoutPlan[]>([])
 
-  const listaOrdenada = reordenando ? ordemLocal : activePlans
+  const sortedList = isReordering ? localOrder : activePlans
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -51,38 +51,38 @@ function TreinosPage() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const oldIdx = ordemLocal.findIndex(p => p.id === active.id)
-    const newIdx = ordemLocal.findIndex(p => p.id === over.id)
-    setOrdemLocal(arrayMove(ordemLocal, oldIdx, newIdx))
+    const oldIdx = localOrder.findIndex(p => p.id === active.id)
+    const newIdx = localOrder.findIndex(p => p.id === over.id)
+    setLocalOrder(arrayMove(localOrder, oldIdx, newIdx))
   }
 
-  const handleToggleReordenar = () => {
-    if (!reordenando) {
-      setOrdemLocal([...activePlans])
-      setReordenando(true)
+  const handleToggleReorder = () => {
+    if (!isReordering) {
+      setLocalOrder([...activePlans])
+      setIsReordering(true)
     } else {
-      reorderPlans(ordemLocal.map(p => p.id))
-      setReordenando(false)
+      reorderPlans(localOrder.map(p => p.id))
+      setIsReordering(false)
     }
   }
 
-  const handleDelete = async (id: string, nome: string) => {
-    if (!confirm(`Excluir o plano "${nome}"? Esta ação não pode ser desfeita.`)) return
-    setDeletando(id)
+  const handleDelete = async (id: string, planName: string) => {
+    if (!confirm(`Excluir o plano "${planName}"? Esta ação não pode ser desfeita.`)) return
+    setDeletingId(id)
     await deletePlanById(id)
-    setDeletando(null)
+    setDeletingId(null)
   }
 
   const handleArchive = async (id: string) => {
-    setProcessando(id)
+    setProcessingId(id)
     await archivePlan(id)
-    setProcessando(null)
+    setProcessingId(null)
   }
 
   const handleRestore = async (id: string) => {
-    setProcessando(id)
+    setProcessingId(id)
     await unarchivePlan(id)
-    setProcessando(null)
+    setProcessingId(null)
   }
 
   return (
@@ -91,9 +91,9 @@ function TreinosPage() {
       style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
     >
       <WorkoutsHeader
-        reordenando={reordenando}
+        reordenando={isReordering}
         podeOrdenar={activePlans.length > 1}
-        onToggleReordenar={handleToggleReordenar}
+        onToggleReordenar={handleToggleReorder}
       />
 
       {loading ? (
@@ -110,18 +110,18 @@ function TreinosPage() {
             {activePlans.length === 0 && (
               <p className="text-center text-text-muted text-sm py-8">Nenhum treino ativo no momento.</p>
             )}
-            {reordenando ? (
+            {isReordering ? (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext
-                  items={listaOrdenada.map(p => p.id)}
+                  items={sortedList.map(p => p.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {listaOrdenada.map(plano => (
+                  {sortedList.map(plano => (
                     <PlanSortableCard
                       key={plano.id}
                       plano={plano}
-                      reordenando={reordenando}
-                      processando={processando}
+                      reordenando={isReordering}
+                      processando={processingId}
                       onArchive={handleArchive}
                     />
                   ))}
@@ -133,7 +133,7 @@ function TreinosPage() {
                   key={plan.id}
                   plano={plan}
                   reordenando={false}
-                  processando={processando}
+                  processando={processingId}
                   onArchive={handleArchive}
                 />
               ))
@@ -142,10 +142,10 @@ function TreinosPage() {
 
           <ArchivedPlansSection
             planos={archivedPlans}
-            expandido={mostrarArquivados}
-            processando={processando}
-            deletando={deletando}
-            onToggle={() => setMostrarArquivados(!mostrarArquivados)}
+            expandido={showArchived}
+            processando={processingId}
+            deletando={deletingId}
+            onToggle={() => setShowArchived(!showArchived)}
             onRestore={handleRestore}
             onDelete={handleDelete}
           />

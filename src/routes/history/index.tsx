@@ -3,121 +3,121 @@ import { useHistory } from '../../hooks/useHistory'
 import { useActiveWorkoutStore } from '../../stores'
 import { useMemo, useState } from 'react'
 import { HistoryHeader } from './components/-HistoryHeader'
-import { HistoryFilters, type Periodo } from './components/-HistoryFilters'
+import { HistoryFilters, type Period } from './components/-HistoryFilters'
 import { VolumeChart } from './components/-VolumeChart'
 import { EmptyHistory } from './components/-EmptyHistory'
 import { SessionCard } from './components/-SessionCard'
 import { ConfirmDeleteModal } from './components/-ConfirmDeleteModal'
 
 export const Route = createFileRoute('/history/')({
-  component: HistoricoPage,
+  component: HistoryPage,
 })
 
-function HistoricoPage() {
+function HistoryPage() {
   const navigate = useNavigate()
   const { sessions, loading, deleteSessionById } = useHistory()
   const restoreFromHistory = useActiveWorkoutStore(s => s.restoreFromHistory)
-  const [confirmExcluir, setConfirmExcluir] = useState<string | null>(null)
-  const [filtroPlano, setFiltroPlano] = useState<string>('todos')
-  const [filtroPeriodo, setFiltroPeriodo] = useState<Periodo>('todos')
-  const [showFiltros, setShowFiltros] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [planFilter, setPlanFilter] = useState<string>('todos')
+  const [periodFilter, setPeriodFilter] = useState<Period>('todos')
+  const [showFilters, setShowFilters] = useState(false)
 
-  const sessoesNomes = useMemo(() => {
-    const nomes = new Set<string>()
-    sessions.forEach(s => nomes.add(s.planName))
-    return Array.from(nomes).sort()
+  const sessionNames = useMemo(() => {
+    const names = new Set<string>()
+    sessions.forEach(s => names.add(s.planName))
+    return Array.from(names).sort()
   }, [sessions])
 
-  const sessoesFiltradas = useMemo(() => {
-    let resultado = sessions
-    if (filtroPlano !== 'todos') {
-      resultado = resultado.filter(s => s.planName === filtroPlano)
+  const filteredSessions = useMemo(() => {
+    let result = sessions
+    if (planFilter !== 'todos') {
+      result = result.filter(s => s.planName === planFilter)
     }
-    if (filtroPeriodo !== 'todos') {
-      const agora = Date.now()
-      const dias = filtroPeriodo === '7d' ? 7 : filtroPeriodo === '30d' ? 30 : 90
-      const limite = agora - dias * 24 * 60 * 60 * 1000
-      resultado = resultado.filter(s => s.startedAt >= limite)
+    if (periodFilter !== 'todos') {
+      const now = Date.now()
+      const days = periodFilter === '7d' ? 7 : periodFilter === '30d' ? 30 : 90
+      const limit = now - days * 24 * 60 * 60 * 1000
+      result = result.filter(s => s.startedAt >= limit)
     }
-    return resultado
-  }, [sessions, filtroPlano, filtroPeriodo])
+    return result
+  }, [sessions, planFilter, periodFilter])
 
-  const filtroAtivo = filtroPlano !== 'todos' || filtroPeriodo !== 'todos'
+  const hasActiveFilter = planFilter !== 'todos' || periodFilter !== 'todos'
 
-  const dadosGrafico = useMemo(() => {
-    const semanas: Record<string, number> = {}
-    sessoesFiltradas.forEach((s) => {
+  const chartData = useMemo(() => {
+    const weeks: Record<string, number> = {}
+    filteredSessions.forEach((s) => {
       const d = new Date(s.startedAt)
-      const inicio = new Date(d)
-      inicio.setDate(d.getDate() - d.getDay())
-      const chave = inicio.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-      semanas[chave] = (semanas[chave] ?? 0) + (s.totalVolume ?? 0)
+      const weekStart = new Date(d)
+      weekStart.setDate(d.getDate() - d.getDay())
+      const key = weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      weeks[key] = (weeks[key] ?? 0) + (s.totalVolume ?? 0)
     })
-    return Object.entries(semanas)
+    return Object.entries(weeks)
       .slice(-8)
-      .map(([semana, volume]) => ({ semana, volume: Math.round(volume) }))
-  }, [sessoesFiltradas])
+      .map(([week, volume]) => ({ week, volume: Math.round(volume) }))
+  }, [filteredSessions])
 
-  const handleLimparFiltros = () => {
-    setFiltroPlano('todos')
-    setFiltroPeriodo('todos')
+  const clearFilters = () => {
+    setPlanFilter('todos')
+    setPeriodFilter('todos')
   }
 
   return (
     <div className="page-container pt-6">
       <HistoryHeader
         hasSessoes={sessions.length > 0}
-        filtroAtivo={filtroAtivo}
+        filtroAtivo={hasActiveFilter}
         onVoltar={() => navigate({ to: '/profile' })}
-        onToggleFiltros={() => setShowFiltros(v => !v)}
+        onToggleFiltros={() => setShowFilters(v => !v)}
       />
 
-      {showFiltros && (
+      {showFilters && (
         <HistoryFilters
-          filtroPlano={filtroPlano}
-          filtroPeriodo={filtroPeriodo}
-          filtroAtivo={filtroAtivo}
-          sessoesNomes={sessoesNomes}
-          onPlanoChange={setFiltroPlano}
-          onPeriodoChange={setFiltroPeriodo}
-          onLimpar={handleLimparFiltros}
+          planFilter={planFilter}
+          periodFilter={periodFilter}
+          hasActiveFilter={hasActiveFilter}
+          sessionNames={sessionNames}
+          onPlanChange={setPlanFilter}
+          onPeriodChange={setPeriodFilter}
+          onClear={clearFilters}
         />
       )}
 
-      <VolumeChart dados={dadosGrafico} />
+      <VolumeChart data={chartData} />
 
       {loading ? (
         <div className="flex flex-col gap-3">
           {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
         </div>
-      ) : sessoesFiltradas.length === 0 ? (
-        <EmptyHistory filtroAtivo={filtroAtivo} onLimparFiltros={handleLimparFiltros} />
+      ) : filteredSessions.length === 0 ? (
+        <EmptyHistory filtroAtivo={hasActiveFilter} onLimparFiltros={clearFilters} />
       ) : (
         <div className="flex flex-col gap-3">
-          {filtroAtivo && (
+          {hasActiveFilter && (
             <p className="text-xs text-text-muted mb-1">
-              {sessoesFiltradas.length} resultado{sessoesFiltradas.length !== 1 ? 's' : ''}
+              {filteredSessions.length} resultado{filteredSessions.length !== 1 ? 's' : ''}
             </p>
           )}
-          {sessoesFiltradas.map((sessao, idx) => (
+          {filteredSessions.map((sessao, idx) => (
             <SessionCard
               key={sessao.id}
               sessao={sessao}
               index={idx}
-              onExcluir={setConfirmExcluir}
+              onExcluir={setConfirmDeleteId}
               onRetornar={restoreFromHistory}
             />
           ))}
         </div>
       )}
 
-      {confirmExcluir && (
+      {confirmDeleteId && (
         <ConfirmDeleteModal
           onConfirm={() => {
-            deleteSessionById(confirmExcluir)
-            setConfirmExcluir(null)
+            deleteSessionById(confirmDeleteId)
+            setConfirmDeleteId(null)
           }}
-          onCancel={() => setConfirmExcluir(null)}
+          onCancel={() => setConfirmDeleteId(null)}
         />
       )}
     </div>

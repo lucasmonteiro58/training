@@ -13,54 +13,54 @@ import { NewMeasurementModal } from './components/-NewMeasurementModal'
 import { ConfirmDeleteMeasurementModal } from './components/-ConfirmDeleteMeasurementModal'
 
 export const Route = createFileRoute('/profile/measurements')({
-  component: MedidasPage,
+  component: MeasurementsPage,
 })
 
-function MedidasPage() {
+function MeasurementsPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const { measurements, loading, add, remove } = useMeasurements()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({})
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [campoGrafico, setCampoGrafico] = useState<string>('peso')
+  const [chartField, setChartField] = useState<string>('peso')
 
-  const handleSalvar = async () => {
+  const handleSave = async () => {
     if (!user) return
-    const temAlgumValor = MEASUREMENT_FIELDS.some(c => form[c.key] && Number(form[c.key]) > 0)
-    if (!temAlgumValor) {
+    const hasAnyValue = MEASUREMENT_FIELDS.some(c => form[c.key] && Number(form[c.key]) > 0)
+    if (!hasAnyValue) {
       toast.error('Preencha pelo menos uma medida.')
       return
     }
 
-    const medida: BodyMeasurement = {
+    const measurement: BodyMeasurement = {
       id: crypto.randomUUID(),
       userId: user.uid,
       data: Date.now(),
     }
     MEASUREMENT_FIELDS.forEach(c => {
       const v = parseFloat(form[c.key] || '')
-      if (v > 0) (medida as unknown as Record<string, unknown>)[c.key] = v
+      if (v > 0) (measurement as unknown as Record<string, unknown>)[c.key] = v
     })
-    if (form.notas?.trim()) medida.notas = form.notas.trim()
+    if (form.notas?.trim()) measurement.notas = form.notas.trim()
 
-    await add(medida)
+    await add(measurement)
     setForm({})
     setShowForm(false)
     toast.success('Medida registrada!')
   }
 
-  const dadosGrafico = useMemo(() => {
-    const campo = MEASUREMENT_FIELDS.find(c => c.key === campoGrafico)
-    if (!campo) return []
+  const chartData = useMemo(() => {
+    const field = MEASUREMENT_FIELDS.find(c => c.key === chartField)
+    if (!field) return []
     return [...measurements]
-      .filter(m => (m as unknown as Record<string, unknown>)[campoGrafico] != null)
+      .filter(m => (m as unknown as Record<string, unknown>)[chartField] != null)
       .sort((a, b) => a.data - b.data)
       .map(m => ({
         data: new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        valor: (m as unknown as Record<string, unknown>)[campoGrafico] as number,
+        valor: (m as unknown as Record<string, unknown>)[chartField] as number,
       }))
-  }, [measurements, campoGrafico])
+  }, [measurements, chartField])
 
   if (loading) {
     return (
@@ -89,9 +89,9 @@ function MedidasPage() {
 
       {measurements.length >= 1 && (
         <MeasurementsChart
-          campoGrafico={campoGrafico}
-          dados={dadosGrafico}
-          onCampoChange={setCampoGrafico}
+          campoGrafico={chartField}
+          dados={chartData}
+          onCampoChange={setChartField}
         />
       )}
 
@@ -119,7 +119,7 @@ function MedidasPage() {
         <NewMeasurementModal
           form={form}
           onFormChange={setForm}
-          onSalvar={handleSalvar}
+          onSalvar={handleSave}
           onClose={() => setShowForm(false)}
         />
       )}

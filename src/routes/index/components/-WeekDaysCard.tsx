@@ -1,51 +1,51 @@
 interface WeekDaysCardProps {
-  diasDaSemana: string[]
-  inicioSemana: Date
-  hoje: Date
-  sessoes: { startedAt: number }[]
-  /** Dias da semana opcionais (0=dom, ..., 6=sáb). Indicação sutil no widget. */
-  diasOpcionais?: number[]
+  weekDayLabels: string[]
+  weekStart: Date
+  today: Date
+  sessions: { startedAt: number }[]
+  /** Optional week days (0=sun, ..., 6=sat). Subtle indicator on widget. */
+  optionalDays?: number[]
 }
 
 export function WeekDaysCard({
-  diasDaSemana,
-  inicioSemana,
-  hoje,
-  sessoes,
-  diasOpcionais = [],
+  weekDayLabels,
+  weekStart,
+  today,
+  sessions,
+  optionalDays = [],
 }: WeekDaysCardProps) {
   return (
     <div className="card p-4 mb-6 animate-fade-up" style={{ animationDelay: '100ms' }}>
       <p className="text-xs text-text-muted font-medium mb-3">ESTA SEMANA</p>
       <div className="flex justify-between">
-        {diasDaSemana.map((dia, idx) => {
-          const diaDate = new Date(inicioSemana)
-          diaDate.setDate(inicioSemana.getDate() + idx)
-          const temTreino = sessoes.some(s => {
+        {weekDayLabels.map((dayLabel, idx) => {
+          const dayDate = new Date(weekStart)
+          dayDate.setDate(weekStart.getDate() + idx)
+          const hasWorkout = sessions.some(s => {
             const d = new Date(s.startedAt)
-            return d.toDateString() === diaDate.toDateString()
+            return d.toDateString() === dayDate.toDateString()
           })
-          const isHoje = diaDate.toDateString() === hoje.toDateString()
-          const isOpcional = diasOpcionais.includes(idx)
+          const isToday = dayDate.toDateString() === today.toDateString()
+          const isOptional = optionalDays.includes(idx)
           return (
             <div key={idx} className="flex flex-col items-center gap-1.5">
               <span
-                className={`text-[10px] ${isHoje ? 'text-accent font-semibold' : 'text-text-subtle'}`}
+                className={`text-[10px] ${isToday ? 'text-accent font-semibold' : 'text-text-subtle'}`}
               >
-                {dia}
+                {dayLabel}
               </span>
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold relative ${
-                  temTreino
+                  hasWorkout
                     ? 'bg-accent text-white'
-                    : isHoje
+                    : isToday
                       ? 'border-2 border-accent text-accent'
                       : 'bg-surface-2 text-text-subtle'
-                } ${isOpcional && !temTreino ? 'ring-1 ring-border ring-offset-1 ring-offset-bg' : ''}`}
+                } ${isOptional && !hasWorkout ? 'ring-1 ring-border ring-offset-1 ring-offset-bg' : ''}`}
               >
-                {temTreino ? '✓' : diaDate.getDate()}
+                {hasWorkout ? '✓' : dayDate.getDate()}
               </div>
-              {isOpcional && (
+              {isOptional && (
                 <span className="text-[9px] text-text-muted/70" title="Dia opcional">
                   opc
                 </span>

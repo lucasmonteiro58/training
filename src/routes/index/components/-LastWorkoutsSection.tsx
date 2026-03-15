@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { formatarTempo } from '../../../lib/notifications'
+import { formatDuration } from '../../../lib/notifications'
 
 interface SessionSummary {
   id: string
@@ -10,12 +10,12 @@ interface SessionSummary {
 }
 
 interface LastWorkoutsSectionProps {
-  sessoes: SessionSummary[]
-  carregando: boolean
+  sessions: SessionSummary[]
+  loading: boolean
 }
 
-export function LastWorkoutsSection({ sessoes, carregando }: LastWorkoutsSectionProps) {
-  if (carregando) {
+export function LastWorkoutsSection({ sessions, loading }: LastWorkoutsSectionProps) {
+  if (loading) {
     return (
       <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
         <div className="flex items-center justify-between mb-3">
@@ -30,7 +30,7 @@ export function LastWorkoutsSection({ sessoes, carregando }: LastWorkoutsSection
     )
   }
 
-  if (sessoes.length === 0) return null
+  if (sessions.length === 0) return null
 
   return (
     <div className="mb-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
@@ -41,18 +41,18 @@ export function LastWorkoutsSection({ sessoes, carregando }: LastWorkoutsSection
         </Link>
       </div>
       <div className="flex flex-col gap-2">
-        {sessoes.map(sessao => (
+        {sessions.map(session => (
           <Link
-            key={sessao.id}
+            key={session.id}
             to="/history/$sessionId"
-            params={{ sessionId: sessao.id }}
+            params={{ sessionId: session.id }}
             style={{ textDecoration: 'none' }}
           >
             <div className="card p-4 flex items-center justify-between">
               <div>
-                <p className="text-text font-semibold text-sm">{sessao.planName}</p>
+                <p className="text-text font-semibold text-sm">{session.planName}</p>
                 <p className="text-text-muted text-xs mt-0.5">
-                  {new Date(sessao.startedAt).toLocaleDateString('pt-BR', {
+                  {new Date(session.startedAt).toLocaleDateString('pt-BR', {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',
@@ -60,14 +60,14 @@ export function LastWorkoutsSection({ sessoes, carregando }: LastWorkoutsSection
                 </p>
               </div>
               <div className="text-right">
-                {sessao.durationSeconds != null && (
+                {session.durationSeconds != null && (
                   <p className="text-text-muted text-xs font-medium">
-                    {formatarTempo(sessao.durationSeconds)}
+                    {formatDuration(session.durationSeconds)}
                   </p>
                 )}
-                {sessao.totalVolume !== undefined && (
+                {session.totalVolume !== undefined && (
                   <p className="text-text-subtle text-xs mt-0.5">
-                    {Math.round(sessao.totalVolume)} kg
+                    {Math.round(session.totalVolume)} kg
                   </p>
                 )}
               </div>

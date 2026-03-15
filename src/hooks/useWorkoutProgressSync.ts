@@ -16,52 +16,52 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
   useEffect(() => {
     if (!user) return
 
-    const unsub = subscribeToWorkoutProgress(user.uid, (dados) => {
+    const unsub = subscribeToWorkoutProgress(user.uid, (data) => {
       const state = useActiveWorkoutStore.getState()
-      const historicoState = useHistoryStore.getState()
+      const historyState = useHistoryStore.getState()
 
-      if (!dados || !dados.iniciado) {
+      if (!data || !data.iniciado) {
         if (state.started) state.clearLocal()
         return
       }
 
-      const updatedAt = (dados as { updatedAt?: number }).updatedAt
+      const updatedAt = (data as { updatedAt?: number }).updatedAt
       if (
         updatedAt &&
         Date.now() - updatedAt > INATIVIDADE_AUTO_ENCERRAR_MS
       ) {
         if (
-          historicoState.autoClosedSnapshot?.session.id === dados.sessao?.id
+          historyState.autoClosedSnapshot?.session.id === data.sessao?.id
         )
           return
-        const sessao = dados.sessao
-        if (!sessao) return
-        const cronometroBruto =
-          (dados as { cronometroGeralSegundos?: number })
+        const session = data.sessao
+        if (!session) return
+        const rawTimerSeconds =
+          (data as { cronometroGeralSegundos?: number })
             .cronometroGeralSegundos ?? 0
-        const tempoOciosoSegundos = Math.floor(
+        const idleTimeSeconds = Math.floor(
           INATIVIDADE_AUTO_ENCERRAR_MS / 1000
         )
-        const finalizada = {
-          ...sessao,
-          finalizadoEm: Date.now(),
-          duracaoSegundos: Math.max(
+        const finishedSession = {
+          ...session,
+          finishedAt: Date.now(),
+          durationSeconds: Math.max(
             0,
-            cronometroBruto - tempoOciosoSegundos
+            rawTimerSeconds - idleTimeSeconds
           ),
-          tempoOciosoDescontadoSegundos: tempoOciosoSegundos,
-          volumeTotal: calcularVolume(sessao),
-          autoEncerrado: true,
+          idleSecondsDeducted: idleTimeSeconds,
+          totalVolume: calcularVolume(session),
+          autoClosed: true,
         }
-        saveSessionComplete(finalizada).then(() => {
+        saveSessionComplete(finishedSession).then(() => {
           clearWorkoutProgressFromFirestore(user.uid)
           state.clearLocal()
           setAutoClosedSnapshot({
-            session: finalizada,
-            currentExerciseIndex: dados.exercicioAtualIndex ?? 0,
-            currentSetIndex: dados.serieAtualIndex ?? 0,
+            session: finishedSession,
+            currentExerciseIndex: data.exercicioAtualIndex ?? 0,
+            currentSetIndex: data.serieAtualIndex ?? 0,
             totalTimerSeconds:
-              (dados as { cronometroGeralSegundos?: number })
+              (data as { cronometroGeralSegundos?: number })
                 .cronometroGeralSegundos ?? 0,
           })
         })
@@ -69,11 +69,11 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
       }
 
       if (!state.started) {
-        state.restoreFromExternal(dados as Parameters<typeof state.restoreFromExternal>[0])
+        state.restoreFromExternal(data as Parameters<typeof state.restoreFromExternal>[0])
         return
       }
 
-      state.syncExternalState(dados as Parameters<typeof state.syncExternalState>[0])
+      state.syncExternalState(data as Parameters<typeof state.syncExternalState>[0])
     })
 
     return unsub

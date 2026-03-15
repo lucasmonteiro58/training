@@ -1,5 +1,5 @@
 import { Download } from 'lucide-react'
-import { downloadTemplateCsv } from '../../../lib/csvImport'
+import { downloadCsvTemplate } from '../../../lib/csvImport'
 
 export function CsvFormatCard() {
   return (
@@ -16,7 +16,7 @@ export function CsvFormatCard() {
         </div>
         <button
           type="button"
-          onClick={downloadTemplateCsv}
+          onClick={downloadCsvTemplate}
           className="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5 shrink-0"
         >
           <Download size={14} />

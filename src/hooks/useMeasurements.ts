@@ -26,10 +26,10 @@ export function useMeasurements() {
   }, [user])
 
   const add = useCallback(
-    async (medida: BodyMeasurement) => {
-      await saveMeasurement(medida)
-      setMeasurements(prev => [medida, ...prev].sort((a, b) => b.data - a.data))
-      syncMeasurementToFirestore(medida)
+    async (measurement: BodyMeasurement) => {
+      await saveMeasurement(measurement)
+      setMeasurements(prev => [measurement, ...prev].sort((a, b) => b.data - a.data))
+      syncMeasurementToFirestore(measurement)
     },
     []
   )

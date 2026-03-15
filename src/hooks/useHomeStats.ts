@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { calcularStreaks } from '../lib/streaks'
+import { calculateStreaks } from '../lib/streaks'
 import { GROUP_COLORS } from '../types'
 import type { WorkoutSession } from '../types'
 import type { WorkoutPlan } from '../types'
@@ -7,8 +7,8 @@ import type { WorkoutPlan } from '../types'
 interface UseHomeStatsParams {
   sessions: WorkoutSession[]
   activePlans: WorkoutPlan[]
-  metaSemanal: number
-  diasOpcionais: number[]
+  weeklyGoal: number
+  optionalDays: number[]
   loading: boolean
   loadingSessions: boolean
 }
@@ -16,8 +16,8 @@ interface UseHomeStatsParams {
 export function useHomeStats({
   sessions,
   activePlans,
-  metaSemanal,
-  diasOpcionais,
+  weeklyGoal,
+  optionalDays,
   loading,
   loadingSessions,
 }: UseHomeStatsParams) {
@@ -41,8 +41,8 @@ export function useHomeStats({
   const isLoading = loading || loadingSessions
 
   const streaks = useMemo(
-    () => calcularStreaks(sessions, metaSemanal, diasOpcionais),
-    [sessions, metaSemanal, diasOpcionais]
+    () => calculateStreaks(sessions, weeklyGoal, optionalDays),
+    [sessions, weeklyGoal, optionalDays]
   )
 
   const lastSession = sessions[0]
@@ -74,12 +74,12 @@ export function useHomeStats({
     })
     return Object.entries(groupMap)
       .map(([group, last]) => ({
-        grupo: group,
-        dias: Math.floor((now - last) / 86400000),
-        cor: GROUP_COLORS[group] ?? '#6366f1',
+        group,
+        days: Math.floor((now - last) / 86400000),
+        color: GROUP_COLORS[group] ?? '#6366f1',
       }))
-      .filter((a) => a.dias >= 7)
-      .sort((a, b) => b.dias - a.dias)
+      .filter((a) => a.days >= 7)
+      .sort((a, b) => b.days - a.days)
       .slice(0, 4)
   }, [sessions])
 

@@ -205,7 +205,7 @@ export async function toggleExerciseFavorite(exerciseId: string, favorited: bool
   }
 }
 
-export async function getFavoritoIds(): Promise<Set<string>> {
+export async function getFavoriteIds(): Promise<Set<string>> {
   const cached = await localDB.exerciciosCache.filter((ex) => ex.favorited === true).toArray()
   const custom = await localDB.exerciciosPersonalizados.filter((ex) => ex.favorited === true).toArray()
   return new Set([...cached, ...custom].map((ex) => ex.id))
@@ -222,8 +222,8 @@ export async function getMeasurements(userId: string): Promise<BodyMeasurement[]
     .sortBy('data')
 }
 
-export async function saveMeasurement(medida: BodyMeasurement): Promise<void> {
-  await localDB.medidas.put(medida)
+export async function saveMeasurement(measurement: BodyMeasurement): Promise<void> {
+  await localDB.medidas.put(measurement)
 }
 
 export async function deleteMeasurement(id: string): Promise<void> {

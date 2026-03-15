@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Calculator, X } from 'lucide-react'
-import { calcular1RM, tabelaCargas } from '../../lib/calculadora1rm'
+import { calculate1RM, getWeightsTable } from '../../lib/calculadora1rm'
 
 interface Calculadora1RMProps {
   onClose: () => void
@@ -12,8 +12,8 @@ export function Calculadora1RM({ onClose, initialWeight, initialReps }: Calculad
   const [weight, setWeight] = useState(initialWeight ?? 0)
   const [reps, setReps] = useState(initialReps ?? 0)
 
-  const oneRM = calcular1RM(weight, reps)
-  const loadTable = oneRM > 0 ? tabelaCargas(oneRM) : []
+  const oneRM = calculate1RM(weight, reps)
+  const loadTable = oneRM > 0 ? getWeightsTable(oneRM) : []
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -84,16 +84,16 @@ export function Calculadora1RM({ onClose, initialWeight, initialReps }: Calculad
             <div className="space-y-1">
               {loadTable.map((row) => (
                 <div
-                  key={row.percentual}
+                  key={row.percentage}
                   className={`grid grid-cols-3 items-center py-2 px-3 rounded-lg text-sm ${
-                    row.percentual === 100
+                    row.percentage === 100
                       ? 'bg-accent/15 text-accent font-bold'
                       : 'bg-surface-2/50'
                   }`}
                 >
-                  <span className="text-text-muted font-medium">{row.percentual}%</span>
-                  <span className="text-text font-bold text-center">{row.peso} kg</span>
-                  <span className="text-text-muted text-right text-xs">{row.repsEstimadas} reps</span>
+                  <span className="text-text-muted font-medium">{row.percentage}%</span>
+                  <span className="text-text font-bold text-center">{row.weight} kg</span>
+                  <span className="text-text-muted text-right text-xs">{row.estimatedReps} reps</span>
                 </div>
               ))}
             </div>

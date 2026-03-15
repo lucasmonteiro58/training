@@ -1,12 +1,12 @@
 import { CheckCircle2, Circle, Trophy } from 'lucide-react'
 import type { ExerciseInSession } from '../../../types'
-import type { RecordeExercicio } from '../../../lib/records'
+import type { ExerciseRecord } from '../../../lib/records'
 
 interface ExerciseSessionCardProps {
   ex: ExerciseInSession
   exIdx: number
   editando: boolean
-  recordesSemAtual: Map<string, RecordeExercicio>
+  recordsExcludingCurrent: Map<string, ExerciseRecord>
   onUpdateSerie: (exIdx: number, sIdx: number, campo: Partial<{ weight: number; reps: number; completed: boolean }>) => void
 }
 
@@ -14,14 +14,14 @@ export function ExerciseSessionCard({
   ex,
   exIdx,
   editando,
-  recordesSemAtual,
+  recordsExcludingCurrent,
   onUpdateSerie,
 }: ExerciseSessionCardProps) {
   const seriesPRs = ex.sets.map((s: { completed: boolean; weight: number }) => {
     if (!s.completed || s.weight <= 0) return false
-    const rec = recordesSemAtual.get(ex.exerciseId)
-    if (!rec) return true
-    return s.weight > rec.maiorPeso
+    const record = recordsExcludingCurrent.get(ex.exerciseId)
+    if (!record) return true
+    return s.weight > record.maxWeight
   })
 
   return (

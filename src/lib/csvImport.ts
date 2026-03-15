@@ -3,15 +3,15 @@ import type { WorkoutCsvRow, ExerciseInPlan, Exercise } from '../types'
 import { GROUPS_EN_TO_PT } from '../types'
 import { v4 as uuidv4 } from 'uuid'
 
-export interface PlanoImportado {
+export interface ImportedPlan {
   id: string
   name: string
   exercises: ExerciseInPlan[]
 }
 
-export interface ResultadoCsv {
-  planos: PlanoImportado[]
-  erros: string[]
+export interface CsvResult {
+  plans: ImportedPlan[]
+  errors: string[]
 }
 
 export const CSV_TEMPLATE = `id,plano,nome_exercicio,grupo_muscular,series,repeticoes,peso_kg,descanso_segundos,instrucoes,notas
@@ -19,115 +19,113 @@ export const CSV_TEMPLATE = `id,plano,nome_exercicio,grupo_muscular,series,repet
 Barbell_Curl,Treino A,Rosca Direta,Bíceps,3,12,20,60,,Sem roubar
 ,Treino B,Agachamento Livre,Quadríceps,4,8,100,120,Pés na largura dos ombros|Desça até 90 graus,Manter o core firme`
 
-export function parsearCsv(conteudo: string, exerciciosDb: Exercise[] = []): ResultadoCsv {
-  const resultado: ResultadoCsv = { planos: [], erros: [] }
+export function parseCsv(content: string, exercisesDb: Exercise[] = []): CsvResult {
+  const result: CsvResult = { plans: [], errors: [] }
 
-  // Criar mapas para busca rápida por id e por nome (normalizado)
-  const dbPorId = new Map<string, Exercise>()
-  const dbPorNome = new Map<string, Exercise>()
-  for (const ex of exerciciosDb) {
-    dbPorId.set(ex.id.toLowerCase(), ex)
-    dbPorNome.set(ex.name.toLowerCase().trim(), ex)
+  const dbById = new Map<string, Exercise>()
+  const dbByName = new Map<string, Exercise>()
+  for (const ex of exercisesDb) {
+    dbById.set(ex.id.toLowerCase(), ex)
+    dbByName.set(ex.name.toLowerCase().trim(), ex)
   }
 
-  const { data, errors } = Papa.parse<WorkoutCsvRow>(conteudo, {
+  const { data, errors } = Papa.parse<WorkoutCsvRow>(content, {
     header: true,
     skipEmptyLines: true,
     transformHeader: (h) => h.trim().toLowerCase().replace(/ /g, '_'),
   })
 
   if (errors.length > 0) {
-    resultado.erros.push('Erro ao ler CSV: verifique o formato do arquivo')
-    return resultado
+    result.errors.push('Erro ao ler CSV: verifique o formato do arquivo')
+    return result
   }
 
-  const planosMap = new Map<string, ExerciseInPlan[]>()
-  const planoNamesOrder: string[] = []
+  const plansMap = new Map<string, ExerciseInPlan[]>()
+  const planNamesOrder: string[] = []
 
-  data.forEach((linha, idx) => {
+  data.forEach((row, idx) => {
     const rowNum = idx + 2
 
-    if (!linha.nome_exercicio?.trim()) {
-      resultado.erros.push(`Linha ${rowNum}: nome_exercicio é obrigatório`)
+    if (!row.nome_exercicio?.trim()) {
+      result.errors.push(`Linha ${rowNum}: nome_exercicio é obrigatório`)
       return
     }
 
-    const numSeries = parseInt(linha.series, 10)
-    if (isNaN(numSeries) || numSeries < 1) {
-      resultado.erros.push(`Linha ${rowNum}: séries inválidas (deve ser um número >= 1)`)
+    const numSets = parseInt(row.series, 10)
+    if (isNaN(numSets) || numSets < 1) {
+      result.errors.push(`Linha ${rowNum}: séries inválidas (deve ser um número >= 1)`)
       return
     }
 
-    const repsArr = (linha.repeticoes || '').split(';').map(v => parseInt(v.trim(), 10)).filter(v => !isNaN(v))
-    const pesosArr = (linha.peso_kg || '').split(';').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
-    const descanso = parseInt(linha.descanso_segundos || '60', 10)
-    const instrucoesArr = linha.instrucoes ? linha.instrucoes.split('|').map(s => s.trim()).filter(Boolean) : undefined
+    const repsArr = (row.repeticoes || '').split(';').map(v => parseInt(v.trim(), 10)).filter(v => !isNaN(v))
+    const weightsArr = (row.peso_kg || '').split(';').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
+    const restSeconds = parseInt(row.descanso_segundos || '60', 10)
+    const instructionsArr = row.instrucoes ? row.instrucoes.split('|').map(s => s.trim()).filter(Boolean) : undefined
 
     if (repsArr.length === 0) {
-      resultado.erros.push(`Linha ${rowNum}: repetições inválidas`)
+      result.errors.push(`Linha ${rowNum}: repetições inválidas`)
       return
     }
 
-    const setsDetail = Array.from({ length: numSeries }).map((_, i) => ({
+    const setsDetail = Array.from({ length: numSets }).map((_, i) => ({
       reps: repsArr[i] ?? repsArr[repsArr.length - 1],
-      weight: pesosArr[i] ?? pesosArr[pesosArr.length - 1] ?? 0,
+      weight: weightsArr[i] ?? weightsArr[weightsArr.length - 1] ?? 0,
     }))
 
-    const grupoEn = linha.grupo_muscular?.trim() ?? ''
-    const grupoPt = GROUPS_EN_TO_PT[grupoEn.toLowerCase()] ?? (grupoEn || 'Outro')
+    const groupEn = row.grupo_muscular?.trim() ?? ''
+    const groupPt = GROUPS_EN_TO_PT[groupEn.toLowerCase()] ?? (groupEn || 'Outro')
 
-    // Tentar encontrar exercício existente no banco de dados por ID ou nome exato
-    const csvId = linha.id?.trim()
-    let exercicioDb: Exercise | undefined
+    const csvId = row.id?.trim()
+    let exerciseDb: Exercise | undefined
 
     if (csvId) {
-      exercicioDb = dbPorId.get(csvId.toLowerCase())
+      exerciseDb = dbById.get(csvId.toLowerCase())
     }
-    if (!exercicioDb) {
-      exercicioDb = dbPorNome.get(linha.nome_exercicio.trim().toLowerCase())
+    if (!exerciseDb) {
+      exerciseDb = dbByName.get(row.nome_exercicio.trim().toLowerCase())
     }
 
-    const exercise: Exercise = exercicioDb
-      ? { ...exercicioDb }
+    const exercise: Exercise = exerciseDb
+      ? { ...exerciseDb }
       : {
           id: `csv-${uuidv4()}`,
-          name: linha.nome_exercicio.trim(),
-          muscleGroup: grupoPt,
-          instructions: instrucoesArr,
+          name: row.nome_exercicio.trim(),
+          muscleGroup: groupPt,
+          instructions: instructionsArr,
           custom: true,
         }
 
-    const planoNome = (linha as any).plano?.trim() || 'Meu Treino'
-    if (!planosMap.has(planoNome)) {
-      planosMap.set(planoNome, [])
-      planoNamesOrder.push(planoNome)
+    const planName = (row as any).plano?.trim() || 'Meu Treino'
+    if (!plansMap.has(planName)) {
+      plansMap.set(planName, [])
+      planNamesOrder.push(planName)
     }
 
-    const exercisesDoPlano = planosMap.get(planoNome)!
-    exercisesDoPlano.push({
+    const planExercises = plansMap.get(planName)!
+    planExercises.push({
       id: uuidv4(),
       exerciseId: exercise.id,
       exercise,
-      series: numSeries,
+      series: numSets,
       targetReps: repsArr[0],
-      targetWeight: pesosArr[0] ?? 0,
+      targetWeight: weightsArr[0] ?? 0,
       setsDetail,
-      restSeconds: isNaN(descanso) ? 60 : descanso,
-      order: exercisesDoPlano.length,
-      notes: linha.notas?.trim() || undefined,
+      restSeconds: isNaN(restSeconds) ? 60 : restSeconds,
+      order: planExercises.length,
+      notes: row.notas?.trim() || undefined,
     })
   })
 
-  resultado.planos = planoNamesOrder.map((name) => ({
+  result.plans = planNamesOrder.map((name) => ({
     id: uuidv4(),
     name,
-    exercises: planosMap.get(name)!,
+    exercises: plansMap.get(name)!,
   }))
 
-  return resultado
+  return result
 }
 
-export function downloadTemplateCsv() {
+export function downloadCsvTemplate() {
   const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

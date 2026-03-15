@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { carregarExercicios, buscarExercicios } from '../../lib/exercises/freeExerciseDb'
+import { loadExercises, searchExercises } from '../../lib/exercises/freeExerciseDb'
 import type { Exercise } from '../../types'
 import { Search, X, Plus, Heart } from 'lucide-react'
-import { getPersonalizedExercises, getFavoritoIds, toggleExerciseFavorite } from '../../lib/db/dexie'
+import { getPersonalizedExercises, getFavoriteIds, toggleExerciseFavorite } from '../../lib/db/dexie'
 import { useAuthStore } from '../../stores'
 import { CreateExerciseModal } from './CreateExerciseModal'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -27,7 +27,7 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
 
   const loadAll = async () => {
     setLoading(true)
-    const base = await carregarExercicios()
+    const base = await loadExercises()
     let custom: Exercise[] = []
     if (user) {
       custom = await getPersonalizedExercises(user.uid)
@@ -35,7 +35,7 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
     const all = [...custom, ...base].sort((a, b) => a.name.localeCompare(b.name))
     setExercises(all)
     setFiltered(all)
-    const favIds = await getFavoritoIds()
+    const favIds = await getFavoriteIds()
     setFavoriteIds(favIds)
     setLoading(false)
   }
@@ -45,7 +45,7 @@ export function ExercisePicker({ onSelect, onClose }: ExercisePickerProps) {
   }, [user])
 
   useEffect(() => {
-    let result = buscarExercicios(exercises, query, group || undefined)
+    let result = searchExercises(exercises, query, group || undefined)
     if (showFavorites) {
       result = result.filter(ex => favoriteIds.has(ex.id))
     }

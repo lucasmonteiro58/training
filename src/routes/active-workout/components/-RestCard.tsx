@@ -1,12 +1,12 @@
 import { Timer, SkipForward } from 'lucide-react'
-import { formatarTempo } from '../../../lib/notifications'
+import { formatDuration } from '../../../lib/notifications'
 
 interface RestCardProps {
-  segundosRestantes: number
-  onPular: () => void
+  secondsRemaining: number
+  onSkip: () => void
 }
 
-export function RestCard({ segundosRestantes, onPular }: RestCardProps) {
+export function RestCard({ secondsRemaining, onSkip }: RestCardProps) {
   return (
     <div className="mx-4 mb-4 p-4 rounded-2xl bg-surface border border-border flex items-center justify-between animate-scale-in">
       <div className="flex items-center gap-3">
@@ -17,16 +17,16 @@ export function RestCard({ segundosRestantes, onPular }: RestCardProps) {
           <p className="text-xs text-text-muted font-medium">Descanso</p>
           <p
             className={`text-2xl font-black tabular-nums ${
-              segundosRestantes <= 10 && segundosRestantes > 0 ? 'text-warning' : 'text-text'
+              secondsRemaining <= 10 && secondsRemaining > 0 ? 'text-warning' : 'text-text'
             }`}
           >
-            {formatarTempo(segundosRestantes)}
+            {formatDuration(secondsRemaining)}
           </p>
         </div>
       </div>
       <button
         type="button"
-        onClick={onPular}
+        onClick={onSkip}
         className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-2 text-text-muted text-sm font-semibold hover:bg-surface-3 transition-colors"
       >
         <SkipForward size={14} />

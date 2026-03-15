@@ -1,13 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '../../hooks/useAuth'
 import { useHistoryStore, usePlansStore } from '../../stores'
-import { getNotifAtivas, setNotifAtivas, solicitarPermissaoNotificacao } from '../../lib/notifications'
+import {
+  getNotificationsEnabled,
+  setNotificationsEnabled,
+  requestNotificationPermission,
+} from '../../lib/notifications'
 import { LogOut } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { toast } from 'sonner'
-import { calcularStreaks, calcularConquistas } from '../../lib/streaks'
+import { calculateStreaks, calculateAchievements } from '../../lib/streaks'
 
-function parseDiasOpcionais(): number[] {
+function parseOptionalDays(): number[] {
   try {
     const v = localStorage.getItem('diasOpcionais')
     if (!v) return []
@@ -25,52 +29,52 @@ import { ExportModal } from './components/-ExportModal'
 import { LogoutConfirmModal } from './components/-LogoutConfirmModal'
 
 export const Route = createFileRoute('/profile/')({
-  component: PerfilPage,
+  component: ProfilePage,
 })
 
-function PerfilPage() {
+function ProfilePage() {
   const { user, logout } = useAuth()
   const plans = usePlansStore((s) => s.plans)
   const sessions = useHistoryStore((s) => s.sessions)
-  const [notifPermitida, setNotifPermitida] = useState(() => getNotifAtivas())
+  const [notificationsEnabled, setNotificationsEnabledState] = useState(() => getNotificationsEnabled())
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
 
   const streaks = useMemo(
-    () => calcularStreaks(sessions, 4, parseDiasOpcionais()),
+    () => calculateStreaks(sessions, 4, parseOptionalDays()),
     [sessions]
   )
-  const conquistas = useMemo(() => calcularConquistas(sessions, streaks), [sessions, streaks])
+  const achievements = useMemo(() => calculateAchievements(sessions, streaks), [sessions, streaks])
 
-  const totalDuracao = sessions.reduce((sum, s) => sum + (s.durationSeconds ?? 0), 0)
+  const totalDuration = sessions.reduce((sum, s) => sum + (s.durationSeconds ?? 0), 0)
   const totalVolume = sessions.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0)
 
-  const handleNotif = async () => {
-    const permissao = typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  const handleNotificationToggle = async () => {
+    const permission = typeof Notification !== 'undefined' ? Notification.permission : 'denied'
 
-    if (permissao === 'granted' && notifPermitida) {
-      setNotifAtivas(false)
-      setNotifPermitida(false)
+    if (permission === 'granted' && notificationsEnabled) {
+      setNotificationsEnabled(false)
+      setNotificationsEnabledState(false)
       toast.success('Notificações desativadas.')
       return
     }
 
-    if (permissao === 'granted' && !notifPermitida) {
-      setNotifAtivas(true)
-      setNotifPermitida(true)
+    if (permission === 'granted' && !notificationsEnabled) {
+      setNotificationsEnabled(true)
+      setNotificationsEnabledState(true)
       toast.success('Notificações reativadas!')
       return
     }
 
-    if (permissao === 'denied') {
+    if (permission === 'denied') {
       toast.error('Permissão bloqueada pelo navegador. Acesse as configurações do site para reativar.')
       return
     }
 
-    const ok = await solicitarPermissaoNotificacao()
+    const ok = await requestNotificationPermission()
     if (ok) {
-      setNotifAtivas(true)
-      setNotifPermitida(true)
+      setNotificationsEnabled(true)
+      setNotificationsEnabledState(true)
       toast.success('Notificações ativadas! Você receberá alertas durante o treino.')
     } else {
       toast.error('Permissão negada. Ative nas configurações do seu navegador.')
@@ -89,14 +93,14 @@ function PerfilPage() {
         totalTreinos={sessions.length}
         totalPlanos={plans.length}
         volumeTotal={totalVolume}
-        tempoTotal={totalDuracao}
+        tempoTotal={totalDuration}
       />
 
-      <AchievementsCard conquistas={conquistas} />
+      <AchievementsCard achievements={achievements} />
 
       <SettingsCard
-        notifPermitida={notifPermitida}
-        onNotifToggle={handleNotif}
+        notifPermitida={notificationsEnabled}
+        onNotifToggle={handleNotificationToggle}
         onExportClick={() => setShowExportMenu(true)}
       />
 
@@ -116,8 +120,8 @@ function PerfilPage() {
 
       {showExportMenu && (
         <ExportModal
-          sessoes={sessions}
-          planos={plans}
+          sessions={sessions}
+          plans={plans}
           onClose={() => setShowExportMenu(false)}
           onExport={(msg) => toast.success(msg)}
         />

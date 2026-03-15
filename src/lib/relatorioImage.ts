@@ -1,7 +1,7 @@
 import type { WorkoutSession } from '../types'
-import { formatarTempo } from './notifications'
+import { formatDuration } from './notifications'
 
-export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | null> {
+export async function generateReportImage(s: WorkoutSession): Promise<Blob | null> {
   const W = 1080
   const PAD = 72
   const PALETTE = ['#6366f1', '#a78bfa', '#38bdf8', '#f59e0b', '#f472b6', '#22c55e']
@@ -23,10 +23,10 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
     0
   )
   const volumeKg = s.totalVolume ? Math.round(s.totalVolume) : 0
-  const exercFeitos = s.exercises.filter(ex => ex.sets.some(sr => sr.completed)).length
-  const mediaSerie = totalSeries > 0 && volumeKg > 0 ? `${Math.round(volumeKg / totalSeries)}kg` : '–'
-  const duracao = s.durationSeconds ? formatarTempo(s.durationSeconds) : '–'
-  const data = new Date(s.startedAt).toLocaleDateString('pt-BR', {
+  const exercisesDone = s.exercises.filter(ex => ex.sets.some(sr => sr.completed)).length
+  const avgPerSet = totalSeries > 0 && volumeKg > 0 ? `${Math.round(volumeKg / totalSeries)}kg` : '–'
+  const duration = s.durationSeconds ? formatDuration(s.durationSeconds) : '–'
+  const formattedDate = new Date(s.startedAt).toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -34,14 +34,14 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
 
   const barData = s.exercises
     .map((ex: { exerciseName: string; sets: { completed: boolean; weight?: number; reps?: number }[] }) => ({
-      nome: ex.exerciseName,
-      vol: ex.sets
+      name: ex.exerciseName,
+      volume: ex.sets
         .filter(sr => sr.completed)
         .reduce((a: number, sr) => a + (sr.weight ?? 0) * (sr.reps ?? 0), 0),
       sets: ex.sets.filter(sr => sr.completed).length,
     }))
     .filter((ex: { sets: number }) => ex.sets > 0)
-    .sort((a: { vol: number }, b: { vol: number }) => b.vol - a.vol)
+    .sort((a: { volume: number }, b: { volume: number }) => b.volume - a.volume)
     .slice(0, 6)
 
   const muscleMap = new Map<string, number>()
@@ -119,7 +119,7 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
   ctx.fillStyle = C.muted
   ctx.font = '400 30px -apple-system, Inter, sans-serif'
   y += 32
-  ctx.fillText(data, W / 2, y)
+  ctx.fillText(formattedDate, W / 2, y)
   y += 36
 
   ctx.strokeStyle = C.border
@@ -131,12 +131,12 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
   y += 40
 
   const statsData = [
-    { icon: '⏱', label: 'DURAÇÃO', value: duracao },
+    { icon: '⏱', label: 'DURAÇÃO', value: duration },
     { icon: '📦', label: 'VOLUME TOTAL', value: volumeKg > 0 ? `${volumeKg}kg` : '–' },
     { icon: '✅', label: 'SÉRIES', value: String(totalSeries) },
     { icon: '🔁', label: 'REPETIÇÕES', value: String(totalReps) },
-    { icon: '💪', label: 'EXERCÍCIOS', value: String(exercFeitos) },
-    { icon: '⚖️', label: 'MÉDIA/SÉRIE', value: mediaSerie },
+    { icon: '💪', label: 'EXERCÍCIOS', value: String(exercisesDone) },
+    { icon: '⚖️', label: 'MÉDIA/SÉRIE', value: avgPerSet },
   ]
   const COLS = 3,
     ROWS = 2,
@@ -172,7 +172,7 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
   y += ROWS * cellH + (ROWS - 1) * GAP + 44
 
   if (barData.length > 0) {
-    const maxVol = Math.max(...barData.map(e => e.vol), 1)
+    const maxVol = Math.max(...barData.map(e => e.volume), 1)
     const LABEL_W = 196
     const barAreaW = W - PAD * 2 - LABEL_W - 16
     const BAR_H = 36
@@ -185,10 +185,10 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
 
     barData.forEach((ex, i) => {
       const color = PALETTE[i % PALETTE.length]
-      const barFill = (ex.vol / maxVol) * barAreaW
+      const barFill = (ex.volume / maxVol) * barAreaW
       const barX = PAD + LABEL_W + 16
       const barY = y
-      const shortName = ex.nome.length > 15 ? ex.nome.slice(0, 13) + '…' : ex.nome
+      const shortName = ex.name.length > 15 ? ex.name.slice(0, 13) + '…' : ex.name
       ctx.fillStyle = C.muted
       ctx.font = '400 23px -apple-system, Inter, sans-serif'
       ctx.fillText(shortName, PAD, barY + 25)
@@ -205,10 +205,10 @@ export async function gerarImagemRelatorio(s: WorkoutSession): Promise<Blob | nu
         roundRect(barX, barY, barFill, BAR_H, 8)
         ctx.fill()
       }
-      if (ex.vol > 0) {
+      if (ex.volume > 0) {
         ctx.fillStyle = C.subtle
         ctx.font = '500 21px -apple-system, Inter, sans-serif'
-        ctx.fillText(`${Math.round(ex.vol)}kg`, barX + barFill + 10, barY + 25)
+        ctx.fillText(`${Math.round(ex.volume)}kg`, barX + barFill + 10, barY + 25)
       }
       y += BAR_H + 32
     })

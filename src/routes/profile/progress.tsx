@@ -8,15 +8,15 @@ import { ProgressExerciseCard } from './components/-ProgressExerciseCard'
 import { VolumeChart } from './components/-VolumeChart'
 
 export const Route = createFileRoute('/profile/progress')({
-  component: EvolucaoPage,
+  component: ProgressPage,
 })
 
-function EvolucaoPage() {
+function ProgressPage() {
   const sessions = useHistoryStore(s => s.sessions)
   const navigate = useNavigate()
   const [tab, setTab] = useState<ProgressTabId>('exercicios')
 
-  const exercicios = useMemo(() => {
+  const exercises = useMemo(() => {
     const map = new Map<string, string>()
     sessions.forEach(s => {
       s.exercises.forEach((ex: { exerciseId: string; exerciseName: string; sets: { completed: boolean; weight: number }[] }) => {
@@ -25,39 +25,39 @@ function EvolucaoPage() {
       })
     })
     return Array.from(map.entries())
-      .map(([id, nome]) => ({ id, nome }))
-      .sort((a, b) => a.nome.localeCompare(b.nome))
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   }, [sessions])
 
-  const timelineByExercicio = useMemo(() => {
+  const timelineByExercise = useMemo(() => {
     const result = new Map<string, { data: string; peso: number; iniciadoEm: number }[]>()
-    exercicios.forEach(({ id }) => {
-      const pontos = sessions
+    exercises.forEach(({ id }) => {
+      const points = sessions
         .filter((s: { exercises: { exerciseId: string }[] }) => s.exercises.some((ex: { exerciseId: string }) => ex.exerciseId === id))
         .sort((a: { startedAt: number }, b: { startedAt: number }) => a.startedAt - b.startedAt)
         .flatMap((s: { startedAt: number; exercises: { exerciseId: string; sets: { completed: boolean; weight: number }[] }[] }) => {
           const ex = s.exercises.find((e: { exerciseId: string }) => e.exerciseId === id)!
-          const pesos = ex.sets
+          const weights = ex.sets
             .filter((sr: { completed: boolean; weight: number }) => sr.completed && sr.weight > 0)
             .map((sr: { weight: number }) => sr.weight)
-          if (!pesos.length) return []
+          if (!weights.length) return []
           return [
             {
               data: new Date(s.startedAt).toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: '2-digit',
               }),
-              peso: Math.max(...pesos),
+              peso: Math.max(...weights),
               iniciadoEm: s.startedAt,
             },
           ]
         })
-      if (pontos.length) result.set(id, pontos)
+      if (points.length) result.set(id, points)
     })
     return result
-  }, [sessions, exercicios])
+  }, [sessions, exercises])
 
-  const dadosVolume = useMemo(
+  const volumeData = useMemo(
     () =>
       sessions
         .slice()
@@ -69,7 +69,7 @@ function EvolucaoPage() {
             month: '2-digit',
           }),
           volume: Math.round(s.totalVolume ?? 0),
-          plano: s.planName,
+          plan: s.planName,
         })),
     [sessions]
   )
@@ -97,23 +97,23 @@ function EvolucaoPage() {
 
       {tab === 'exercicios' && (
         <div className="flex flex-col gap-3 animate-fade-up">
-          {exercicios.length === 0 ? (
+          {exercises.length === 0 ? (
             <p className="text-xs text-text-muted text-center py-10">
               Nenhum exercício com peso registrado encontrado.
             </p>
           ) : (
-            exercicios.map(ex => (
+            exercises.map(ex => (
               <ProgressExerciseCard
                 key={ex.id}
-                nome={ex.nome}
-                pontos={timelineByExercicio.get(ex.id) ?? []}
+                nome={ex.name}
+                pontos={timelineByExercise.get(ex.id) ?? []}
               />
             ))
           )}
         </div>
       )}
 
-      {tab === 'grafico' && <VolumeChart dados={dadosVolume} />}
+      {tab === 'grafico' && <VolumeChart dados={volumeData} />}
     </div>
   )
 }

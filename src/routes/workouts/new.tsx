@@ -13,16 +13,16 @@ import { CancelCreationModal } from './components/-CancelCreationModal'
 import { GroupTypeModal } from './components/-GroupTypeModal'
 
 export const Route = createFileRoute('/workouts/new')({
-  component: NovoPlanoPage,
+  component: NewPlanPage,
 })
 
-function NovoPlanoPage() {
+function NewPlanPage() {
   const {
     name,
     setName,
     description,
     setDescription,
-    exercicios,
+    exercises,
     saving,
     showPicker,
     setShowPicker,
@@ -73,8 +73,8 @@ function NovoPlanoPage() {
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-text">EXERCÍCIOS ({exercicios.length})</h2>
-            {exercicios.length >= 2 && (
+            <h2 className="text-sm font-bold text-text">EXERCÍCIOS ({exercises.length})</h2>
+            {exercises.length >= 2 && (
               <div className="flex items-center gap-2">
                 {selected.size >= 2 && (
                   <button
@@ -104,14 +104,14 @@ function NovoPlanoPage() {
             collisionDetection={closestCenter}
             onDragOver={handleDragOver}
           >
-            <SortableContext items={exercicios.map(ex => ex.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={exercises.map(ex => ex.id)} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-2">
                 {(() => {
                   const rendered = new Set<string>()
-                  return exercicios.map(ex => {
+                  return exercises.map(ex => {
                     if (ex.groupingId && !rendered.has(ex.groupingId)) {
                       rendered.add(ex.groupingId)
-                      const groupExs = exercicios.filter((e) => e.groupingId === ex.groupingId)
+                      const groupExs = exercises.filter((e) => e.groupingId === ex.groupingId)
                       const config = GROUPING_CONFIG[ex.groupingType ?? 'superset']
                       return (
                         <div
@@ -136,7 +136,7 @@ function NovoPlanoPage() {
                                 onRemove={() => removeExercise(gex.id)}
                                 isSelected={selected.has(gex.id)}
                                 onToggleSelect={() => toggleSelected(gex.id)}
-                                showSelect={exercicios.length >= 2}
+                                showSelect={exercises.length >= 2}
                                 onRemoveFromGroup={() => removeFromGrouping(gex.id)}
                               />
                             ))}
@@ -153,7 +153,7 @@ function NovoPlanoPage() {
                         onRemove={() => removeExercise(ex.id)}
                         isSelected={selected.has(ex.id)}
                         onToggleSelect={() => toggleSelected(ex.id)}
-                        showSelect={exercicios.length >= 2}
+                        showSelect={exercises.length >= 2}
                       />
                     )
                   })
@@ -188,7 +188,7 @@ function NovoPlanoPage() {
               targetReps: 10,
               targetWeight: 0,
               restSeconds: 60,
-              order: exercicios.length,
+              order: exercises.length,
               setsDetail: [
                 { weight: 0, reps: 10 },
                 { weight: 0, reps: 10 },

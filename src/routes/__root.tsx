@@ -2,7 +2,7 @@ import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-r
 import { useEffect } from 'react'
 import { BottomNav } from '../components/layout/BottomNav'
 import { useActiveWorkoutStore } from '../stores'
-import { registrarServiceWorker } from '../lib/notifications'
+import { registerServiceWorker } from '../lib/notifications'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
 import { Toaster } from 'sonner'
 import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
@@ -73,7 +73,7 @@ function RootComponent() {
         regs.forEach(reg => reg.unregister())
       })
     }
-    registrarServiceWorker()
+    registerServiceWorker()
   }, [])
 
   useEffect(() => {

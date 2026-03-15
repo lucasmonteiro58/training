@@ -4,9 +4,9 @@ import { usePlans } from '../../hooks/usePlans'
 import { useHistory } from '../../hooks/useHistory'
 import { useAuthStore, useActiveWorkoutStore, useHistoryStore } from '../../stores'
 import {
-  limparNotificacoesTreino,
-  cancelarNotificacaoDescanso,
-  formatarTempo,
+  clearWorkoutNotifications,
+  cancelRestNotification,
+  formatDuration,
 } from '../../lib/notifications'
 import { useSetTimer } from '../../hooks/useSetTimer'
 import { useRestNotifications } from '../../hooks/useRestNotifications'
@@ -15,11 +15,11 @@ import { useStartWorkoutSession } from '../../hooks/useStartWorkoutSession'
 import { useCompleteWorkoutSet } from '../../hooks/useCompleteWorkoutSet'
 import type { WorkoutSession } from '../../types'
 import { toast } from 'sonner'
-import { calcular1RM } from '../../lib/calculadora1rm'
-import { calcularRecordes } from '../../lib/records'
+import { calculate1RM } from '../../lib/calculadora1rm'
+import { calculateRecords } from '../../lib/records'
 import { CheckCircle, SkipForward, Timer, Zap } from 'lucide-react'
 import { Confetti } from '../../components/ui/Confetti'
-import { gerarImagemRelatorio } from '../../lib/relatorioImage'
+import { generateReportImage } from '../../lib/relatorioImage'
 import { WorkoutReportScreen } from './components/-WorkoutReportScreen'
 import { ActiveWorkoutHeader } from './components/-ActiveWorkoutHeader'
 import { RestCard } from './components/-RestCard'
@@ -30,10 +30,10 @@ import { WorkoutNotesModal } from './components/-WorkoutNotesModal'
 import { PRCelebrationOverlay } from './components/-PRCelebrationOverlay'
 
 export const Route = createFileRoute('/active-workout/$planId')({
-  component: TreinoAtivoPage,
+  component: ActiveWorkoutPage,
 })
 
-function TreinoAtivoPage() {
+function ActiveWorkoutPage() {
   const { planId } = Route.useParams()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
@@ -41,7 +41,7 @@ function TreinoAtivoPage() {
   const { saveSessionComplete } = useHistory()
   const plan = plans.find((p) => p.id === planId)
   const sessions = useHistoryStore((s) => s.sessions)
-  const recordes = useMemo(() => calcularRecordes(sessions), [sessions])
+  const records = useMemo(() => calculateRecords(sessions), [sessions])
 
   const store = useActiveWorkoutStore()
   const {
@@ -56,7 +56,7 @@ function TreinoAtivoPage() {
   } = store
 
   const timerRef = useRef<number | null>(null)
-  const descansoRef = useRef<number | null>(null)
+  const restIntervalRef = useRef<number | null>(null)
 
   const [applyAll, setApplyAll] = useState<{ field: 'weight' | 'reps'; sIdx: number; value: number } | null>(null)
   const { saveWeightsToPlan } = useSaveWeightsToPlan(
@@ -67,7 +67,7 @@ function TreinoAtivoPage() {
     () => setApplyAll(null)
   )
 
-  const { timerSerie, iniciarTimerSerie, pararTimerSerie } = useSetTimer(currentExerciseIndex)
+  const { timerSet: setTimer, startSetTimer, stopSetTimer } = useSetTimer(currentExerciseIndex)
   const { restEndedNaturalRef } = useRestNotifications({
     restTimerActive,
     restTimerSeconds,
@@ -82,32 +82,32 @@ function TreinoAtivoPage() {
     return () => clearInterval(id)
   }, [started, session, heartbeat])
 
-  const [finalizando, setFinalizando] = useState(false)
-  const [showConfirmFinalizar, setShowConfirmFinalizar] = useState(false)
-  const [showConfirmCancelar, setShowConfirmCancelar] = useState(false)
-  const [relatorio, setRelatorio] = useState<WorkoutSession | null>(null)
-  const [copiado, setCopiado] = useState(false)
-  const [gerandoImagem, setGerandoImagem] = useState(false)
+  const [finishing, setFinishing] = useState(false)
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [report, setReport] = useState<WorkoutSession | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [generatingImage, setGeneratingImage] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
-  const [showNotas, setShowNotas] = useState(false)
-  const [notasTemp, setNotasTemp] = useState('')
+  const [showNotes, setShowNotes] = useState(false)
+  const [notesDraft, setNotesDraft] = useState('')
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPrCelebration, setShowPrCelebration] = useState(false)
 
   useStartWorkoutSession({
     planId,
-    plano: plan ?? undefined,
+    plan: plan ?? undefined,
     user,
     sessions,
-    iniciado: started,
-    sessao: session,
-    iniciarTreino: startWorkout,
+    started,
+    session,
+    startWorkout,
   })
 
   const { handleCompleteSet } = useCompleteWorkoutSet({
     session,
     currentExerciseIndex,
-    recordes,
+    records,
     saveWeightsToPlan,
     markSetCompleted,
     updateSet,
@@ -115,7 +115,7 @@ function TreinoAtivoPage() {
     nextExercise,
     previousExercise,
     stopRest,
-    cancelRestNotification: cancelarNotificacaoDescanso,
+    cancelRestNotification,
     restEndedNaturalRef,
     onPrDetected: () => {
       setShowPrCelebration(true)
@@ -126,7 +126,7 @@ function TreinoAtivoPage() {
         setShowConfetti(false)
       }, 3000)
     },
-    onWorkoutComplete: () => setShowConfirmFinalizar(true),
+    onWorkoutComplete: () => setShowFinishConfirm(true),
   })
 
   // ─── Cronômetro geral ──────────────────────────────────────────────────────
@@ -138,41 +138,41 @@ function TreinoAtivoPage() {
   // ─── Cronômetro de descanso ────────────────────────────────────────────────
   useEffect(() => {
     if (!restTimerActive) {
-      if (descansoRef.current) clearInterval(descansoRef.current)
+      if (restIntervalRef.current) clearInterval(restIntervalRef.current)
       return
     }
-    descansoRef.current = window.setInterval(() => { tickRest() }, 1000)
-    return () => { if (descansoRef.current) clearInterval(descansoRef.current) }
+    restIntervalRef.current = window.setInterval(() => { tickRest() }, 1000)
+    return () => { if (restIntervalRef.current) clearInterval(restIntervalRef.current) }
   }, [restTimerActive, tickRest])
 
-  const exercicioAtual = session?.exercises[currentExerciseIndex]
-  const planExercise = plan?.exercises.find((ex) => ex.exerciseId === exercicioAtual?.exerciseId)
-  const totalExercicios = session?.exercises.length ?? 0
-  const progresso = totalExercicios ? (currentExerciseIndex / totalExercicios) * 100 : 0
+  const currentExercise = session?.exercises[currentExerciseIndex]
+  const planExercise = plan?.exercises.find((ex) => ex.exerciseId === currentExercise?.exerciseId)
+  const totalExercises = session?.exercises.length ?? 0
+  const progress = totalExercises ? (currentExerciseIndex / totalExercises) * 100 : 0
 
-  const handleFinalizar = async () => {
+  const handleFinish = async () => {
     // Salvar pesos do exercício atual antes de finalizar
     saveWeightsToPlan()
-    setFinalizando(true)
-    const sessaoFinalizada = finishWorkout()
-    cancelarNotificacaoDescanso()
-    limparNotificacoesTreino()
-    if (sessaoFinalizada) {
-      await saveSessionComplete(sessaoFinalizada)
-      setShowConfirmFinalizar(false)
+    setFinishing(true)
+    const finishedSession = finishWorkout()
+    cancelRestNotification()
+    clearWorkoutNotifications()
+    if (finishedSession) {
+      await saveSessionComplete(finishedSession)
+      setShowFinishConfirm(false)
       setShowConfetti(true)
-      setRelatorio(sessaoFinalizada)
+      setReport(finishedSession)
       navigator.vibrate?.([100, 50, 100, 50, 200])
     } else {
       navigate({ to: '/history' })
     }
-    setFinalizando(false)
+    setFinishing(false)
   }
 
-  const handleCompartilhar = async (s: WorkoutSession) => {
-    setGerandoImagem(true)
+  const handleShare = async (s: WorkoutSession) => {
+    setGeneratingImage(true)
     try {
-      const blob = await gerarImagemRelatorio(s)
+      const blob = await generateReportImage(s)
       if (!blob) throw new Error('Falha ao gerar imagem')
 
       const file = new File([blob], `treino-${Date.now()}.png`, { type: 'image/png' })
@@ -187,31 +187,31 @@ function TreinoAtivoPage() {
         a.download = `treino-${s.planName.replace(/\s+/g, '-')}.png`
         a.click()
         URL.revokeObjectURL(url)
-        setCopiado(true)
-        setTimeout(() => setCopiado(false), 2500)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2500)
       }
     } catch {
       // user cancelled or error — ignore
     } finally {
-      setGerandoImagem(false)
+      setGeneratingImage(false)
     }
   }
 
-  if (relatorio) {
+  if (report) {
     return (
       <>
         <Confetti active={showConfetti} />
         <WorkoutReportScreen
-          relatorio={relatorio}
-          gerandoImagem={gerandoImagem}
-          copiado={copiado}
-          onCompartilhar={handleCompartilhar}
+          report={report}
+          isGeneratingImage={generatingImage}
+          copied={copied}
+          onShare={handleShare}
         />
       </>
     )
   }
 
-  if (!plan || !session || !exercicioAtual) {
+  if (!plan || !session || !currentExercise) {
     return (
       <div className="page-container pt-6 text-center">
         <p className="text-text-muted">Carregando treino...</p>
@@ -219,38 +219,38 @@ function TreinoAtivoPage() {
     )
   }
 
-  const seriesCompletadas = exercicioAtual.sets.filter((s) => s.completed).length
+  const completedSets = currentExercise.sets.filter((s) => s.completed).length
 
   return (
     <div className="flex flex-col min-h-dvh bg-bg max-w-[480px] mx-auto w-full border-x border-border/50 shadow-2xl">
       <Confetti active={showConfetti} />
       {showPrCelebration && <PRCelebrationOverlay />}
       <ActiveWorkoutHeader
-        cronometroGeralSegundos={totalTimerSeconds}
-        pausado={paused}
+        totalTimerSeconds={totalTimerSeconds}
+        isPaused={paused}
         onPause={pauseWorkout}
         onResume={resume}
-        exercicioAtual={exercicioAtual}
-        exercicioAtualIndex={currentExerciseIndex}
-        totalExercicios={totalExercicios}
+        currentExercise={currentExercise}
+        currentExerciseIndex={currentExerciseIndex}
+        totalExercises={totalExercises}
         onPrev={previousExercise}
         onNext={nextExercise}
-        onNotas={() => { setNotasTemp(session?.notes ?? ''); setShowNotas(true) }}
-        onFinalizar={() => setShowConfirmFinalizar(true)}
+        onNotes={() => { setNotesDraft(session?.notes ?? ''); setShowNotes(true) }}
+        onFinish={() => setShowFinishConfirm(true)}
         onClose={() => navigate({ to: '/workouts' })}
         onInfo={() => setShowInfo(true)}
-        hasNotas={!!session?.notes}
-        finalizando={finalizando}
-        progresso={progresso}
+        hasNotes={!!session?.notes}
+        isFinishing={finishing}
+        progress={progress}
       />
 
       {/* ─── GIF do exercício ──────────────────────────────────────── */}
       <div className="px-4 mb-4 flex items-center justify-center">
-        {exercicioAtual.gifUrl ? (
+        {currentExercise.gifUrl ? (
           <div className="aspect-video max-h-48  rounded-2xl overflow-hidden bg-surface">
             <img
-              src={exercicioAtual.gifUrl}
-              alt={exercicioAtual.exerciseName}
+              src={currentExercise.gifUrl}
+              alt={currentExercise.exerciseName}
               className="w-full h-full object-cover"
             />
           </div>
@@ -263,10 +263,10 @@ function TreinoAtivoPage() {
 
       {restTimerActive && (
         <RestCard
-          segundosRestantes={restTimerSeconds}
-          onPular={() => {
+          secondsRemaining={restTimerSeconds}
+          onSkip={() => {
             restEndedNaturalRef.current = false
-            cancelarNotificacaoDescanso()
+            cancelRestNotification()
             stopRest()
           }}
         />
@@ -276,17 +276,17 @@ function TreinoAtivoPage() {
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {/* 1RM estimate */}
         {(() => {
-          const seriesCompletas = exercicioAtual.sets.filter((s) => s.completed && s.weight > 0 && s.reps > 0)
-          if (seriesCompletas.length === 0) return null
-          const melhor = seriesCompletas.reduce((best, s) => {
-            const rm = calcular1RM(s.weight, s.reps)
+          const completedSeries = currentExercise.sets.filter((s) => s.completed && s.weight > 0 && s.reps > 0)
+          if (completedSeries.length === 0) return null
+          const bestSet = completedSeries.reduce((best, s) => {
+            const rm = calculate1RM(s.weight, s.reps)
             return rm > best.rm ? { rm, peso: s.weight, reps: s.reps } : best
           }, { rm: 0, peso: 0, reps: 0 })
-          if (melhor.rm <= 0) return null
+          if (bestSet.rm <= 0) return null
           return (
             <div className="flex items-center justify-center gap-2 mb-2 px-3 py-1.5 rounded-xl bg-accent-subtle animate-scale-in">
               <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
-                1RM estimado: {Math.round(melhor.rm)} kg
+                1RM estimado: {Math.round(bestSet.rm)} kg
               </span>
             </div>
           )
@@ -294,7 +294,7 @@ function TreinoAtivoPage() {
 
         {/* Header */}
         {(() => {
-          const tipo = exercicioAtual.setType ?? 'reps'
+          const tipo = currentExercise.setType ?? 'reps'
           const labels: Record<string, string> = { reps: 'Reps', tempo: 'Min', falha: 'Falha ⚡' }
           return (
             <div className="grid grid-cols-[32px_1fr_1fr_40px] gap-2 px-3 mb-1">
@@ -305,7 +305,7 @@ function TreinoAtivoPage() {
           )
         })()}
 
-        {exercicioAtual.setType === 'falha' && (
+        {currentExercise.setType === 'falha' && (
           <div className="flex items-center gap-1.5 mb-2 px-1">
             <Zap size={12} className="text-yellow-400" />
             <span className="text-[10px] font-semibold text-yellow-400">Executar até a falha muscular</span>
@@ -313,9 +313,9 @@ function TreinoAtivoPage() {
         )}
 
         <div className="flex flex-col">
-          {exercicioAtual.sets.map((serie, sIdx) => {
-            const tipo = exercicioAtual.setType ?? 'reps'
-            const isTimerAtivo = timerSerie?.sIdx === sIdx
+          {currentExercise.sets.map((serie, sIdx) => {
+            const tipo = currentExercise.setType ?? 'reps'
+            const isSetTimerActive = setTimer?.sIdx === sIdx
             return (
             <div key={serie.id} className="contents">
             <div
@@ -337,12 +337,12 @@ function TreinoAtivoPage() {
                 onChange={(e) => {
                   const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
                   updateSet(currentExerciseIndex, sIdx, { weight: val })
-                  if (exercicioAtual.sets.length > 1) setApplyAll({ field: 'weight', sIdx, value: val })
+                  if (currentExercise.sets.length > 1) setApplyAll({ field: 'weight', sIdx, value: val })
                 }}
                 onBlur={(e) => {
                   if (!plan) return
                   const val = e.target.value === '' ? 0 : parseFloat(e.target.value)
-                  const exIdx = plan.exercises.findIndex((ex) => ex.exerciseId === exercicioAtual.exerciseId)
+                  const exIdx = plan.exercises.findIndex((ex) => ex.exerciseId === currentExercise.exerciseId)
                   if (exIdx === -1) return
                   const exercises = plan.exercises.map((ex, i) => {
                     if (i !== exIdx) return ex
@@ -359,21 +359,21 @@ function TreinoAtivoPage() {
               {tipo === 'tempo' ? (
                 <button
                   onClick={() => {
-                    const duracaoSeg = Math.round((serie.reps || 1) * 60)
-                    if (isTimerAtivo) {
-                      pararTimerSerie()
+                    const durationSeconds = Math.round((serie.reps || 1) * 60)
+                    if (isSetTimerActive) {
+                      stopSetTimer()
                     } else {
-                      iniciarTimerSerie(sIdx, duracaoSeg)
+                      startSetTimer(sIdx, durationSeconds)
                     }
                   }}
                   className={`set-input flex items-center justify-center gap-1 text-xs font-bold ${
-                    isTimerAtivo ? 'text-accent' : 'text-text-muted'
+                    isSetTimerActive ? 'text-accent' : 'text-text-muted'
                   }`}
                 >
                   <Timer size={12} />
-                  {isTimerAtivo
-                    ? formatarTempo(timerSerie!.restando)
-                    : formatarTempo(Math.round((serie.reps || 1) * 60))}
+                  {isSetTimerActive
+                    ? formatDuration(setTimer!.remaining)
+                    : formatDuration(Math.round((serie.reps || 1) * 60))}
                 </button>
               ) : (
                 <input
@@ -384,7 +384,7 @@ function TreinoAtivoPage() {
                   onChange={(e) => {
                     const val = e.target.value === '' ? 0 : parseInt(e.target.value)
                     updateSet(currentExerciseIndex, sIdx, { reps: val })
-                    if (exercicioAtual.sets.length > 1) setApplyAll({ field: 'reps', sIdx, value: val })
+                    if (currentExercise.sets.length > 1) setApplyAll({ field: 'reps', sIdx, value: val })
                   }}
                   onFocus={(e) => e.target.select()}
                 />
@@ -393,7 +393,7 @@ function TreinoAtivoPage() {
               {/* Check */}
               <button
                 onClick={() => {
-                  if (tipo === 'tempo' && isTimerAtivo) pararTimerSerie()
+                  if (tipo === 'tempo' && isSetTimerActive) stopSetTimer()
                   handleCompleteSet(sIdx)
                 }}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
@@ -424,10 +424,10 @@ function TreinoAtivoPage() {
                   </button>
                 </div>
                 <div className="flex gap-1.5">
-                  {applyAll.sIdx < exercicioAtual.sets.length - 1 && (
+                  {applyAll.sIdx < currentExercise.sets.length - 1 && (
                     <button
                       onClick={() => {
-                        exercicioAtual.sets.forEach((_, i) => {
+                        currentExercise.sets.forEach((_, i) => {
                           if (i > applyAll.sIdx)
                             updateSet(currentExerciseIndex, i, { [applyAll.field]: applyAll.value })
                         })
@@ -440,7 +440,7 @@ function TreinoAtivoPage() {
                   )}
                   <button
                     onClick={() => {
-                      exercicioAtual.sets.forEach((_, i) => {
+                      currentExercise.sets.forEach((_, i) => {
                         updateSet(currentExerciseIndex, i, { [applyAll.field]: applyAll.value })
                       })
                       setApplyAll(null)
@@ -461,16 +461,16 @@ function TreinoAtivoPage() {
         {/* Progresso séries */}
         <div className="mt-4 text-center">
           <p className="text-xs text-text-muted">
-            {seriesCompletadas}/{exercicioAtual.sets.length} séries completadas
+            {completedSets}/{currentExercise.sets.length} séries completadas
           </p>
           <div className="progress-bar mt-2">
             <div className="progress-fill"
-              style={{ width: `${exercicioAtual.sets.length ? (seriesCompletadas / exercicioAtual.sets.length) * 100 : 0}%` }} />
+              style={{ width: `${currentExercise.sets.length ? (completedSets / currentExercise.sets.length) * 100 : 0}%` }} />
           </div>
         </div>
 
         {/* Próximo exercício */}
-        {currentExerciseIndex < totalExercicios - 1 && (
+        {currentExerciseIndex < totalExercises - 1 && (
           <button
             onClick={nextExercise}
             className="mt-4 w-full btn-secondary flex items-center justify-center gap-2 mb-[100px]"
@@ -482,50 +482,50 @@ function TreinoAtivoPage() {
 
         {/* Cancelar treino */}
         <button
-          onClick={() => setShowConfirmCancelar(true)}
+          onClick={() => setShowCancelConfirm(true)}
           className="mt-6 mb-24 text-xs text-text-muted/50 underline underline-offset-2 mx-auto block"
         >
           Cancelar treino
         </button>
       </div>
 
-      {showConfirmCancelar && (
+      {showCancelConfirm && (
         <ConfirmCancelModal
           onConfirm={() => {
-            cancelarNotificacaoDescanso()
+            cancelRestNotification()
             clearLocal()
             navigate({ to: '/workouts' })
           }}
-          onCancel={() => setShowConfirmCancelar(false)}
+          onCancel={() => setShowCancelConfirm(false)}
         />
       )}
 
       {showInfo && (
         <ExerciseInfoModal
-          exercicio={exercicioAtual}
-          exercicioPlano={planExercise}
+          exercise={currentExercise}
+          planExercise={planExercise}
           onClose={() => setShowInfo(false)}
         />
       )}
 
-      {showNotas && (
+      {showNotes && (
         <WorkoutNotesModal
-          notas={notasTemp}
-          onNotasChange={setNotasTemp}
-          onSalvar={() => {
-            updateNotes(notasTemp)
-            setShowNotas(false)
+          notes={notesDraft}
+          onNotesChange={setNotesDraft}
+          onSave={() => {
+            updateNotes(notesDraft)
+            setShowNotes(false)
             toast.success('Notas salvas!')
           }}
-          onCancel={() => setShowNotas(false)}
+          onCancel={() => setShowNotes(false)}
         />
       )}
 
-      {showConfirmFinalizar && (
+      {showFinishConfirm && (
         <ConfirmFinishModal
-          onConfirm={handleFinalizar}
-          onCancel={() => setShowConfirmFinalizar(false)}
-          finalizando={finalizando}
+          onConfirm={handleFinish}
+          onCancel={() => setShowFinishConfirm(false)}
+          isFinishing={finishing}
         />
       )}
 

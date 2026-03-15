@@ -3,20 +3,20 @@ import type { ExerciseInSession } from '../../../types'
 import type { ExerciseInPlan } from '../../../types'
 
 interface ExerciseInfoModalProps {
-  exercicio: ExerciseInSession
-  exercicioPlano?: ExerciseInPlan
+  exercise: ExerciseInSession
+  planExercise?: ExerciseInPlan
   onClose: () => void
 }
 
-export function ExerciseInfoModal({ exercicio, exercicioPlano, onClose }: ExerciseInfoModalProps) {
-  const gifUrl = exercicio.gifUrl || exercicioPlano?.exercise.gifUrl
-  const instrucoes = exercicio.instructions || exercicioPlano?.exercise.instructions || []
+export function ExerciseInfoModal({ exercise, planExercise, onClose }: ExerciseInfoModalProps) {
+  const gifUrl = exercise.gifUrl || planExercise?.exercise.gifUrl
+  const instructions = exercise.instructions || planExercise?.exercise.instructions || []
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content max-h-[80dvh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-text truncate pr-4">{exercicio.exerciseName}</h2>
+          <h2 className="text-lg font-bold text-text truncate pr-4">{exercise.exerciseName}</h2>
           <button type="button" onClick={onClose} className="btn-ghost p-2 text-text-subtle">
             <XCircle size={20} />
           </button>
@@ -37,35 +37,35 @@ export function ExerciseInfoModal({ exercicio, exercicioPlano, onClose }: Exerci
                 Músculo
               </p>
               <span className="px-2.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium capitalize">
-                {exercicio.muscleGroup}
+                {exercise.muscleGroup}
               </span>
             </div>
-            {exercicioPlano?.exercise.equipment && (
+            {planExercise?.exercise.equipment && (
               <div>
                 <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-1">
                   Equipamento
                 </p>
-                <p className="text-sm text-text capitalize">{exercicioPlano.exercise.equipment}</p>
+                <p className="text-sm text-text capitalize">{planExercise.exercise.equipment}</p>
               </div>
             )}
           </div>
 
-          {exercicio.notes && (
+          {exercise.notes && (
             <div className="p-3 rounded-xl bg-accent/5 border border-accent/10">
               <p className="text-[10px] font-bold text-accent uppercase tracking-wider mb-1">
                 Observação do Treino
               </p>
-              <p className="text-sm text-text italic">&quot;{exercicio.notes}&quot;</p>
+              <p className="text-sm text-text italic">&quot;{exercise.notes}&quot;</p>
             </div>
           )}
 
-          {instrucoes.length > 0 && (
+          {instructions.length > 0 && (
             <div>
               <p className="text-[10px] font-bold text-text-subtle uppercase tracking-wider mb-2">
                 Instruções
               </p>
               <ol className="list-decimal list-inside space-y-2">
-                {instrucoes.map((inst: string, i: number) => (
+                {instructions.map((inst: string, i: number) => (
                   <li key={i} className="text-xs text-text-muted leading-relaxed">
                     {inst}
                   </li>
@@ -78,7 +78,7 @@ export function ExerciseInfoModal({ exercicio, exercicioPlano, onClose }: Exerci
             type="button"
             onClick={() => {
               const query = encodeURIComponent(
-                `${exercicio.exerciseName} ${exercicio.muscleGroup} como fazer`
+                `${exercise.exerciseName} ${exercise.muscleGroup} como fazer`
               )
               window.open(`https://www.google.com/search?q=${query}`, '_blank')
             }}

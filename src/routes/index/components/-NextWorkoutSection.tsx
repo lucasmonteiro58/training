@@ -2,22 +2,22 @@ import { Zap, Play } from 'lucide-react'
 import { useStartWorkout } from '../../../hooks/useStartWorkout'
 
 interface NextWorkoutSectionProps {
-  proximoPlano: { id: string; name: string; color?: string | null; exercises: unknown[] }
-  ultimaSessao: { planId: string } | undefined
+  nextPlan: { id: string; name: string; color?: string | null; exercises: unknown[] }
+  lastSession: { planId: string } | undefined
 }
 
 export function NextWorkoutSection({
-  proximoPlano,
-  ultimaSessao,
+  nextPlan,
+  lastSession,
 }: NextWorkoutSectionProps) {
-  const { handleIniciar, modal } = useStartWorkout()
+  const { handleStart, modal } = useStartWorkout()
 
   return (
     <>
       <div className="mb-6 animate-fade-up" style={{ animationDelay: '112ms' }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-text">Próximo Treino</h2>
-          {ultimaSessao && (
+          {lastSession && (
             <span className="text-[10px] text-text-subtle font-medium">
               baseado no último concluído
             </span>
@@ -27,21 +27,21 @@ export function NextWorkoutSection({
           <div className="flex items-center gap-3">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center"
-              style={{ background: proximoPlano.color ?? '#6366f1' }}
+              style={{ background: nextPlan.color ?? '#6366f1' }}
             >
               <Zap size={20} className="text-white" />
             </div>
             <div>
-              <p className="text-text font-bold text-sm">{proximoPlano.name}</p>
+              <p className="text-text font-bold text-sm">{nextPlan.name}</p>
               <p className="text-text-muted text-xs mt-0.5">
-                {proximoPlano.exercises.length} exercícios
+                {nextPlan.exercises.length} exercícios
               </p>
             </div>
           </div>
           <button
             type="button"
             className="flex items-center gap-1.5 bg-accent text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-accent-hover active:scale-95 transition-all"
-            onClick={() => handleIniciar(proximoPlano.id)}
+            onClick={() => handleStart(nextPlan.id)}
           >
             <Play size={14} className="ml-0.5" /> Iniciar
           </button>

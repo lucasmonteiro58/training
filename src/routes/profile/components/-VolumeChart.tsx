@@ -2,7 +2,7 @@ import { BarChart2 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface VolumeChartProps {
-  dados: { data: string; volume: number; plano?: string }[]
+  dados: { data: string; volume: number; plan?: string }[]
 }
 
 const TOOLTIP_STYLE = {
@@ -50,8 +50,8 @@ export function VolumeChart({ dados }: VolumeChartProps) {
             contentStyle={TOOLTIP_STYLE}
             formatter={(v: unknown) => [`${Number(v).toLocaleString('pt-BR')} kg`, 'Volume']}
             labelFormatter={(label, payload) => {
-              const plano = payload?.[0]?.payload?.plano
-              return plano ? `${label} · ${plano}` : label
+              const plan = payload?.[0]?.payload?.plan
+              return plan ? `${label} · ${plan}` : label
             }}
           />
           <Bar

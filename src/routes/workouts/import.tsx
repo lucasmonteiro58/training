@@ -1,15 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useRef, useEffect } from 'react'
-import { parsearCsv } from '../../lib/csvImport'
+import { parseCsv } from '../../lib/csvImport'
 import { usePlans } from '../../hooks/usePlans'
 import { useAuthStore } from '../../stores'
 import { savePersonalizedExercise } from '../../lib/db/dexie'
 import { syncExerciseToFirestore } from '../../lib/firestore/sync'
-import { carregarExercicios } from '../../lib/exercises/freeExerciseDb'
+import { loadExercises } from '../../lib/exercises/freeExerciseDb'
 import { toast } from 'sonner'
 import type { Exercise } from '../../types'
 import { X } from 'lucide-react'
-import type { PlanoEditado } from './components/-PlanEditCard'
+import type { EditedPlan } from './components/-PlanEditCard'
 import { PlanEditCard } from './components/-PlanEditCard'
 import { ImportHeader } from './components/-ImportHeader'
 import { ImportSuccess } from './components/-ImportSuccess'
@@ -18,32 +18,32 @@ import { ImportDropZone } from './components/-ImportDropZone'
 import { ImportErrors } from './components/-ImportErrors'
 
 export const Route = createFileRoute('/workouts/import')({
-  component: ImportarCsvPage,
+  component: ImportCsvPage,
 })
 
-function ImportarCsvPage() {
+function ImportCsvPage() {
   const navigate = useNavigate()
   const { createPlan, updatePlanById } = usePlans()
   const user = useAuthStore(s => s.user)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [planos, setPlanos] = useState<PlanoEditado[] | null>(null)
-  const [erros, setErros] = useState<string[]>([])
-  const [salvando, setSalvando] = useState(false)
-  const [sucesso, setSucesso] = useState(false)
+  const [plans, setPlans] = useState<EditedPlan[] | null>(null)
+  const [errors, setErrors] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [expandedExs, setExpandedExs] = useState<Set<string>>(new Set())
-  const [exerciciosDb, setExerciciosDb] = useState<Exercise[]>([])
+  const [exerciseDb, setExerciseDb] = useState<Exercise[]>([])
 
   useEffect(() => {
-    carregarExercicios().then(setExerciciosDb)
+    loadExercises().then(setExerciseDb)
   }, [])
 
   const handleFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = e => {
-      const texto = e.target?.result as string
-      const resultado = parsearCsv(texto, exerciciosDb)
-      setPlanos(resultado.planos.map(p => ({ ...p, collapsed: false })))
-      setErros(resultado.erros)
+      const text = e.target?.result as string
+      const result = parseCsv(text, exerciseDb)
+      setPlans(result.plans.map(p => ({ ...p, collapsed: false })))
+      setErrors(result.errors)
       setExpandedExs(new Set())
     }
     reader.readAsText(file)
@@ -57,68 +57,68 @@ function ImportarCsvPage() {
       return next
     })
 
-  const changePlano = (planoId: string) => (fn: (p: PlanoEditado) => PlanoEditado) =>
-    setPlanos(prev => prev?.map(p => (p.id === planoId ? fn(p) : p)) ?? null)
+  const changePlan = (planId: string) => (fn: (p: EditedPlan) => EditedPlan) =>
+    setPlans(prev => prev?.map(p => (p.id === planId ? fn(p) : p)) ?? null)
 
-  const salvar = async () => {
-    if (!planos || !user) return
-    const validos = planos.filter((p) => p.name.trim() && p.exercises.length > 0)
-    if (validos.length === 0) {
+  const savePlans = async () => {
+    if (!plans || !user) return
+    const validPlans = plans.filter((p) => p.name.trim() && p.exercises.length > 0)
+    if (validPlans.length === 0) {
       toast.error('Nenhum plano válido para salvar.')
       return
     }
-    setSalvando(true)
+    setSaving(true)
     try {
-      for (const planoData of validos) {
+      for (const planData of validPlans) {
         const exercisesWithUser = await Promise.all(
-          planoData.exercises.map(async (ex) => {
+          planData.exercises.map(async (ex) => {
             if (ex.exercise.custom === false) return ex
-            const exFinal = { ...ex.exercise, userId: user.uid }
-            await savePersonalizedExercise(exFinal)
-            syncExerciseToFirestore(exFinal)
-            return { ...ex, exercise: exFinal }
+            const finalExercise = { ...ex.exercise, userId: user.uid }
+            await savePersonalizedExercise(finalExercise)
+            syncExerciseToFirestore(finalExercise)
+            return { ...ex, exercise: finalExercise }
           })
         )
-        const plan = await createPlan(planoData.name.trim())
+        const plan = await createPlan(planData.name.trim())
         await updatePlanById({ ...plan, exercises: exercisesWithUser })
       }
-      setSucesso(true)
+      setSuccess(true)
       setTimeout(() => navigate({ to: '/workouts' }), 1500)
     } catch (e) {
       console.error(e)
       toast.error('Erro ao salvar planos.')
     } finally {
-      setSalvando(false)
+      setSaving(false)
     }
   }
 
-  const planosValidos = planos?.filter((p) => p.name.trim() && p.exercises.length > 0) ?? []
+  const validPlans = plans?.filter((p) => p.name.trim() && p.exercises.length > 0) ?? []
 
   return (
     <div className="page-container pt-4 pb-[450px]">
-      <ImportHeader onBack={() => navigate({ to: '/workouts' })} planosCount={planos?.length} />
+      <ImportHeader onBack={() => navigate({ to: '/workouts' })} planosCount={plans?.length} />
 
-      {sucesso ? (
-        <ImportSuccess planosCount={planosValidos.length} />
+      {success ? (
+        <ImportSuccess planosCount={validPlans.length} />
       ) : (
         <>
           <CsvFormatCard />
 
-          {!planos && (
+          {!plans && (
             <ImportDropZone inputRef={inputRef} onFile={handleFile} />
           )}
 
-          <ImportErrors erros={erros} />
+          <ImportErrors erros={errors} />
 
-          {planos && (
+          {plans && (
             <div className="mt-4 animate-fade-up flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-text">Revise e edite antes de salvar</h2>
                 <button
                   type="button"
                   onClick={() => {
-                    setPlanos(null)
-                    setErros([])
+                    setPlans(null)
+                    setErrors([])
                   }}
                   className="btn-ghost p-2 text-text-muted"
                 >
@@ -126,20 +126,20 @@ function ImportarCsvPage() {
                 </button>
               </div>
 
-              {planos.map(plano => (
+              {plans.map(plan => (
                 <PlanEditCard
-                  key={plano.id}
-                  plano={plano}
+                  key={plan.id}
+                  plan={plan}
                   expandedExs={expandedExs}
                   onToggleEx={toggleExpandEx}
-                  onChange={changePlano(plano.id)}
+                  onChange={changePlan(plan.id)}
                   onRemove={() =>
-                    setPlanos(prev => prev?.filter(p => p.id !== plano.id) ?? null)
+                    setPlans(prev => prev?.filter(p => p.id !== plan.id) ?? null)
                   }
                 />
               ))}
 
-              {planos.length === 0 && (
+              {plans.length === 0 && (
                 <p className="text-xs text-text-muted text-center py-6">
                   Todos os planos foram removidos.
                 </p>
@@ -149,22 +149,22 @@ function ImportarCsvPage() {
         </>
       )}
 
-      {planos && !sucesso && (
+      {plans && !success && (
         <div
           className="fixed left-0 right-0 p-4 bg-bg/90 backdrop-blur border-t border-border z-60"
           style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
             type="button"
-            onClick={salvar}
-            disabled={planosValidos.length === 0 || salvando}
+            onClick={savePlans}
+            disabled={validPlans.length === 0 || saving}
             className="btn-primary w-full disabled:opacity-40"
           >
-            {salvando
+            {saving
               ? 'Criando planos...'
-              : planosValidos.length === 1
-                ? `Criar "${planosValidos[0].name}"`
-                : `Criar ${planosValidos.length} planos`}
+              : validPlans.length === 1
+                ? `Criar "${validPlans[0].name}"`
+                : `Criar ${validPlans.length} planos`}
           </button>
         </div>
       )}

@@ -3,10 +3,10 @@ import { CheckCircle } from 'lucide-react'
 interface ConfirmFinishModalProps {
   onConfirm: () => void
   onCancel: () => void
-  finalizando: boolean
+  isFinishing: boolean
 }
 
-export function ConfirmFinishModal({ onConfirm, onCancel, finalizando }: ConfirmFinishModalProps) {
+export function ConfirmFinishModal({ onConfirm, onCancel, isFinishing }: ConfirmFinishModalProps) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content text-center" onClick={e => e.stopPropagation()}>
@@ -21,10 +21,10 @@ export function ConfirmFinishModal({ onConfirm, onCancel, finalizando }: Confirm
           <button
             type="button"
             onClick={onConfirm}
-            disabled={finalizando}
+            disabled={isFinishing}
             className="btn-success w-full py-4 text-base"
           >
-            {finalizando ? 'Salvando...' : 'Sim, Finalizar Agora'}
+            {isFinishing ? 'Salvando...' : 'Sim, Finalizar Agora'}
           </button>
           <button type="button" onClick={onCancel} className="btn-ghost w-full py-3">
             Continuar Treinando

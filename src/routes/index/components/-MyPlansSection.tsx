@@ -4,11 +4,11 @@ import type { WorkoutPlan } from '../../../types'
 import { PlanCard } from './-PlanCard'
 
 interface MyPlansSectionProps {
-  planos: WorkoutPlan[]
-  carregando: boolean
+  plans: WorkoutPlan[]
+  loading: boolean
 }
 
-export function MyPlansSection({ planos, carregando }: MyPlansSectionProps) {
+export function MyPlansSection({ plans, loading }: MyPlansSectionProps) {
   return (
     <div className="mb-6 animate-fade-up" style={{ animationDelay: '150ms' }}>
       <div className="flex items-center justify-between mb-3">
@@ -18,13 +18,13 @@ export function MyPlansSection({ planos, carregando }: MyPlansSectionProps) {
         </Link>
       </div>
 
-      {carregando ? (
+      {loading ? (
         <div className="flex flex-col gap-2">
           {[...Array(2)].map((_, i) => (
             <div key={i} className="skeleton h-[68px] rounded-2xl" />
           ))}
         </div>
-      ) : planos.length === 0 ? (
+      ) : plans.length === 0 ? (
         <Link to="/workouts/new" style={{ textDecoration: 'none' }}>
           <div className="card p-6 border-dashed border-border-strong flex flex-col items-center gap-3 text-center">
             <div className="w-12 h-12 rounded-2xl bg-accent-subtle flex items-center justify-center">
@@ -38,8 +38,8 @@ export function MyPlansSection({ planos, carregando }: MyPlansSectionProps) {
         </Link>
       ) : (
         <div className="flex flex-col gap-2">
-          {planos.slice(0, 3).map(plano => (
-            <PlanCard key={plano.id} plano={plano} />
+          {plans.slice(0, 3).map(plan => (
+            <PlanCard key={plan.id} plan={plan} />
           ))}
         </div>
       )}

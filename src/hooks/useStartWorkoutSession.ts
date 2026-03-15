@@ -1,48 +1,46 @@
 import { useEffect, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { solicitarPermissaoNotificacao } from '../lib/notifications'
+import { requestNotificationPermission } from '../lib/notifications'
 import type { WorkoutPlan, WorkoutSession, RecordedSet, ExerciseInSession } from '../types'
 
 interface UseStartWorkoutSessionParams {
   planId: string
-  plano: WorkoutPlan | undefined
+  plan: WorkoutPlan | undefined
   user: { uid: string } | null
   sessions: WorkoutSession[]
-  iniciado: boolean
-  sessao: WorkoutSession | null
-  iniciarTreino: (sessao: WorkoutSession) => void
+  started: boolean
+  session: WorkoutSession | null
+  startWorkout: (session: WorkoutSession) => void
 }
 
 export function useStartWorkoutSession({
   planId,
-  plano,
+  plan,
   user,
   sessions,
-  iniciado,
-  sessao,
-  iniciarTreino,
+  started,
+  session,
+  startWorkout,
 }: UseStartWorkoutSessionParams) {
-  const startedForPlanoIdRef = useRef<string | null>(null)
+  const startedForPlanIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!plano || !user) return
+    if (!plan || !user) return
 
-    if (iniciado && sessao?.planId === planId) {
-      startedForPlanoIdRef.current = planId
+    if (started && session?.planId === planId) {
+      startedForPlanIdRef.current = planId
       return
     }
-    // Trocar de plano: permitir iniciar sessão para o novo plano
-    if (startedForPlanoIdRef.current !== null && startedForPlanoIdRef.current !== planId) {
-      startedForPlanoIdRef.current = null
+    if (startedForPlanIdRef.current !== null && startedForPlanIdRef.current !== planId) {
+      startedForPlanIdRef.current = null
     }
-    // Não re-iniciar sessão após cancelar/finalizar: já tratamos este plano nesta visita
-    if (startedForPlanoIdRef.current === planId) return
+    if (startedForPlanIdRef.current === planId) return
 
     const lastSession = sessions
       .filter((s) => s.planId === planId && s.finishedAt)
       .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))[0]
 
-    const exercisesInSession: ExerciseInSession[] = plano.exercises.map((ex) => {
+    const exercisesInSession: ExerciseInSession[] = plan.exercises.map((ex) => {
       const exLastSession = lastSession?.exercises.find(
         (e) => e.exerciseId === ex.exerciseId
       )
@@ -78,13 +76,13 @@ export function useStartWorkoutSession({
     const newSession: WorkoutSession = {
       id: uuidv4(),
       userId: user.uid,
-      planId: plano.id,
-      planName: plano.name,
+      planId: plan.id,
+      planName: plan.name,
       startedAt: Date.now(),
       exercises: exercisesInSession,
     }
-    iniciarTreino(newSession)
-    startedForPlanoIdRef.current = planId
-    solicitarPermissaoNotificacao()
-  }, [plano, user, planId, sessions, iniciado, sessao?.planId, iniciarTreino])
+    startWorkout(newSession)
+    startedForPlanIdRef.current = planId
+    requestNotificationPermission()
+  }, [plan, user, planId, sessions, started, session?.planId, startWorkout])
 }

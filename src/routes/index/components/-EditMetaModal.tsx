@@ -1,20 +1,20 @@
-interface EditMetaModalProps {
-  metaInput: string
-  onMetaInputChange: (value: string) => void
-  onSave: (valor: number) => void
+interface EditGoalModalProps {
+  goalInput: string
+  onGoalInputChange: (value: string) => void
+  onSave: (value: number) => void
   onClose: () => void
 }
 
-export function EditMetaModal({
-  metaInput,
-  onMetaInputChange,
+export function EditGoalModal({
+  goalInput,
+  onGoalInputChange,
   onSave,
   onClose,
-}: EditMetaModalProps) {
+}: EditGoalModalProps) {
   const handleSave = () => {
-    const valor = parseInt(metaInput, 10)
-    if (valor >= 1 && valor <= 7) {
-      onSave(valor)
+    const value = parseInt(goalInput, 10)
+    if (value >= 1 && value <= 7) {
+      onSave(value)
       onClose()
     }
   }
@@ -31,9 +31,9 @@ export function EditMetaModal({
             <button
               key={n}
               type="button"
-              onClick={() => onMetaInputChange(String(n))}
+              onClick={() => onGoalInputChange(String(n))}
               className={`w-11 h-11 rounded-xl font-bold text-lg transition-all ${
-                String(n) === metaInput ? 'bg-accent text-white scale-110' : 'bg-surface-2 text-text-muted'
+                String(n) === goalInput ? 'bg-accent text-white scale-110' : 'bg-surface-2 text-text-muted'
               }`}
             >
               {n}

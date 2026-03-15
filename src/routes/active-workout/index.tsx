@@ -4,10 +4,10 @@ import { Link } from '@tanstack/react-router'
 import { Play, Dumbbell } from 'lucide-react'
 
 export const Route = createFileRoute('/active-workout/')({
-  component: TreinoAtivoIndexPage,
+  component: ActiveWorkoutIndexPage,
 })
 
-function TreinoAtivoIndexPage() {
+function ActiveWorkoutIndexPage() {
   const { started, session } = useActiveWorkoutStore()
 
   if (started && session) {

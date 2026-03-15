@@ -200,9 +200,9 @@ self.addEventListener('message', (event) => {
   const { type, payload } = event.data || {}
 
   if (type === 'WORKOUT_NOTIFICATION') {
-    const { titulo, corpo, tag } = payload
-    self.registration.showNotification(titulo, {
-      body: corpo,
+    const { title, body, tag } = payload
+    self.registration.showNotification(title, {
+      body,
       icon: '/android-chrome-192x192.png',
       badge: '/android-chrome-192x192.png',
       tag: tag || 'training-workout',
@@ -218,7 +218,7 @@ self.addEventListener('message', (event) => {
 
   // Agendar notificação para quando o descanso terminar
   if (type === 'SCHEDULE_REST_END') {
-    const { segundos, exercicioNome } = payload
+    const { seconds, exerciseName } = payload
     // Cancela timer anterior se existir
     if (restEndTimer) {
       clearTimeout(restEndTimer)
@@ -230,8 +230,8 @@ self.addEventListener('message', (event) => {
 
       // Notifica o fim do descanso (som padrão do sistema + vibração; funciona em background PWA)
       self.registration.showNotification('💪 Descanso finalizado!', {
-        body: exercicioNome
-          ? `Hora de voltar — ${exercicioNome}`
+        body: exerciseName
+          ? `Hora de voltar — ${exerciseName}`
           : 'Hora de voltar ao treino!',
         icon: '/android-chrome-192x192.png',
         badge: '/android-chrome-192x192.png',
@@ -249,7 +249,7 @@ self.addEventListener('message', (event) => {
       self.clients.matchAll({ type: 'window' }).then((clients) => {
         clients.forEach((c) => c.postMessage({ type: 'REST_ENDED' }))
       })
-    }, segundos * 1000)
+    }, seconds * 1000)
   }
 
   // Cancelar timer de descanso (quando o usuário pula o descanso)

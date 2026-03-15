@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useHistory } from '../../hooks/useHistory'
 import { useHistoryStore, useActiveWorkoutStore } from '../../stores'
-import { calcularRecordes } from '../../lib/records'
+import { calculateRecords } from '../../lib/records'
 import { useSessionEdit } from '../../hooks/useSessionEdit'
 import { useMemo } from 'react'
 import { SessionDetailHeader } from './components/-SessionDetailHeader'
@@ -27,19 +27,19 @@ function SessaoDetalhePage() {
 
   const edicao = useSessionEdit(session, saveSessionComplete)
   const {
-    editando,
+    isEditing,
     editData,
-    displaySessao,
-    iniciarEdicao,
-    salvarEdicao,
-    cancelarEdicao,
-    updateSerie,
-    updateDuracao,
-    updateIniciadoEm,
+    displaySession,
+    startEditing,
+    saveEdit,
+    cancelEdit,
+    updateSet,
+    updateDuration,
+    updateStartedAt,
   } = edicao
 
-  const recordesSemAtual = useMemo(
-    () => calcularRecordes(allSessions.filter((s) => s.id !== sessionId)),
+  const recordsExcludingCurrent = useMemo(
+    () => calculateRecords(allSessions.filter((s) => s.id !== sessionId)),
     [allSessions, sessionId]
   )
 
@@ -58,18 +58,18 @@ function SessaoDetalhePage() {
     )
   }
 
-  const data = new Date(displaySessao!.startedAt)
+  const data = new Date(displaySession!.startedAt)
   const dataStr = data.toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
-  const totalSeries = displaySessao!.exercises.reduce(
+  const totalSeries = displaySession!.exercises.reduce(
     (s, ex) => s + ex.sets.length,
     0
   )
-  const seriesOk = displaySessao!.exercises.reduce(
+  const seriesOk = displaySession!.exercises.reduce(
     (s, ex) => s + ex.sets.filter((sr) => sr.completed).length,
     0
   )
@@ -77,60 +77,60 @@ function SessaoDetalhePage() {
   return (
     <div className="page-container pt-4">
       <SessionDetailHeader
-        planName={displaySessao!.planName}
+        planName={displaySession!.planName}
         dataStr={dataStr}
-        editando={editando}
-        autoClosed={displaySessao!.autoClosed}
+        editando={isEditing}
+        autoClosed={displaySession!.autoClosed}
         startedAt={
-          editando && editData ? editData.startedAt : displaySessao!.startedAt
+          isEditing && editData ? editData.startedAt : displaySession!.startedAt
         }
-        finishedAt={displaySessao!.finishedAt}
-        onStartedAtChange={editando ? updateIniciadoEm : undefined}
+        finishedAt={displaySession!.finishedAt}
+        onStartedAtChange={isEditing ? updateStartedAt : undefined}
         onVoltar={() => navigate({ to: '/history' })}
-        onIniciarEdicao={iniciarEdicao}
-        onCancelarEdicao={cancelarEdicao}
-        onSalvarEdicao={salvarEdicao}
+        onIniciarEdicao={startEditing}
+        onCancelarEdicao={cancelEdit}
+        onSalvarEdicao={saveEdit}
       />
 
       <SessionStats
-        durationSeconds={displaySessao!.durationSeconds}
-        numExercicios={displaySessao!.exercises.length}
-        totalVolume={displaySessao!.totalVolume}
-        editando={editando}
+        durationSeconds={displaySession!.durationSeconds}
+        numExercicios={displaySession!.exercises.length}
+        totalVolume={displaySession!.totalVolume}
+        editando={isEditing}
         durationMinutes={
           editData?.durationSeconds != null
             ? Math.round(editData.durationSeconds / 60)
             : undefined
         }
-        onDurationChange={editando ? updateDuracao : undefined}
-        idleSecondsDeducted={displaySessao!.idleSecondsDeducted}
+        onDurationChange={isEditing ? updateDuration : undefined}
+        idleSecondsDeducted={displaySession!.idleSecondsDeducted}
       />
 
       <SetsProgress seriesOk={seriesOk} totalSeries={totalSeries} />
 
       <ReturnToWorkoutButton
         onClick={() => {
-          restoreFromHistory(displaySessao!)
+          restoreFromHistory(displaySession!)
           navigate({
             to: '/active-workout/$planId',
-            params: { planId: displaySessao!.planId },
+            params: { planId: displaySession!.planId },
           })
         }}
       />
 
-      {displaySessao!.notes && (
-        <WorkoutNotes notas={displaySessao!.notes} />
+      {displaySession!.notes && (
+        <WorkoutNotes notas={displaySession!.notes} />
       )}
 
       <div className="flex flex-col gap-3">
-        {displaySessao!.exercises.map((ex, eIdx) => (
+        {displaySession!.exercises.map((ex, eIdx) => (
           <ExerciseSessionCard
             key={`${ex.exerciseId}-${eIdx}`}
             ex={ex}
             exIdx={eIdx}
-            editando={editando}
-            recordesSemAtual={recordesSemAtual}
-            onUpdateSerie={updateSerie}
+            editando={isEditing}
+            recordsExcludingCurrent={recordsExcludingCurrent}
+            onUpdateSerie={updateSet}
           />
         ))}
       </div>

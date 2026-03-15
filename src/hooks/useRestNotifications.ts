@@ -1,10 +1,10 @@
 import { useRef, useEffect } from 'react'
 import type { WorkoutSession } from '../types'
 import {
-  limparNotificacoesTreino,
-  agendarNotificacaoDescanso,
-  tocarAlertaDescanso,
-  vibrarDescansoFim,
+  clearWorkoutNotifications,
+  scheduleRestNotification,
+  playRestAlert,
+  vibrateRestEnd,
   onSwMessage,
 } from '../lib/notifications'
 
@@ -22,35 +22,35 @@ export function useRestNotifications({
   currentExerciseIndex,
 }: UseRestNotificationsParams) {
   const restEndedNaturalRef = useRef(false)
-  const restEndAgendadoRef = useRef(false)
+  const restEndScheduledRef = useRef(false)
 
   useEffect(() => {
     if (restTimerActive && session) {
       const ex = session.exercises[currentExerciseIndex]
       restEndedNaturalRef.current = true
 
-      if (!restEndAgendadoRef.current) {
-        restEndAgendadoRef.current = true
-        agendarNotificacaoDescanso(restTimerSeconds, ex?.exerciseName)
+      if (!restEndScheduledRef.current) {
+        restEndScheduledRef.current = true
+        scheduleRestNotification(restTimerSeconds, ex?.exerciseName)
       }
     }
 
     if (!restTimerActive) {
-      restEndAgendadoRef.current = false
+      restEndScheduledRef.current = false
       if (restEndedNaturalRef.current) {
-        tocarAlertaDescanso()
-        vibrarDescansoFim()
+        playRestAlert()
+        vibrateRestEnd()
         restEndedNaturalRef.current = false
       }
-      limparNotificacoesTreino()
+      clearWorkoutNotifications()
     }
   }, [restTimerActive, restTimerSeconds, session, currentExerciseIndex])
 
   useEffect(() => {
     return onSwMessage((msg) => {
       if (msg?.type === 'REST_ENDED') {
-        tocarAlertaDescanso()
-        vibrarDescansoFim()
+        playRestAlert()
+        vibrateRestEnd()
       }
     })
   }, [])

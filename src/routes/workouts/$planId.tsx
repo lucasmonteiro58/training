@@ -13,18 +13,18 @@ import { DndContext, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 export const Route = createFileRoute('/workouts/$planId')({
-  component: PlanoDetalheComponent,
+  component: PlanDetailPage,
 })
 
-function PlanoDetalheComponent() {
+function PlanDetailPage() {
   const { planId } = Route.useParams()
   const navigate = useNavigate()
   const { plans, updatePlanById, deletePlanById, clonePlan } = usePlans()
   const plan = plans.find((p) => p.id === planId)
   const [showPicker, setShowPicker] = useState(false)
-  const { handleIniciar, modal: modalInicio } = useStartWorkout()
+  const { handleStart: handleStartWorkout, modal: startWorkoutModal } = useStartWorkout()
 
-  const edicao = usePlanEdit(plan, updatePlanById)
+  const planEditState = usePlanEdit(plan, updatePlanById)
   const {
     editing,
     name,
@@ -49,7 +49,7 @@ function PlanoDetalheComponent() {
     createGrouping,
     removeFromGrouping,
     toggleSelected,
-  } = edicao
+  } = planEditState
 
   const { status: blockerStatus, proceed: blockerProceed, reset: blockerReset } = useBlocker({
     shouldBlockFn: () => editing,
@@ -107,12 +107,12 @@ function PlanoDetalheComponent() {
         <button
           className="btn-primary w-full mb-6 py-4 text-base animate-fade-up"
           style={{ animationDelay: '100ms' }}
-          onClick={() => handleIniciar(planId)}
+          onClick={() => handleStartWorkout(planId)}
         >
           <Play size={20} />
           Iniciar Treino
         </button>
-        {modalInicio}
+        {startWorkoutModal}
 
         {/* Exercises list */}
         <div className="animate-fade-up" style={{ animationDelay: '150ms' }}>

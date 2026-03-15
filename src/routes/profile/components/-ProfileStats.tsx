@@ -1,5 +1,5 @@
 import { History, Dumbbell, TrendingUp } from 'lucide-react'
-import { formatarTempo } from '../../../lib/notifications'
+import { formatDuration } from '../../../lib/notifications'
 
 interface ProfileStatsProps {
   totalTreinos: number
@@ -13,7 +13,7 @@ export function ProfileStats({ totalTreinos, totalPlanos, volumeTotal, tempoTota
     { icon: History, label: 'Total de Treinos', value: totalTreinos },
     { icon: Dumbbell, label: 'Planos Criados', value: totalPlanos },
     { icon: TrendingUp, label: 'Volume Total (kg)', value: Math.round(volumeTotal).toLocaleString('pt-BR') },
-    { icon: null, label: 'Tempo Total', value: formatarTempo(tempoTotal) },
+    { icon: null, label: 'Tempo Total', value: formatDuration(tempoTotal) },
   ]
 
   return (

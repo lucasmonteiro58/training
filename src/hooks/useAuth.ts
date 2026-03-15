@@ -14,7 +14,7 @@ export function useAuth() {
     return unsubscribe
   }, [setUser, setLoading])
 
-  const loginComGoogle = async () => {
+  const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
     provider.addScope('profile')
     provider.addScope('email')
@@ -34,5 +34,5 @@ export function useAuth() {
     }
   }
 
-  return { user, loading, loginComGoogle, logout }
+  return { user, loading, loginWithGoogle, logout }
 }

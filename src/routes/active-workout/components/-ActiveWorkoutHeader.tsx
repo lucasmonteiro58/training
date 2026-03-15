@@ -9,46 +9,46 @@ import {
   Info,
   XCircle,
 } from 'lucide-react'
-import { formatarTempo } from '../../../lib/notifications'
+import { formatDuration } from '../../../lib/notifications'
 import { GROUPING_CONFIG } from '../../../types'
 import type { ExerciseInSession } from '../../../types'
 
 interface ActiveWorkoutHeaderProps {
-  cronometroGeralSegundos: number
-  pausado: boolean
+  totalTimerSeconds: number
+  isPaused: boolean
   onPause: () => void
   onResume: () => void
-  exercicioAtual: ExerciseInSession
-  exercicioAtualIndex: number
-  totalExercicios: number
+  currentExercise: ExerciseInSession
+  currentExerciseIndex: number
+  totalExercises: number
   onPrev: () => void
   onNext: () => void
-  onNotas: () => void
-  onFinalizar: () => void
+  onNotes: () => void
+  onFinish: () => void
   onClose: () => void
   onInfo: () => void
-  hasNotas: boolean
-  finalizando: boolean
-  progresso: number
+  hasNotes: boolean
+  isFinishing: boolean
+  progress: number
 }
 
 export function ActiveWorkoutHeader({
-  cronometroGeralSegundos,
-  pausado,
+  totalTimerSeconds,
+  isPaused,
   onPause,
   onResume,
-  exercicioAtual,
-  exercicioAtualIndex,
-  totalExercicios,
+  currentExercise,
+  currentExerciseIndex,
+  totalExercises,
   onPrev,
   onNext,
-  onNotas,
-  onFinalizar,
+  onNotes,
+  onFinish,
   onClose,
   onInfo,
-  hasNotas,
-  finalizando,
-  progresso,
+  hasNotes,
+  isFinishing,
+  progress,
 }: ActiveWorkoutHeaderProps) {
   return (
     <div className="px-4 pt-4 pb-2 flex flex-col gap-4">
@@ -62,64 +62,64 @@ export function ActiveWorkoutHeader({
         </button>
         <div className="flex items-center gap-2">
           <Timer size={14} className="text-text-subtle" />
-          <span className="timer-sm text-text-muted">{formatarTempo(cronometroGeralSegundos)}</span>
+          <span className="timer-sm text-text-muted">{formatDuration(totalTimerSeconds)}</span>
           <button
             type="button"
-            onClick={pausado ? onResume : onPause}
+            onClick={isPaused ? onResume : onPause}
             className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted"
           >
-            {pausado ? <Play size={16} /> : <Pause size={16} />}
+            {isPaused ? <Play size={16} /> : <Pause size={16} />}
           </button>
         </div>
         <button
           type="button"
-          onClick={onNotas}
+          onClick={onNotes}
           className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-text-muted relative"
         >
           <FileText size={16} />
-          {hasNotas && (
+          {hasNotes && (
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-accent" />
           )}
         </button>
         <button
           type="button"
-          onClick={onFinalizar}
-          disabled={finalizando}
+          onClick={onFinish}
+          disabled={isFinishing}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(34,197,94,0.12)] text-success text-sm font-semibold"
         >
           <Flag size={14} />
-          {finalizando ? '...' : 'Finalizar'}
+          {isFinishing ? '...' : 'Finalizar'}
         </button>
       </div>
 
       <div className="progress-bar">
-        <div className="progress-fill" style={{ width: `${progresso}%` }} />
+        <div className="progress-fill" style={{ width: `${progress}%` }} />
       </div>
 
       <div className="flex items-center justify-between py-1">
         <button
           type="button"
           onClick={onPrev}
-          disabled={exercicioAtualIndex === 0}
+          disabled={currentExerciseIndex === 0}
           className="btn-ghost p-1.5 disabled:opacity-30"
         >
           <ChevronLeft size={18} />
         </button>
         <div className="text-center">
           <p className="text-[10px] text-text-subtle font-medium">
-            {exercicioAtualIndex + 1} / {totalExercicios}
+            {currentExerciseIndex + 1} / {totalExercises}
           </p>
-          <p className="text-text font-bold text-sm">{exercicioAtual.exerciseName}</p>
-          <p className="text-[10px] text-text-muted">{exercicioAtual.muscleGroup}</p>
-          {exercicioAtual.groupingId && (
+          <p className="text-text font-bold text-sm">{currentExercise.exerciseName}</p>
+          <p className="text-[10px] text-text-muted">{currentExercise.muscleGroup}</p>
+          {currentExercise.groupingId && (
             <span
               className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
               style={{
-                color: GROUPING_CONFIG[exercicioAtual.groupingType ?? 'superset']?.cor,
-                background: GROUPING_CONFIG[exercicioAtual.groupingType ?? 'superset']?.corBg,
+                color: GROUPING_CONFIG[currentExercise.groupingType ?? 'superset']?.cor,
+                background: GROUPING_CONFIG[currentExercise.groupingType ?? 'superset']?.corBg,
               }}
             >
-              {GROUPING_CONFIG[exercicioAtual.groupingType ?? 'superset']?.label}
+              {GROUPING_CONFIG[currentExercise.groupingType ?? 'superset']?.label}
             </span>
           )}
         </div>
@@ -130,7 +130,7 @@ export function ActiveWorkoutHeader({
           <button
             type="button"
             onClick={onNext}
-            disabled={exercicioAtualIndex === totalExercicios - 1}
+            disabled={currentExerciseIndex === totalExercises - 1}
             className="btn-ghost p-1.5 disabled:opacity-30"
           >
             <ChevronRight size={18} />

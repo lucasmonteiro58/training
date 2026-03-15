@@ -20,7 +20,7 @@ export function PlanSortableCard({
 }: PlanSortableCardProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: plano.id })
-  const { handleIniciar, modal } = useStartWorkout()
+  const { handleStart, modal } = useStartWorkout()
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -71,7 +71,7 @@ export function PlanSortableCard({
               <button
                 type="button"
                 className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center hover:bg-accent-hover transition-colors"
-                onClick={() => handleIniciar(plano.id)}
+                onClick={() => handleStart(plano.id)}
               >
                 <Play size={14} className="text-white ml-0.5" />
               </button>

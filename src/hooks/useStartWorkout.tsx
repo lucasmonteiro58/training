@@ -5,31 +5,31 @@ import { AlertTriangle, Play } from 'lucide-react'
 
 export function useStartWorkout() {
   const navigate = useNavigate()
-  const treinoAtivo = useActiveWorkoutStore((s) => s.started)
+  const workoutActive = useActiveWorkoutStore((s) => s.started)
   const session = useActiveWorkoutStore((s) => s.session)
   const [pendingId, setPendingId] = useState<string | null>(null)
 
-  const handleIniciar = (planoId: string) => {
-    if (treinoAtivo && session?.planId !== planoId) {
-      setPendingId(planoId)
+  const handleStart = (planId: string) => {
+    if (workoutActive && session?.planId !== planId) {
+      setPendingId(planId)
     } else {
-      navigate({ to: '/active-workout/$planId', params: { planId: planoId } })
+      navigate({ to: '/active-workout/$planId', params: { planId } })
     }
   }
 
-  const confirmar = () => {
+  const confirm = () => {
     if (!pendingId) return
     navigate({ to: '/active-workout/$planId', params: { planId: pendingId } })
     setPendingId(null)
   }
 
-  const cancelar = () => setPendingId(null)
+  const cancel = () => setPendingId(null)
 
   const modal = pendingId ? (
     <div
       className="fixed inset-0 z-200 flex items-end justify-center"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      onClick={cancelar}
+      onClick={cancel}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
@@ -50,12 +50,12 @@ export function useStartWorkout() {
         <div className="flex flex-col gap-2">
           <button
             className="btn-primary w-full flex items-center justify-center gap-2"
-            onClick={confirmar}
+            onClick={confirm}
           >
             <Play size={15} />
             Iniciar novo treino
           </button>
-          <button className="btn-secondary w-full" onClick={cancelar}>
+          <button className="btn-secondary w-full" onClick={cancel}>
             Continuar treino atual
           </button>
         </div>
@@ -63,5 +63,5 @@ export function useStartWorkout() {
     </div>
   ) : null
 
-  return { handleIniciar, modal }
+  return { handleStart, modal }
 }

@@ -1,5 +1,5 @@
 import { Clock, Dumbbell, TrendingUp } from 'lucide-react'
-import { formatarTempo } from '../../../lib/notifications'
+import { formatDuration } from '../../../lib/notifications'
 
 interface SessionStatsProps {
   durationSeconds: number | undefined
@@ -48,7 +48,7 @@ export function SessionStats({
         ) : (
           <>
             <p className="text-lg font-bold text-text">
-              {durationSeconds != null ? formatarTempo(durationSeconds) : '–'}
+              {durationSeconds != null ? formatDuration(durationSeconds) : '–'}
             </p>
             {tempoOcioMin > 0 && (
               <p className="text-[10px] text-amber-400/90 mt-0.5">

@@ -87,7 +87,7 @@ export function usePlanEdit(
   }, [])
 
   const updateSetEdit = useCallback(
-    (exId: string, sIdx: number, campo: Partial<PlanSet>) => {
+    (exId: string, sIdx: number, changes: Partial<PlanSet>) => {
       setExercisesEdit((prev) =>
         prev.map((ex) => {
           if (ex.id !== exId) return ex
@@ -97,10 +97,10 @@ export function usePlanEdit(
               weight: ex.targetWeight ?? 0,
               reps: ex.targetReps,
             }))
-          const novas = base.map((s, i) =>
-            i === sIdx ? { ...s, ...campo } : s
+          const updatedSets = base.map((s, i) =>
+            i === sIdx ? { ...s, ...changes } : s
           )
-          return { ...ex, setsDetail: novas }
+          return { ...ex, setsDetail: updatedSets }
         })
       )
     },
@@ -108,11 +108,11 @@ export function usePlanEdit(
   )
 
   const updateExerciseEdit = useCallback(
-    (exId: string, campos: Partial<ExerciseInPlan['exercise']>) => {
+    (exId: string, changes: Partial<ExerciseInPlan['exercise']>) => {
       setExercisesEdit((prev) =>
         prev.map((ex) =>
           ex.id === exId
-            ? { ...ex, exercise: { ...ex.exercise, ...campos } }
+            ? { ...ex, exercise: { ...ex.exercise, ...changes } }
             : ex
         )
       )
@@ -120,15 +120,15 @@ export function usePlanEdit(
     []
   )
 
-  const updateRestEdit = useCallback((exId: string, segundos: number) => {
+  const updateRestEdit = useCallback((exId: string, seconds: number) => {
     setExercisesEdit((prev) =>
       prev.map((ex) =>
-        ex.id === exId ? { ...ex, restSeconds: segundos } : ex
+        ex.id === exId ? { ...ex, restSeconds: seconds } : ex
       )
     )
   }, [])
 
-  const updateSetTypeEdit = useCallback((exId: string, tipo: SetType) => {
+  const updateSetTypeEdit = useCallback((exId: string, type: SetType) => {
     setExercisesEdit((prev) =>
       prev.map((ex) => {
         if (ex.id !== exId) return ex
@@ -139,8 +139,8 @@ export function usePlanEdit(
             reps: ex.targetReps,
           }))
         const setsDetail =
-          tipo === 'tempo' ? base.map((s) => ({ ...s, reps: 1 })) : base
-        return { ...ex, setType: tipo, setsDetail }
+          type === 'tempo' ? base.map((s) => ({ ...s, reps: 1 })) : base
+        return { ...ex, setType: type, setsDetail }
       })
     )
   }, [])
@@ -168,13 +168,13 @@ export function usePlanEdit(
     })
   }, [])
 
-  const createGrouping = useCallback((tipo: GroupingType) => {
+  const createGrouping = useCallback((type: GroupingType) => {
     if (selected.size < 2) return
-    const agrupamentoId = uuidv4()
+    const groupingId = uuidv4()
     const sel = selected
     setExercisesEdit((prev) =>
       prev.map((ex) =>
-        sel.has(ex.id) ? { ...ex, groupingId: agrupamentoId, groupingType: tipo } : ex
+        sel.has(ex.id) ? { ...ex, groupingId, groupingType: type } : ex
       )
     )
     setSelected(new Set())

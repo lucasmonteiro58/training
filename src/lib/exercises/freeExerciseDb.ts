@@ -22,11 +22,11 @@ interface RawExercise {
   images?: string[]
 }
 
-function mapearGrupo(en: string): string {
+function mapGroup(en: string): string {
   return GROUPS_EN_TO_PT[en.toLowerCase()] ?? en
 }
 
-function convertRawToExercicio(raw: RawExercise): Exercise {
+function convertRawToExercise(raw: RawExercise): Exercise {
   const primaryMuscle = raw.primaryMuscles?.[0] ?? raw.category ?? 'outro'
   const gifUrl =
     raw.images && raw.images.length > 0
@@ -36,9 +36,9 @@ function convertRawToExercicio(raw: RawExercise): Exercise {
   return {
     id: raw.id,
     name: raw.name,
-    muscleGroup: mapearGrupo(primaryMuscle),
+    muscleGroup: mapGroup(primaryMuscle),
     secondaryMuscleGroup: raw.secondaryMuscles?.[0]
-      ? mapearGrupo(raw.secondaryMuscles[0])
+      ? mapGroup(raw.secondaryMuscles[0])
       : undefined,
     equipment: raw.equipment,
     gifUrl,
@@ -47,44 +47,44 @@ function convertRawToExercicio(raw: RawExercise): Exercise {
   }
 }
 
-let cachedExercicios: Exercise[] | null = null
+let cachedExercises: Exercise[] | null = null
 
-export async function carregarExercicios(): Promise<Exercise[]> {
-  // 1. Memória
-  if (cachedExercicios) return cachedExercicios
+export async function loadExercises(): Promise<Exercise[]> {
+  // 1. Memory
+  if (cachedExercises) return cachedExercises
 
-  // 2. IndexedDB local
+  // 2. Local IndexedDB
   const dbCache = await getCachedExercises()
   if (dbCache.length > 0) {
-    cachedExercicios = dbCache
+    cachedExercises = dbCache
     return dbCache
   }
 
-  // 3. Fetch remoto
+  // 3. Remote fetch
   try {
     const resp = await fetch(RAW_URL)
     if (!resp.ok) throw new Error('Erro ao buscar exercícios')
     const raw: RawExercise[] = await resp.json()
-    const exercicios = raw.map(convertRawToExercicio)
-    cachedExercicios = exercicios
-    await setCachedExercises(exercicios)
-    return exercicios
+    const exercises = raw.map(convertRawToExercise)
+    cachedExercises = exercises
+    await setCachedExercises(exercises)
+    return exercises
   } catch (err) {
     console.error('Erro ao carregar exercícios:', err)
     return []
   }
 }
 
-export function buscarExercicios(
-  exercicios: Exercise[],
+export function searchExercises(
+  exercises: Exercise[],
   query: string,
-  grupo?: string
+  group?: string
 ): Exercise[] {
   const q = query.toLowerCase().trim()
-  return exercicios.filter((ex) => {
+  return exercises.filter((ex) => {
     const matchQuery = !q || ex.name.toLowerCase().includes(q) ||
       ex.muscleGroup.toLowerCase().includes(q)
-    const matchGrupo = !grupo || ex.muscleGroup === grupo
-    return matchQuery && matchGrupo
+    const matchGroup = !group || ex.muscleGroup === group
+    return matchQuery && matchGroup
   })
 }

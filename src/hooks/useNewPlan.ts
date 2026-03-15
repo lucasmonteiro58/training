@@ -22,7 +22,7 @@ export function useNewPlan() {
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [exercicios, setExercicios] = useState<ExerciseInPlan[]>([])
+  const [exercises, setExercises] = useState<ExerciseInPlan[]>([])
   const [saving, setSaving] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [selectedColor, setSelectedColor] = useState(PLAN_COLORS[0])
@@ -32,7 +32,7 @@ export function useNewPlan() {
   const isDirty =
     name.trim() !== '' ||
     description.trim() !== '' ||
-    exercicios.length > 0 ||
+    exercises.length > 0 ||
     selectedColor !== PLAN_COLORS[0]
 
   const sensors = useSensors(
@@ -45,13 +45,13 @@ export function useNewPlan() {
     })
   )
 
-  const createGrouping = useCallback((tipo: GroupingType) => {
-    setExercicios((prev) => {
+  const createGrouping = useCallback((type: GroupingType) => {
+    setExercises((prev) => {
       if (selected.size < 2) return prev
-      const agrupamentoId = uuidv4()
+      const groupingId = uuidv4()
       const sel = selected
       return prev.map((ex) =>
-        sel.has(ex.id) ? { ...ex, groupingId: agrupamentoId, groupingType: tipo } : ex
+        sel.has(ex.id) ? { ...ex, groupingId, groupingType: type } : ex
       )
     })
     setSelected(new Set())
@@ -59,7 +59,7 @@ export function useNewPlan() {
   }, [selected])
 
   const removeFromGrouping = useCallback((exId: string) => {
-    setExercicios((prev) =>
+    setExercises((prev) =>
       prev.map((ex) =>
         ex.id === exId
           ? { ...ex, groupingId: undefined, groupingType: undefined }
@@ -80,7 +80,7 @@ export function useNewPlan() {
   const addExercise = useCallback(
     (ex: Partial<ExerciseInPlan> & { exercise?: any }) => {
       const defaultSets = Array(3).fill({ weight: 0, reps: 10 })
-      setExercicios((prev) => [
+      setExercises((prev) => [
         ...prev,
         {
           ...ex,
@@ -94,13 +94,13 @@ export function useNewPlan() {
   )
 
   const removeExercise = useCallback((id: string) => {
-    setExercicios((prev) => prev.filter((e) => e.id !== id))
+    setExercises((prev) => prev.filter((e) => e.id !== id))
   }, [])
 
   const updateExercise = useCallback(
-    (id: string, campo: Partial<ExerciseInPlan>) => {
-      setExercicios((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, ...campo } : e))
+    (id: string, changes: Partial<ExerciseInPlan>) => {
+      setExercises((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, ...changes } : e))
       )
     },
     []
@@ -109,12 +109,12 @@ export function useNewPlan() {
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event
     if (over && active.id !== over.id) {
-      setExercicios((items) => {
+      setExercises((items) => {
         const oldIndex = items.findIndex((i) => i.id === active.id)
         const newIndex = items.findIndex((i) => i.id === over.id)
         return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({
           ...ex,
-          ordem: idx,
+          order: idx,
         }))
       })
     }
@@ -128,7 +128,7 @@ export function useNewPlan() {
         name.trim(),
         description.trim() || undefined
       )
-      await updatePlanById({ ...plan, exercises: exercicios, color: selectedColor })
+      await updatePlanById({ ...plan, exercises, color: selectedColor })
       savedRef.current = true
       navigate({ to: '/workouts' })
     } catch (err) {
@@ -140,7 +140,7 @@ export function useNewPlan() {
   }, [
     name,
     description,
-    exercicios,
+    exercises,
     selectedColor,
     createPlan,
     updatePlanById,
@@ -160,7 +160,7 @@ export function useNewPlan() {
     setName,
     description,
     setDescription,
-    exercicios,
+    exercises,
     saving,
     showPicker,
     setShowPicker,

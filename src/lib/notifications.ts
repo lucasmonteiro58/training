@@ -5,18 +5,18 @@ const NOTIF_PREF_KEY = 'training_notif_ativas'
 
 // ─── Preferências ─────────────────────────────────────────────────────────────
 
-export function getNotifAtivas(): boolean {
+export function getNotificationsEnabled(): boolean {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false
   return localStorage.getItem(NOTIF_PREF_KEY) !== 'false'
 }
 
-export function setNotifAtivas(ativo: boolean): void {
-  localStorage.setItem(NOTIF_PREF_KEY, ativo ? 'true' : 'false')
+export function setNotificationsEnabled(enabled: boolean): void {
+  localStorage.setItem(NOTIF_PREF_KEY, enabled ? 'true' : 'false')
 }
 
 // ─── Service Worker ───────────────────────────────────────────────────────────
 
-export async function registrarServiceWorker(): Promise<void> {
+export async function registerServiceWorker(): Promise<void> {
   if (!('serviceWorker' in navigator)) return
   // Em desenvolvimento o SW pode cachear HTML/CSS e deixar a página sem estilos
   // até limpar o cache; só registramos em produção.
@@ -29,7 +29,7 @@ export async function registrarServiceWorker(): Promise<void> {
   }
 }
 
-export async function solicitarPermissaoNotificacao(): Promise<boolean> {
+export async function requestNotificationPermission(): Promise<boolean> {
   if (!('Notification' in window)) return false
   if (Notification.permission === 'granted') return true
   const result = await Notification.requestPermission()
@@ -62,8 +62,7 @@ function getAudioContext(): AudioContext | null {
   }
 }
 
-/** Toca um beep duplo para sinalizar fim do descanso */
-export function tocarAlertaDescanso(): void {
+export function playRestAlert(): void {
   const ctx = getAudioContext()
   if (!ctx) return
 
@@ -99,11 +98,7 @@ function playBeep(ctx: AudioContext, freq: number, startTime: number, duration: 
   osc.stop(startTime + duration)
 }
 
-/**
- * Prepara o AudioContext com uma interação do usuário.
- * Chamar ao iniciar treino ou completar série (dentro de event handler).
- */
-export function prepararAudio(): void {
+export function prepareAudio(): void {
   const ctx = getAudioContext()
   if (ctx?.state === 'suspended') {
     ctx.resume().catch(() => {})
@@ -112,50 +107,44 @@ export function prepararAudio(): void {
 
 // ─── Vibração ─────────────────────────────────────────────────────────────────
 
-/** Vibra o dispositivo (padrão forte para fim de descanso) */
-export function vibrarDescansoFim(): void {
+export function vibrateRestEnd(): void {
   if (!('vibrate' in navigator)) return
   navigator.vibrate([300, 150, 300, 150, 400])
 }
 
 // ─── Notificações via SW ──────────────────────────────────────────────────────
 
-export function enviarNotificacaoTreino(
-  titulo: string,
-  corpo: string,
+export function sendWorkoutNotification(
+  title: string,
+  body: string,
   tag = 'training-workout'
 ): void {
-  if (!getNotifAtivas()) return
+  if (!getNotificationsEnabled()) return
   if (!swRegistration?.active) return
   swRegistration.active.postMessage({
     type: 'WORKOUT_NOTIFICATION',
-    payload: { titulo, corpo, tag },
+    payload: { title, body, tag },
   })
 }
 
-/**
- * Agenda uma notificação no SW para quando o descanso terminar.
- * Funciona mesmo com a aba em background.
- */
-export function agendarNotificacaoDescanso(
-  segundos: number,
-  exercicioNome?: string
+export function scheduleRestNotification(
+  seconds: number,
+  exerciseName?: string
 ): void {
-  if (!getNotifAtivas()) return
+  if (!getNotificationsEnabled()) return
   if (!swRegistration?.active) return
   swRegistration.active.postMessage({
     type: 'SCHEDULE_REST_END',
-    payload: { segundos, exercicioNome },
+    payload: { seconds, exerciseName },
   })
 }
 
-/** Cancela a notificação agendada de fim de descanso (skip) */
-export function cancelarNotificacaoDescanso(): void {
+export function cancelRestNotification(): void {
   if (!swRegistration?.active) return
   swRegistration.active.postMessage({ type: 'CANCEL_REST_END' })
 }
 
-export function limparNotificacoesTreino(): void {
+export function clearWorkoutNotifications(): void {
   if (!swRegistration?.active) return
   swRegistration.active.postMessage({ type: 'CLEAR_NOTIFICATIONS' })
 }
@@ -173,10 +162,10 @@ export function onSwMessage(callback: (msg: any) => void): () => void {
 
 // ─── Utilitários ──────────────────────────────────────────────────────────────
 
-export function formatarTempo(segundos: number): string {
-  const h = Math.floor(segundos / 3600)
-  const m = Math.floor((segundos % 3600) / 60)
-  const s = segundos % 60
+export function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
   if (h > 0) {
     return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }

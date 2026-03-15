@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { formatarTempo } from '../../../lib/notifications'
+import { formatDuration } from '../../../lib/notifications'
 import { Clock, Dumbbell, TrendingUp, ChevronRight, Trash2, RotateCcw, TimerOff } from 'lucide-react'
 import type { WorkoutSession } from '../../../types'
 
@@ -59,7 +59,7 @@ export function SessionCard({ sessao, index, onExcluir, onRetornar }: SessionCar
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
               <Clock size={13} className="text-text-subtle" />
-              <span className="text-xs text-text-muted">{formatarTempo(sessao.durationSeconds)}</span>
+              <span className="text-xs text-text-muted">{formatDuration(sessao.durationSeconds)}</span>
             </div>
             {sessao.autoClosed && tempoOcioMin > 0 && (
               <span className="text-[10px] text-amber-400/90">

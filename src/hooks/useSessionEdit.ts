@@ -6,18 +6,18 @@ export function useSessionEdit(
   session: WorkoutSession | undefined,
   saveSessionComplete: (session: WorkoutSession) => Promise<void>
 ) {
-  const [editando, setEditando] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState<WorkoutSession | null>(null)
 
-  const displaySessao = editando && editData ? editData : session ?? null
+  const displaySession = isEditing && editData ? editData : session ?? null
 
-  const iniciarEdicao = useCallback(() => {
+  const startEditing = useCallback(() => {
     if (!session) return
     setEditData(JSON.parse(JSON.stringify(session)))
-    setEditando(true)
+    setIsEditing(true)
   }, [session])
 
-  const salvarEdicao = useCallback(async () => {
+  const saveEdit = useCallback(async () => {
     if (!editData) return
     const totalVolume = editData.exercises.reduce(
       (sum, ex) =>
@@ -28,21 +28,21 @@ export function useSessionEdit(
       0
     )
     await saveSessionComplete({ ...editData, totalVolume })
-    setEditando(false)
+    setIsEditing(false)
     setEditData(null)
     toast.success('Sessão atualizada!')
   }, [editData, saveSessionComplete])
 
-  const cancelarEdicao = useCallback(() => {
-    setEditando(false)
+  const cancelEdit = useCallback(() => {
+    setIsEditing(false)
     setEditData(null)
   }, [])
 
-  const updateSerie = useCallback(
+  const updateSet = useCallback(
     (
       exIdx: number,
       sIdx: number,
-      campo: Partial<{
+      changes: Partial<{
         weight: number
         reps: number
         completed: boolean
@@ -55,7 +55,7 @@ export function useSessionEdit(
         return {
           ...ex,
           sets: ex.sets.map((s, sI) =>
-            sI === sIdx ? { ...s, ...campo } : s
+            sI === sIdx ? { ...s, ...changes } : s
           ),
         }
       })
@@ -64,23 +64,23 @@ export function useSessionEdit(
     [editData]
   )
 
-  const updateDuracao = useCallback((durationSeconds: number) => {
+  const updateDuration = useCallback((durationSeconds: number) => {
     setEditData((prev) => (prev ? { ...prev, durationSeconds } : null))
   }, [])
 
-  const updateIniciadoEm = useCallback((startedAt: number) => {
+  const updateStartedAt = useCallback((startedAt: number) => {
     setEditData((prev) => (prev ? { ...prev, startedAt } : null))
   }, [])
 
   return {
-    editando,
+    isEditing,
     editData,
-    displaySessao,
-    iniciarEdicao,
-    salvarEdicao,
-    cancelarEdicao,
-    updateSerie,
-    updateDuracao,
-    updateIniciadoEm,
+    displaySession,
+    startEditing,
+    saveEdit,
+    cancelEdit,
+    updateSet,
+    updateDuration,
+    updateStartedAt,
   }
 }

@@ -1,20 +1,20 @@
 import { useNavigate } from '@tanstack/react-router'
 import { X, Trophy, Share2 } from 'lucide-react'
-import { formatarTempo } from '../../../lib/notifications'
+import { formatDuration } from '../../../lib/notifications'
 import type { WorkoutSession } from '../../../types'
 
 interface WorkoutReportScreenProps {
-  relatorio: WorkoutSession
-  gerandoImagem: boolean
-  copiado: boolean
-  onCompartilhar: (s: WorkoutSession) => void
+  report: WorkoutSession
+  isGeneratingImage: boolean
+  copied: boolean
+  onShare: (s: WorkoutSession) => void
 }
 
 export function WorkoutReportScreen({
-  relatorio,
-  gerandoImagem,
-  copiado,
-  onCompartilhar,
+  report,
+  isGeneratingImage,
+  copied,
+  onShare,
 }: WorkoutReportScreenProps) {
   const navigate = useNavigate()
 
@@ -39,9 +39,9 @@ export function WorkoutReportScreen({
           <Trophy size={36} className="text-success" />
         </div>
         <h1 className="text-2xl font-bold text-text animate-celebration-pulse">Treino Concluído!</h1>
-        <p className="text-text-muted text-sm mt-1">{relatorio.planName}</p>
+        <p className="text-text-muted text-sm mt-1">{report.planName}</p>
         <p className="text-text-subtle text-xs mt-0.5 capitalize">
-          {new Date(relatorio.startedAt).toLocaleDateString('pt-BR', {
+          {new Date(report.startedAt).toLocaleDateString('pt-BR', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
@@ -53,15 +53,15 @@ export function WorkoutReportScreen({
         {[
           {
             label: 'Duração',
-            value: relatorio.durationSeconds ? formatarTempo(relatorio.durationSeconds) : '–',
+            value: report.durationSeconds ? formatDuration(report.durationSeconds) : '–',
           },
           {
             label: 'Volume (kg)',
-            value: relatorio.totalVolume ? Math.round(relatorio.totalVolume) : '–',
+            value: report.totalVolume ? Math.round(report.totalVolume) : '–',
           },
           {
             label: 'Séries ✓',
-            value: relatorio.exercises.reduce(
+            value: report.exercises.reduce(
               (a: number, ex: { sets: { completed: boolean }[] }) => a + ex.sets.filter((s: { completed: boolean }) => s.completed).length,
               0
             ),
@@ -75,7 +75,7 @@ export function WorkoutReportScreen({
       </div>
 
       <div className="flex flex-col gap-2 px-4 mb-6">
-        {relatorio.exercises.map((ex: { exerciseId: string; exerciseName: string; sets: { weight?: number; reps?: number; completed: boolean }[] }) => {
+        {report.exercises.map((ex: { exerciseId: string; exerciseName: string; sets: { weight?: number; reps?: number; completed: boolean }[] }) => {
           const seriesOk = ex.sets.filter((s: { completed: boolean }) => s.completed)
           return (
             <div key={ex.exerciseId} className="card p-4">
@@ -110,15 +110,15 @@ export function WorkoutReportScreen({
         <button
           type="button"
           className="btn-primary w-full py-4 flex items-center justify-center gap-2"
-          onClick={() => onCompartilhar(relatorio)}
-          disabled={gerandoImagem}
+          onClick={() => onShare(report)}
+          disabled={isGeneratingImage}
         >
-          {gerandoImagem ? (
+          {isGeneratingImage ? (
             <>
               <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
               Gerando imagem...
             </>
-          ) : copiado ? (
+          ) : copied ? (
             <>
               <Share2 size={18} />
               Imagem salva!
