@@ -1,49 +1,49 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuthStore } from '../stores'
-import { useHistorico } from '../hooks/useHistorico'
-import { usePlanos } from '../hooks/usePlanos'
-import { useTreinoAtivoStore } from '../stores'
+import { useHistory } from '../hooks/useHistory'
+import { usePlans } from '../hooks/usePlans'
+import { useActiveWorkoutStore } from '../stores'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
-import { useConfigUsuario } from '../hooks/useConfigUsuario'
+import { useUserConfig } from '../hooks/useUserConfig'
 import { useHomeStats } from '../hooks/useHomeStats'
 import { HomeHeader } from './index/components/-HomeHeader'
 import { PullToRefreshIndicator } from './index/components/-PullToRefreshIndicator'
-import { TreinoAtivoBanner } from './index/components/-TreinoAtivoBanner'
+import { ActiveWorkoutBanner } from './index/components/-ActiveWorkoutBanner'
 import { HomeStats } from './index/components/-HomeStats'
-import { StreakMetaSection } from './index/components/-StreakMetaSection'
+import { StreakGoalSection } from './index/components/-StreakMetaSection'
 import { WeekDaysCard } from './index/components/-WeekDaysCard'
-import { ProximoTreinoSection } from './index/components/-ProximoTreinoSection'
-import { FrequenciaGruposCard } from './index/components/-FrequenciaGruposCard'
-import { MeusPlanosSection } from './index/components/-MeusPlanosSection'
-import { UltimosTreinosSection } from './index/components/-UltimosTreinosSection'
-import { EditMetaModal } from './index/components/-EditMetaModal'
+import { NextWorkoutSection } from './index/components/-NextWorkoutSection'
+import { GroupFrequencyCard } from './index/components/-GroupFrequencyCard'
+import { MyPlansSection } from './index/components/-MyPlansSection'
+import { LastWorkoutsSection } from './index/components/-LastWorkoutsSection'
+import { EditGoalModal } from './index/components/-EditMetaModal'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
 
-const DIAS_DA_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 function HomePage() {
   const user = useAuthStore((s) => s.user)
-  const { planosAtivos, loading, sincronizar: sincronizarPlanos } = usePlanos()
-  const { sessoes, loading: loadingSessoes, sincronizar: sincronizarSessoes } =
-    useHistorico()
-  const [sincronizando, setSincronizando] = useState(false)
-  const [showEditMeta, setShowEditMeta] = useState(false)
-  const [metaInput, setMetaInput] = useState('4')
+  const { activePlans, loading, sync: syncPlans } = usePlans()
+  const { sessions, loading: loadingSessions, sync: syncSessions } =
+    useHistory()
+  const [syncing, setSyncing] = useState(false)
+  const [showEditGoal, setShowEditGoal] = useState(false)
+  const [goalInput, setGoalInput] = useState('4')
 
-  const treinoAtivo = useTreinoAtivoStore((s) => s.iniciado)
-  const sessaoAtiva = useTreinoAtivoStore((s) => s.sessao)
-  const exercicioAtualIndex = useTreinoAtivoStore((s) => s.exercicioAtualIndex)
-  const pausado = useTreinoAtivoStore((s) => s.pausado)
-  const cronometroGeralSegundos = useTreinoAtivoStore(
-    (s) => s.cronometroGeralSegundos
+  const hasActiveWorkout = useActiveWorkoutStore((s) => s.started)
+  const activeSession = useActiveWorkoutStore((s) => s.session)
+  const currentExerciseIndex = useActiveWorkoutStore((s) => s.currentExerciseIndex)
+  const isPaused = useActiveWorkoutStore((s) => s.paused)
+  const totalTimerSeconds = useActiveWorkoutStore(
+    (s) => s.totalTimerSeconds
   )
 
-  const { metaSemanal, diasOpcionais, handleSaveMeta } =
-    useConfigUsuario(user)
+  const { weeklyGoal, optionalDays, handleSaveGoal } =
+    useUserConfig(user)
 
   const {
     pullDistance,
@@ -54,35 +54,35 @@ function HomePage() {
     handleTouchEnd,
     threshold: pullThreshold,
   } = usePullToRefresh(async () => {
-    await Promise.all([sincronizarPlanos(), sincronizarSessoes()])
+    await Promise.all([syncPlans(), syncSessions()])
   })
 
   const stats = useHomeStats({
-    sessoes,
-    planosAtivos,
-    metaSemanal,
-    diasOpcionais,
+    sessions,
+    activePlans,
+    weeklyGoal,
+    optionalDays,
     loading,
-    loadingSessoes,
+    loadingSessions,
   })
   const {
-    treinosSemana,
-    volumeTotal,
-    ultimasSessoes,
-    carregando,
+    workoutsThisWeek,
+    totalVolume,
+    lastSessions,
+    isLoading,
     streaks,
-    proximoPlano,
-    alertasGrupos,
-    hoje,
-    inicioSemana,
-    ultimaSessao,
+    nextPlan,
+    groupAlerts,
+    today,
+    weekStart,
+    lastSession,
   } = stats
 
-  const nome = user?.displayName?.split(' ')[0] ?? 'Atleta'
-  const hora = new Date().getHours()
-  const saudacao =
-    hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
-  const exercicioAtual = sessaoAtiva?.exercicios[exercicioAtualIndex]
+  const firstName = user?.displayName?.split(' ')[0] ?? 'Atleta'
+  const hour = new Date().getHours()
+  const greeting =
+    hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
+  const currentExercise = activeSession?.exercises[currentExerciseIndex]
 
   return (
     <div
@@ -99,27 +99,27 @@ function HomePage() {
       />
 
       <HomeHeader
-        saudacao={saudacao}
-        nome={nome}
+        greeting={greeting}
+        name={firstName}
         onSync={async () => {
-          setSincronizando(true)
-          await Promise.all([sincronizarPlanos(), sincronizarSessoes()])
-          setSincronizando(false)
+          setSyncing(true)
+          await Promise.all([syncPlans(), syncSessions()])
+          setSyncing(false)
         }}
-        sincronizando={sincronizando}
+        isSyncing={syncing}
       />
 
-      {treinoAtivo && sessaoAtiva && (
-        <TreinoAtivoBanner
-          planoId={sessaoAtiva.planoId}
-          pausado={pausado}
-          cronometroGeralSegundos={cronometroGeralSegundos}
-          exercicioAtualNome={exercicioAtual?.exercicioNome ?? null}
-          planoNome={sessaoAtiva.planoNome}
+      {hasActiveWorkout && activeSession && (
+        <ActiveWorkoutBanner
+          planId={activeSession.planId}
+          isPaused={isPaused}
+          totalTimerSeconds={totalTimerSeconds}
+          currentExerciseName={currentExercise?.exerciseName ?? null}
+          planName={activeSession.planName}
         />
       )}
 
-      {carregando ? (
+      {isLoading ? (
         <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
           {[...Array(3)].map((_, i) => (
             <div key={i} className="skeleton h-[88px] rounded-2xl" />
@@ -127,63 +127,63 @@ function HomePage() {
         </div>
       ) : (
         <HomeStats
-          treinosSemana={treinosSemana}
-          volumeTotal={volumeTotal}
-          treinosTotal={sessoes.length}
+          workoutsThisWeek={workoutsThisWeek}
+          totalVolume={totalVolume}
+          totalWorkouts={sessions.length}
         />
       )}
 
-      {!carregando && sessoes.length > 0 && (
-        <StreakMetaSection
-          streakAtual={streaks.streakAtual}
-          treinosEstaSemana={streaks.treinosEstaSemana}
-          metaSemanal={streaks.metaSemanal}
-          onEditMeta={() => {
-            setMetaInput(String(metaSemanal))
-            setShowEditMeta(true)
+      {!isLoading && sessions.length > 0 && (
+        <StreakGoalSection
+          currentStreak={streaks.currentStreak}
+          workoutsThisWeek={streaks.workoutsThisWeek}
+          weeklyGoal={streaks.weeklyGoal}
+          onEditGoal={() => {
+            setGoalInput(String(weeklyGoal))
+            setShowEditGoal(true)
           }}
         />
       )}
 
 
       <WeekDaysCard
-        diasDaSemana={DIAS_DA_SEMANA}
-        inicioSemana={inicioSemana}
-        hoje={hoje}
-        sessoes={sessoes}
-        diasOpcionais={diasOpcionais}
+        weekDayLabels={WEEKDAY_LABELS}
+        weekStart={weekStart}
+        today={today}
+        sessions={sessions}
+        optionalDays={optionalDays}
       />
 
-      {!treinoAtivo && proximoPlano && (
-        <ProximoTreinoSection
-          proximoPlano={proximoPlano}
-          ultimaSessao={ultimaSessao}
+      {!hasActiveWorkout && nextPlan && (
+        <NextWorkoutSection
+          nextPlan={nextPlan}
+          lastSession={lastSession}
         />
       )}
 
-      {!carregando && sessoes.length > 0 && (
-        <FrequenciaGruposCard alertas={alertasGrupos} />
+      {!isLoading && sessions.length > 0 && (
+        <GroupFrequencyCard groupAlerts={groupAlerts} />
       )}
 
-      <MeusPlanosSection planos={planosAtivos} carregando={carregando} />
+      <MyPlansSection plans={activePlans} loading={isLoading} />
 
-      <UltimosTreinosSection
-        sessoes={ultimasSessoes.map(s => ({
+      <LastWorkoutsSection
+        sessions={lastSessions.map(s => ({
           id: s.id,
-          planoNome: s.planoNome,
-          iniciadoEm: s.iniciadoEm,
-          duracaoSegundos: s.duracaoSegundos,
-          volumeTotal: s.volumeTotal,
+          planName: s.planName,
+          startedAt: s.startedAt,
+          durationSeconds: s.durationSeconds,
+          totalVolume: s.totalVolume,
         }))}
-        carregando={carregando}
+        loading={isLoading}
       />
 
-      {showEditMeta && (
-        <EditMetaModal
-          metaInput={metaInput}
-          onMetaInputChange={setMetaInput}
-          onSave={handleSaveMeta}
-          onClose={() => setShowEditMeta(false)}
+      {showEditGoal && (
+        <EditGoalModal
+          goalInput={goalInput}
+          onGoalInputChange={setGoalInput}
+          onSave={handleSaveGoal}
+          onClose={() => setShowEditGoal(false)}
         />
       )}
     </div>

@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { Calculator, X } from 'lucide-react'
-import { calcular1RM, tabelaCargas } from '../../lib/calculadora1rm'
+import { calculate1RM, getWeightsTable } from '../../lib/calculadora1rm'
 
 interface Calculadora1RMProps {
   onClose: () => void
-  pesoInicial?: number
-  repsInicial?: number
+  initialWeight?: number
+  initialReps?: number
 }
 
-export function Calculadora1RM({ onClose, pesoInicial, repsInicial }: Calculadora1RMProps) {
-  const [peso, setPeso] = useState(pesoInicial ?? 0)
-  const [reps, setReps] = useState(repsInicial ?? 0)
+export function Calculadora1RM({ onClose, initialWeight, initialReps }: Calculadora1RMProps) {
+  const [weight, setWeight] = useState(initialWeight ?? 0)
+  const [reps, setReps] = useState(initialReps ?? 0)
 
-  const rm1 = calcular1RM(peso, reps)
-  const tabela = rm1 > 0 ? tabelaCargas(rm1) : []
+  const oneRM = calculate1RM(weight, reps)
+  const loadTable = oneRM > 0 ? getWeightsTable(oneRM) : []
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -40,8 +40,8 @@ export function Calculadora1RM({ onClose, pesoInicial, repsInicial }: Calculador
             <input
               type="number"
               className="input text-center text-lg font-bold"
-              value={peso === 0 ? '' : peso}
-              onChange={(e) => setPeso(e.target.value === '' ? 0 : parseFloat(e.target.value))}
+              value={weight === 0 ? '' : weight}
+              onChange={(e) => setWeight(e.target.value === '' ? 0 : parseFloat(e.target.value))}
               onFocus={(e) => e.target.select()}
               placeholder="0"
               min={0}
@@ -66,41 +66,41 @@ export function Calculadora1RM({ onClose, pesoInicial, repsInicial }: Calculador
         </div>
 
         {/* 1RM Result */}
-        {rm1 > 0 && (
+        {oneRM > 0 && (
           <div className="bg-accent/10 border border-accent /20 rounded-2xl p-4 mb-4 text-center shrink-0 animate-scale-in">
             <p className="text-xs text-text-muted mb-1">1RM Estimada</p>
             <p className="text-3xl font-black text-accent">
-              {Math.round(rm1 * 10) / 10} <span className="text-sm font-medium">kg</span>
+              {Math.round(oneRM * 10) / 10} <span className="text-sm font-medium">kg</span>
             </p>
           </div>
         )}
 
         {/* Load Table */}
-        {tabela.length > 0 && (
+        {loadTable.length > 0 && (
           <div className="flex-1 overflow-y-auto -mx-1 px-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-text-subtle mb-2 pl-1">
               TABELA DE CARGAS
             </p>
             <div className="space-y-1">
-              {tabela.map((row) => (
+              {loadTable.map((row) => (
                 <div
-                  key={row.percentual}
+                  key={row.percentage}
                   className={`grid grid-cols-3 items-center py-2 px-3 rounded-lg text-sm ${
-                    row.percentual === 100
+                    row.percentage === 100
                       ? 'bg-accent/15 text-accent font-bold'
                       : 'bg-surface-2/50'
                   }`}
                 >
-                  <span className="text-text-muted font-medium">{row.percentual}%</span>
-                  <span className="text-text font-bold text-center">{row.peso} kg</span>
-                  <span className="text-text-muted text-right text-xs">{row.repsEstimadas} reps</span>
+                  <span className="text-text-muted font-medium">{row.percentage}%</span>
+                  <span className="text-text font-bold text-center">{row.weight} kg</span>
+                  <span className="text-text-muted text-right text-xs">{row.estimatedReps} reps</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {rm1 <= 0 && (
+        {oneRM <= 0 && (
           <p className="text-text-muted text-sm text-center mt-4">
             Insira o peso e o número de repetições para calcular a 1RM
           </p>

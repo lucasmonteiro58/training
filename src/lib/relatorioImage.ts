@@ -1,7 +1,7 @@
-import type { SessaoDeTreino } from '../types'
-import { formatarTempo } from './notifications'
+import type { WorkoutSession } from '../types'
+import { formatDuration } from './notifications'
 
-export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | null> {
+export async function generateReportImage(s: WorkoutSession): Promise<Blob | null> {
   const W = 1080
   const PAD = 72
   const PALETTE = ['#6366f1', '#a78bfa', '#38bdf8', '#f59e0b', '#f472b6', '#22c55e']
@@ -17,37 +17,37 @@ export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | nu
     border: 'rgba(255,255,255,0.08)',
   }
 
-  const totalSeries = s.exercicios.reduce((a, ex) => a + ex.series.filter(sr => sr.completada).length, 0)
-  const totalReps = s.exercicios.reduce(
-    (a, ex) => a + ex.series.filter(sr => sr.completada).reduce((b, sr) => b + (sr.repeticoes ?? 0), 0),
+  const totalSeries = s.exercises.reduce((a: number, ex) => a + ex.sets.filter(sr => sr.completed).length, 0)
+  const totalReps = s.exercises.reduce(
+    (a: number, ex) => a + ex.sets.filter(sr => sr.completed).reduce((b: number, sr) => b + (sr.reps ?? 0), 0),
     0
   )
-  const volumeKg = s.volumeTotal ? Math.round(s.volumeTotal) : 0
-  const exercFeitos = s.exercicios.filter(ex => ex.series.some(sr => sr.completada)).length
-  const mediaSerie = totalSeries > 0 && volumeKg > 0 ? `${Math.round(volumeKg / totalSeries)}kg` : '–'
-  const duracao = s.duracaoSegundos ? formatarTempo(s.duracaoSegundos) : '–'
-  const data = new Date(s.iniciadoEm).toLocaleDateString('pt-BR', {
+  const volumeKg = s.totalVolume ? Math.round(s.totalVolume) : 0
+  const exercisesDone = s.exercises.filter(ex => ex.sets.some(sr => sr.completed)).length
+  const avgPerSet = totalSeries > 0 && volumeKg > 0 ? `${Math.round(volumeKg / totalSeries)}kg` : '–'
+  const duration = s.durationSeconds ? formatDuration(s.durationSeconds) : '–'
+  const formattedDate = new Date(s.startedAt).toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   })
 
-  const barData = s.exercicios
-    .map(ex => ({
-      nome: ex.exercicioNome,
-      vol: ex.series
-        .filter(sr => sr.completada)
-        .reduce((a, sr) => a + (sr.peso ?? 0) * (sr.repeticoes ?? 0), 0),
-      sets: ex.series.filter(sr => sr.completada).length,
+  const barData = s.exercises
+    .map((ex: { exerciseName: string; sets: { completed: boolean; weight?: number; reps?: number }[] }) => ({
+      name: ex.exerciseName,
+      volume: ex.sets
+        .filter(sr => sr.completed)
+        .reduce((a: number, sr) => a + (sr.weight ?? 0) * (sr.reps ?? 0), 0),
+      sets: ex.sets.filter(sr => sr.completed).length,
     }))
-    .filter(ex => ex.sets > 0)
-    .sort((a, b) => b.vol - a.vol)
+    .filter((ex: { sets: number }) => ex.sets > 0)
+    .sort((a: { volume: number }, b: { volume: number }) => b.volume - a.volume)
     .slice(0, 6)
 
   const muscleMap = new Map<string, number>()
-  s.exercicios.forEach(ex => {
-    if (ex.series.some(sr => sr.completada) && ex.grupoMuscular)
-      muscleMap.set(ex.grupoMuscular, (muscleMap.get(ex.grupoMuscular) ?? 0) + 1)
+  s.exercises.forEach((ex: { sets: { completed: boolean }[]; muscleGroup: string }) => {
+    if (ex.sets.some(sr => sr.completed) && ex.muscleGroup)
+      muscleMap.set(ex.muscleGroup, (muscleMap.get(ex.muscleGroup) ?? 0) + 1)
   })
   const muscles = [...muscleMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
 
@@ -105,7 +105,7 @@ export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | nu
   ctx.fillText('Treino Concluído!', W / 2, y)
 
   ctx.font = '600 36px -apple-system, Inter, sans-serif'
-  const pillW = ctx.measureText(s.planoNome).width + 56
+  const pillW = ctx.measureText(s.planName).width + 56
   y += 24
   const pillY = y
   ctx.fillStyle = C.accentLight
@@ -113,13 +113,13 @@ export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | nu
   roundRect(W / 2 - pillW / 2, pillY, pillW, 54, 27)
   ctx.fill()
   ctx.fillStyle = C.accent
-  ctx.fillText(s.planoNome, W / 2, pillY + 36)
+  ctx.fillText(s.planName, W / 2, pillY + 36)
   y = pillY + 54 + 16
 
   ctx.fillStyle = C.muted
   ctx.font = '400 30px -apple-system, Inter, sans-serif'
   y += 32
-  ctx.fillText(data, W / 2, y)
+  ctx.fillText(formattedDate, W / 2, y)
   y += 36
 
   ctx.strokeStyle = C.border
@@ -131,12 +131,12 @@ export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | nu
   y += 40
 
   const statsData = [
-    { icon: '⏱', label: 'DURAÇÃO', value: duracao },
+    { icon: '⏱', label: 'DURAÇÃO', value: duration },
     { icon: '📦', label: 'VOLUME TOTAL', value: volumeKg > 0 ? `${volumeKg}kg` : '–' },
     { icon: '✅', label: 'SÉRIES', value: String(totalSeries) },
     { icon: '🔁', label: 'REPETIÇÕES', value: String(totalReps) },
-    { icon: '💪', label: 'EXERCÍCIOS', value: String(exercFeitos) },
-    { icon: '⚖️', label: 'MÉDIA/SÉRIE', value: mediaSerie },
+    { icon: '💪', label: 'EXERCÍCIOS', value: String(exercisesDone) },
+    { icon: '⚖️', label: 'MÉDIA/SÉRIE', value: avgPerSet },
   ]
   const COLS = 3,
     ROWS = 2,
@@ -172,7 +172,7 @@ export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | nu
   y += ROWS * cellH + (ROWS - 1) * GAP + 44
 
   if (barData.length > 0) {
-    const maxVol = Math.max(...barData.map(e => e.vol), 1)
+    const maxVol = Math.max(...barData.map(e => e.volume), 1)
     const LABEL_W = 196
     const barAreaW = W - PAD * 2 - LABEL_W - 16
     const BAR_H = 36
@@ -185,10 +185,10 @@ export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | nu
 
     barData.forEach((ex, i) => {
       const color = PALETTE[i % PALETTE.length]
-      const barFill = (ex.vol / maxVol) * barAreaW
+      const barFill = (ex.volume / maxVol) * barAreaW
       const barX = PAD + LABEL_W + 16
       const barY = y
-      const shortName = ex.nome.length > 15 ? ex.nome.slice(0, 13) + '…' : ex.nome
+      const shortName = ex.name.length > 15 ? ex.name.slice(0, 13) + '…' : ex.name
       ctx.fillStyle = C.muted
       ctx.font = '400 23px -apple-system, Inter, sans-serif'
       ctx.fillText(shortName, PAD, barY + 25)
@@ -205,10 +205,10 @@ export async function gerarImagemRelatorio(s: SessaoDeTreino): Promise<Blob | nu
         roundRect(barX, barY, barFill, BAR_H, 8)
         ctx.fill()
       }
-      if (ex.vol > 0) {
+      if (ex.volume > 0) {
         ctx.fillStyle = C.subtle
         ctx.font = '500 21px -apple-system, Inter, sans-serif'
-        ctx.fillText(`${Math.round(ex.vol)}kg`, barX + barFill + 10, barY + 25)
+        ctx.fillText(`${Math.round(ex.volume)}kg`, barX + barFill + 10, barY + 25)
       }
       y += BAR_H + 32
     })

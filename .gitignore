@@ -4,6 +4,7 @@ dist
 dist-ssr
 *.local
 .env
+service-account.json
 .nitro
 .tanstack
 .wrangler

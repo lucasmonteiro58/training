@@ -1,79 +1,71 @@
-import type { SessaoDeTreino } from '../types'
+import type { WorkoutSession } from '../types'
 
 export interface StreakInfo {
-  streakAtual: number      // dias consecutivos com treino
-  melhorStreak: number     // recorde de streak
-  treinosEstaSemana: number
-  metaSemanal: number      // padrão: 4
-  totalTreinos: number
+  currentStreak: number
+  bestStreak: number
+  workoutsThisWeek: number
+  weeklyGoal: number
+  totalWorkouts: number
 }
 
-export interface Conquista {
+export interface Achievement {
   id: string
-  nome: string
-  descricao: string
-  icone: string
-  desbloqueada: boolean
-  data?: number // timestamp do desbloqueio
+  name: string
+  description: string
+  icon: string
+  unlocked: boolean
+  date?: number
 }
 
-/** Dias opcionais: 0=dom, 1=seg, ..., 6=sáb. Não treinar nesses dias não quebra o streak. */
-const defaultDiasOpcionais: number[] = []
+const defaultOptionalDays: number[] = []
 
-function isDiaOpcional(date: Date, diasOpcionais: number[]): boolean {
-  return diasOpcionais.length > 0 && diasOpcionais.includes(date.getDay())
+function isOptionalDay(date: Date, optionalDays: number[]): boolean {
+  return optionalDays.length > 0 && optionalDays.includes(date.getDay())
 }
 
-/** Verifica se todos os dias entre prev e curr (exclusive) são opcionais. */
-function gapSoDiasOpcionais(prev: Date, curr: Date, diasOpcionais: number[]): boolean {
+function isGapOnlyOptionalDays(prev: Date, curr: Date, optionalDays: number[]): boolean {
   const p = new Date(prev)
   p.setDate(p.getDate() + 1)
   while (p.getTime() < curr.getTime()) {
-    if (!isDiaOpcional(p, diasOpcionais)) return false
+    if (!isOptionalDay(p, optionalDays)) return false
     p.setDate(p.getDate() + 1)
   }
   return true
 }
 
-/**
- * Calcula streaks e estatísticas semanais.
- * @param diasOpcionais Dias da semana (0–6) em que não treinar não quebra o streak.
- */
-export function calcularStreaks(
-  sessoes: SessaoDeTreino[],
-  metaSemanal = 4,
-  diasOpcionais: number[] = defaultDiasOpcionais
+export function calculateStreaks(
+  sessions: WorkoutSession[],
+  weeklyGoal = 4,
+  optionalDays: number[] = defaultOptionalDays
 ): StreakInfo {
-  if (sessoes.length === 0) {
-    return { streakAtual: 0, melhorStreak: 0, treinosEstaSemana: 0, metaSemanal, totalTreinos: 0 }
+  if (sessions.length === 0) {
+    return { currentStreak: 0, bestStreak: 0, workoutsThisWeek: 0, weeklyGoal, totalWorkouts: 0 }
   }
 
-  // Unique training days (YYYY-MM-DD)
-  const diasTreino = new Set<string>()
-  sessoes.forEach(s => {
-    diasTreino.add(new Date(s.iniciadoEm).toISOString().slice(0, 10))
+  const workoutDays = new Set<string>()
+  sessions.forEach(s => {
+    workoutDays.add(new Date(s.startedAt).toISOString().slice(0, 10))
   })
 
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-  const hojeStr = hoje.toISOString().slice(0, 10)
-  const ontem = new Date(hoje)
-  ontem.setDate(ontem.getDate() - 1)
-  const ontemStr = ontem.toISOString().slice(0, 10)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStr = today.toISOString().slice(0, 10)
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayStr = yesterday.toISOString().slice(0, 10)
 
-  // Streak atual: contar dias consecutivos. Em dias opcionais sem treino, não quebra.
-  let streakAtual = 0
-  let checando = diasTreino.has(hojeStr) ? new Date(hoje) : diasTreino.has(ontemStr) ? new Date(ontem) : null
+  let currentStreak = 0
+  let checking = workoutDays.has(todayStr) ? new Date(today) : workoutDays.has(yesterdayStr) ? new Date(yesterday) : null
 
-  if (checando) {
+  if (checking) {
     while (true) {
-      const str = checando.toISOString().slice(0, 10)
-      if (diasTreino.has(str)) {
-        streakAtual++
-        checando.setDate(checando.getDate() - 1)
+      const str = checking.toISOString().slice(0, 10)
+      if (workoutDays.has(str)) {
+        currentStreak++
+        checking.setDate(checking.getDate() - 1)
       } else {
-        if (isDiaOpcional(checando, diasOpcionais)) {
-          checando.setDate(checando.getDate() - 1)
+        if (isOptionalDay(checking, optionalDays)) {
+          checking.setDate(checking.getDate() - 1)
         } else {
           break
         }
@@ -81,154 +73,148 @@ export function calcularStreaks(
     }
   }
 
-  // Melhor streak: entre dois dias de treino, se o intervalo for só de dias opcionais, conta como consecutivo
-  let melhorStreak = 0
-  let streakTemp = 0
-  const diasAsc = Array.from(diasTreino).sort()
-  for (let i = 0; i < diasAsc.length; i++) {
+  let bestStreak = 0
+  let tempStreak = 0
+  const daysAsc = Array.from(workoutDays).sort()
+  for (let i = 0; i < daysAsc.length; i++) {
     if (i === 0) {
-      streakTemp = 1
+      tempStreak = 1
     } else {
-      const prev = new Date(diasAsc[i - 1])
-      const curr = new Date(diasAsc[i])
+      const prev = new Date(daysAsc[i - 1])
+      const curr = new Date(daysAsc[i])
       const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24)
       if (diff === 1) {
-        streakTemp += 1
-      } else if (diff > 1 && gapSoDiasOpcionais(prev, curr, diasOpcionais)) {
-        streakTemp += 1
+        tempStreak += 1
+      } else if (diff > 1 && isGapOnlyOptionalDays(prev, curr, optionalDays)) {
+        tempStreak += 1
       } else {
-        streakTemp = 1
+        tempStreak = 1
       }
     }
-    melhorStreak = Math.max(melhorStreak, streakTemp)
+    bestStreak = Math.max(bestStreak, tempStreak)
   }
 
-  // Treinos esta semana (dom-sáb)
-  const inicioSemana = new Date(hoje)
-  inicioSemana.setDate(hoje.getDate() - hoje.getDay())
-  const treinosEstaSemana = sessoes.filter(s => s.iniciadoEm >= inicioSemana.getTime()).length
+  const weekStart = new Date(today)
+  weekStart.setDate(today.getDate() - today.getDay())
+  const workoutsThisWeek = sessions.filter(s => s.startedAt >= weekStart.getTime()).length
 
   return {
-    streakAtual,
-    melhorStreak,
-    treinosEstaSemana,
-    metaSemanal,
-    totalTreinos: sessoes.length,
+    currentStreak,
+    bestStreak,
+    workoutsThisWeek,
+    weeklyGoal,
+    totalWorkouts: sessions.length,
   }
 }
 
-/**
- * Calcula conquistas desbloqueadas.
- */
-export function calcularConquistas(sessoes: SessaoDeTreino[], streaks: StreakInfo): Conquista[] {
-  const totalVolume = sessoes.reduce((sum, s) => sum + (s.volumeTotal ?? 0), 0)
+export function calculateAchievements(sessions: WorkoutSession[], streaks: StreakInfo): Achievement[] {
+  const totalVolume = sessions.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0)
 
-  // Máximo de treinos em uma única semana (domingo–sábado)
-  let maxTreinosNaSemana = 0
-  let dataSemanaIncrivel: number | undefined
-  const porSemana = new Map<number, SessaoDeTreino[]>()
-  for (const s of sessoes) {
-    const d = new Date(s.iniciadoEm)
+  let maxWorkoutsInWeek = 0
+  let amazingWeekTimestamp: number | undefined
+  const byWeek = new Map<number, WorkoutSession[]>()
+  for (const s of sessions) {
+    const d = new Date(s.startedAt)
     d.setHours(0, 0, 0, 0)
     d.setDate(d.getDate() - d.getDay())
     const key = d.getTime()
-    const list = porSemana.get(key) ?? []
+    const list = byWeek.get(key) ?? []
     list.push(s)
-    porSemana.set(key, list)
-    if (list.length > maxTreinosNaSemana) {
-      maxTreinosNaSemana = list.length
-      dataSemanaIncrivel = list.length >= 5 ? list[4].iniciadoEm : undefined
+    byWeek.set(key, list)
+    if (list.length > maxWorkoutsInWeek) {
+      maxWorkoutsInWeek = list.length
+      amazingWeekTimestamp = list.length >= 5 ? list[4].startedAt : undefined
     }
   }
 
-  const conquistas: Conquista[] = [
+  const achievements: Achievement[] = [
     {
       id: 'primeiro-treino',
-      nome: 'Primeiro Passo',
-      descricao: 'Complete seu primeiro treino',
-      icone: '🎯',
-      desbloqueada: sessoes.length >= 1,
-      data: sessoes.length >= 1 ? sessoes[sessoes.length - 1]?.iniciadoEm : undefined,
+      name: 'Primeiro Passo',
+      description: 'Complete seu primeiro treino',
+      icon: '🎯',
+      unlocked: sessions.length >= 1,
+      date: sessions.length >= 1 ? sessions[sessions.length - 1]?.startedAt : undefined,
     },
     {
       id: '10-treinos',
-      nome: 'Consistente',
-      descricao: 'Complete 10 treinos',
-      icone: '💪',
-      desbloqueada: sessoes.length >= 10,
+      name: 'Consistente',
+      description: 'Complete 10 treinos',
+      icon: '💪',
+      unlocked: sessions.length >= 10,
     },
     {
       id: '50-treinos',
-      nome: 'Veterano',
-      descricao: 'Complete 50 treinos',
-      icone: '🏋️',
-      desbloqueada: sessoes.length >= 50,
+      name: 'Veterano',
+      description: 'Complete 50 treinos',
+      icon: '🏋️',
+      unlocked: sessions.length >= 50,
     },
     {
       id: '100-treinos',
-      nome: 'Centurião',
-      descricao: 'Complete 100 treinos',
-      icone: '🏆',
-      desbloqueada: sessoes.length >= 100,
+      name: 'Centurião',
+      description: 'Complete 100 treinos',
+      icon: '🏆',
+      unlocked: sessions.length >= 100,
     },
     {
       id: 'streak-3',
-      nome: 'Fogo Brando',
-      descricao: 'Mantenha um streak de 3 dias',
-      icone: '🔥',
-      desbloqueada: streaks.melhorStreak >= 3,
+      name: 'Fogo Brando',
+      description: 'Mantenha um streak de 3 dias',
+      icon: '🔥',
+      unlocked: streaks.bestStreak >= 3,
     },
     {
       id: 'streak-7',
-      nome: 'Semana Perfeita',
-      descricao: 'Streak de 7 dias consecutivos',
-      icone: '⭐',
-      desbloqueada: streaks.melhorStreak >= 7,
+      name: 'Semana Perfeita',
+      description: 'Streak de 7 dias consecutivos',
+      icon: '⭐',
+      unlocked: streaks.bestStreak >= 7,
     },
     {
       id: 'streak-30',
-      nome: 'Máquina',
-      descricao: 'Streak de 30 dias consecutivos',
-      icone: '🤖',
-      desbloqueada: streaks.melhorStreak >= 30,
+      name: 'Máquina',
+      description: 'Streak de 30 dias consecutivos',
+      icon: '🤖',
+      unlocked: streaks.bestStreak >= 30,
     },
     {
       id: 'volume-1000',
-      nome: 'Tonelada',
-      descricao: 'Acumule 1.000 kg de volume total',
-      icone: '📦',
-      desbloqueada: totalVolume >= 1000,
+      name: 'Tonelada',
+      description: 'Acumule 1.000 kg de volume total',
+      icon: '📦',
+      unlocked: totalVolume >= 1000,
     },
     {
       id: 'volume-10000',
-      nome: 'Força Bruta',
-      descricao: 'Acumule 10.000 kg de volume total',
-      icone: '🦾',
-      desbloqueada: totalVolume >= 10000,
+      name: 'Força Bruta',
+      description: 'Acumule 10.000 kg de volume total',
+      icon: '🦾',
+      unlocked: totalVolume >= 10000,
     },
     {
       id: 'volume-100000',
-      nome: 'Titã',
-      descricao: 'Acumule 100.000 kg de volume total',
-      icone: '⚡',
-      desbloqueada: totalVolume >= 100000,
+      name: 'Titã',
+      description: 'Acumule 100.000 kg de volume total',
+      icon: '⚡',
+      unlocked: totalVolume >= 100000,
     },
     {
       id: 'meta-semanal',
-      nome: 'Meta Batida',
-      descricao: 'Bata a meta semanal de treinos',
-      icone: '🎖️',
-      desbloqueada: streaks.treinosEstaSemana >= streaks.metaSemanal,
+      name: 'Meta Batida',
+      description: 'Bata a meta semanal de treinos',
+      icon: '🎖️',
+      unlocked: streaks.workoutsThisWeek >= streaks.weeklyGoal,
     },
     {
       id: 'semana-5',
-      nome: 'Semana Incrível',
-      descricao: 'Faça 5 treinos em uma única semana',
-      icone: '🌟',
-      desbloqueada: maxTreinosNaSemana >= 5,
-      data: dataSemanaIncrivel,
+      name: 'Semana Incrível',
+      description: 'Faça 5 treinos em uma única semana',
+      icon: '🌟',
+      unlocked: maxWorkoutsInWeek >= 5,
+      date: amazingWeekTimestamp,
     },
   ]
 
-  return conquistas
+  return achievements
 }

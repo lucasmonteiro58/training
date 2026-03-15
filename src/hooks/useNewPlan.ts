@@ -1,0 +1,186 @@
+import { useState, useRef, useCallback } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { v4 as uuidv4 } from 'uuid'
+import { usePlans } from './usePlans'
+import { toast } from 'sonner'
+import type { ExerciseInPlan, GroupingType } from '../types'
+import { PLAN_COLORS } from '../types'
+import {
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  type DragOverEvent,
+} from '@dnd-kit/core'
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+
+export function useNewPlan() {
+  const navigate = useNavigate()
+  const { createPlan, updatePlanById } = usePlans()
+  const savedRef = useRef(false)
+
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [exercises, setExercises] = useState<ExerciseInPlan[]>([])
+  const [saving, setSaving] = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
+  const [selectedColor, setSelectedColor] = useState(PLAN_COLORS[0])
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [showGroupMenu, setShowGroupMenu] = useState(false)
+
+  const isDirty =
+    name.trim() !== '' ||
+    description.trim() !== '' ||
+    exercises.length > 0 ||
+    selectedColor !== PLAN_COLORS[0]
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const createGrouping = useCallback((type: GroupingType) => {
+    setExercises((prev) => {
+      if (selected.size < 2) return prev
+      const groupingId = uuidv4()
+      const sel = selected
+      return prev.map((ex) =>
+        sel.has(ex.id) ? { ...ex, groupingId, groupingType: type } : ex
+      )
+    })
+    setSelected(new Set())
+    setShowGroupMenu(false)
+  }, [selected])
+
+  const removeFromGrouping = useCallback((exId: string) => {
+    setExercises((prev) =>
+      prev.map((ex) =>
+        ex.id === exId
+          ? { ...ex, groupingId: undefined, groupingType: undefined }
+          : ex
+      )
+    )
+  }, [])
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const addExercise = useCallback(
+    (ex: Partial<ExerciseInPlan> & { exercise?: any }) => {
+      const defaultSets = Array(3).fill({ weight: 0, reps: 10 })
+      setExercises((prev) => [
+        ...prev,
+        {
+          ...ex,
+          id: ex.id ?? uuidv4(),
+          setsDetail: (ex as ExerciseInPlan).setsDetail ?? defaultSets,
+          order: ex.order ?? prev.length,
+        } as ExerciseInPlan,
+      ])
+    },
+    []
+  )
+
+  const removeExercise = useCallback((id: string) => {
+    setExercises((prev) => prev.filter((e) => e.id !== id))
+  }, [])
+
+  const updateExercise = useCallback(
+    (id: string, changes: Partial<ExerciseInPlan>) => {
+      setExercises((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, ...changes } : e))
+      )
+    },
+    []
+  )
+
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setExercises((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id)
+        const newIndex = items.findIndex((i) => i.id === over.id)
+        return arrayMove(items, oldIndex, newIndex).map((ex, idx) => ({
+          ...ex,
+          order: idx,
+        }))
+      })
+    }
+  }, [])
+
+  const save = useCallback(async () => {
+    if (!name.trim()) return
+    setSaving(true)
+    try {
+      const plan = await createPlan(
+        name.trim(),
+        description.trim() || undefined
+      )
+      await updatePlanById({ ...plan, exercises, color: selectedColor })
+      savedRef.current = true
+      navigate({ to: '/workouts' })
+    } catch (err) {
+      console.error(err)
+      toast.error('Erro ao salvar plano')
+    } finally {
+      setSaving(false)
+    }
+  }, [
+    name,
+    description,
+    exercises,
+    selectedColor,
+    createPlan,
+    updatePlanById,
+    navigate,
+  ])
+
+  const handleBack = useCallback(() => {
+    if (isDirty) {
+      // Caller will use blocker proceed
+    } else {
+      navigate({ to: '/workouts' })
+    }
+  }, [isDirty, navigate])
+
+  return {
+    name,
+    setName,
+    description,
+    setDescription,
+    exercises,
+    saving,
+    showPicker,
+    setShowPicker,
+    selectedColor,
+    setSelectedColor,
+    selected,
+    setSelected,
+    showGroupMenu,
+    setShowGroupMenu,
+    savedRef,
+    isDirty,
+    sensors,
+    createGrouping,
+    removeFromGrouping,
+    toggleSelected,
+    addExercise,
+    removeExercise,
+    updateExercise,
+    handleDragOver,
+    save,
+    handleBack,
+  }
+}

@@ -2,127 +2,127 @@
 // Training – Type Definitions
 // ============================================================
 
-export interface Exercicio {
+export interface Exercise {
   id: string
-  nome: string
-  grupoMuscular: string
-  grupoMuscularSecundario?: string
-  equipamento?: string
+  name: string
+  muscleGroup: string
+  secondaryMuscleGroup?: string
+  equipment?: string
   gifUrl?: string
-  instrucoes?: string[]
-  personalizado?: boolean
+  instructions?: string[]
+  custom?: boolean
   userId?: string
-  favoritado?: boolean
+  favorited?: boolean
 }
 
-export interface SerieRegistrada {
+export interface RecordedSet {
   id: string
-  ordem: number
-  repeticoes: number
-  peso: number // kg
-  completada: boolean
-  duracaoSegundos?: number
+  order: number
+  reps: number
+  weight: number // kg
+  completed: boolean
+  durationSeconds?: number
   rpe?: number // Rate of Perceived Exertion 1-10
-  notas?: string
+  notes?: string
 }
 
-export interface SeriePlano {
-  peso: number
-  repeticoes: number
+export interface PlanSet {
+  weight: number
+  reps: number
 }
 
-export type TipoSerie = 'reps' | 'tempo' | 'falha'
-export type TipoAgrupamento = 'superset' | 'dropset' | 'giantset'
+export type SetType = 'reps' | 'tempo' | 'falha'
+export type GroupingType = 'superset' | 'dropset' | 'giantset'
 
-export interface ExercicioNoPlano {
+export interface ExerciseInPlan {
   id: string
-  exercicioId: string
-  exercicio: Exercicio
+  exerciseId: string
+  exercise: Exercise
   series: number
-  repeticoesMeta: number
-  pesoMeta?: number
-  seriesDetalhadas?: SeriePlano[]
-  descansoSegundos: number
-  ordem: number
-  notas?: string
-  tipoSerie?: TipoSerie
-  duracaoMetaSegundos?: number // usado quando tipoSerie === 'tempo'
-  agrupamentoId?: string // ID compartilhado entre exercícios do mesmo grupo (superset/dropset/giantset)
-  tipoAgrupamento?: TipoAgrupamento
+  targetReps: number
+  targetWeight?: number
+  setsDetail?: PlanSet[]
+  restSeconds: number
+  order: number
+  notes?: string
+  setType?: SetType
+  targetDurationSeconds?: number // usado quando setType === 'tempo'
+  groupingId?: string // ID compartilhado entre exercícios do mesmo grupo (superset/dropset/giantset)
+  groupingType?: GroupingType
 }
 
-export interface PlanoDeTreino {
+export interface WorkoutPlan {
   id: string
   userId: string
-  nome: string
-  descricao?: string
-  exercicios: ExercicioNoPlano[]
-  cor?: string // hex color para card
-  arquivado?: boolean
-  ordem?: number // posição na lista
+  name: string
+  description?: string
+  exercises: ExerciseInPlan[]
+  color?: string // hex color para card
+  archived?: boolean
+  order?: number // posição na lista
   createdAt: number // timestamp
   updatedAt: number
   syncedAt?: number
 }
 
-export interface ExercicioNaSessao {
-  exercicioId: string
-  exercicioNome: string
+export interface ExerciseInSession {
+  exerciseId: string
+  exerciseName: string
   gifUrl?: string
-  grupoMuscular: string
-  series: SerieRegistrada[]
-  descansoSegundos: number
-  ordem: number
-  notas?: string // Observação vinda do plano
-  instrucoes?: string[] // Instruções originais do exercício
-  tipoSerie?: TipoSerie
-  duracaoMetaSegundos?: number
-  agrupamentoId?: string
-  tipoAgrupamento?: TipoAgrupamento
+  muscleGroup: string
+  sets: RecordedSet[]
+  restSeconds: number
+  order: number
+  notes?: string // Observação vinda do plano
+  instructions?: string[] // Instruções originais do exercício
+  setType?: SetType
+  targetDurationSeconds?: number
+  groupingId?: string
+  groupingType?: GroupingType
 }
 
-export interface SessaoDeTreino {
+export interface WorkoutSession {
   id: string
   userId: string
-  planoId: string
-  planoNome: string
-  iniciadoEm: number // timestamp
-  finalizadoEm?: number
-  duracaoSegundos?: number
-  exercicios: ExercicioNaSessao[]
-  notas?: string
-  volumeTotal?: number // soma de (peso x reps) de todas as séries
+  planId: string
+  planName: string
+  startedAt: number // timestamp
+  finishedAt?: number
+  durationSeconds?: number
+  exercises: ExerciseInSession[]
+  notes?: string
+  totalVolume?: number // soma de (peso x reps) de todas as séries
   syncedAt?: number
   /** true quando o treino foi encerrado automaticamente por inatividade (20 min) */
-  autoEncerrado?: boolean
-  /** quando autoEncerrado: segundos de inatividade descontados do tempo total (ex: 1200 = 20 min) */
-  tempoOciosoDescontadoSegundos?: number
+  autoClosed?: boolean
+  /** quando autoClosed: segundos de inatividade descontados do tempo total (ex: 1200 = 20 min) */
+  idleSecondsDeducted?: number
 }
 
 // Stats calculados do histórico
-export interface EstatisticasTreino {
-  totalTreinos: number
+export interface WorkoutStats {
+  totalWorkouts: number
   totalVolume: number
-  treinosEssaSemana: number
-  streakAtual: number
-  melhorStreak: number
-  ultimoTreino?: SessaoDeTreino
+  workoutsThisWeek: number
+  currentStreak: number
+  bestStreak: number
+  lastWorkout?: WorkoutSession
 }
 
 // Estado do treino ativo (em memória / zustand)
-export interface TreinoAtivoState {
-  sessao: SessaoDeTreino | null
-  exercicioAtualIndex: number
-  serieAtualIndex: number
-  cronometroGeralSegundos: number
-  cronometroDescansoSegundos: number
-  cronometroDescansoAtivo: boolean
-  pausado: boolean
-  iniciado: boolean
+export interface ActiveWorkoutState {
+  session: WorkoutSession | null
+  currentExerciseIndex: number
+  currentSetIndex: number
+  totalTimerSeconds: number
+  restTimerSeconds: number
+  restTimerActive: boolean
+  paused: boolean
+  started: boolean
 }
 
 // CSV Import
-export interface LinhaCsvTreino {
+export interface WorkoutCsvRow {
   id?: string // ID do exercício no banco de dados (opcional — se presente, busca o exercício existente)
   plano?: string // Nome do plano (coluna opcional — agrupa exercícios em planos separados)
   nome_exercicio: string
@@ -152,7 +152,7 @@ export type GrupoMuscular =
   | 'Corpo Inteiro'
   | 'Outro'
 
-export const GRUPOS_MUSCULARES: GrupoMuscular[] = [
+export const MUSCLE_GROUPS: GrupoMuscular[] = [
   'Peito',
   'Costas',
   'Ombros',
@@ -171,7 +171,7 @@ export const GRUPOS_MUSCULARES: GrupoMuscular[] = [
 ]
 
 // Mapeamento de grupos musculares EN → PT-BR
-export const GRUPOS_EN_PT: Record<string, GrupoMuscular> = {
+export const GROUPS_EN_TO_PT: Record<string, GrupoMuscular> = {
   chest: 'Peito',
   back: 'Costas',
   shoulders: 'Ombros',
@@ -198,7 +198,7 @@ export const GRUPOS_EN_PT: Record<string, GrupoMuscular> = {
 }
 
 // Cores por grupo muscular
-export const CORES_GRUPO: Record<string, string> = {
+export const GROUP_COLORS: Record<string, string> = {
   Peito: '#ef4444',
   Costas: '#3b82f6',
   Ombros: '#f59e0b',
@@ -217,7 +217,7 @@ export const CORES_GRUPO: Record<string, string> = {
 }
 
 // Cores do app (para planos)
-export const CORES_PLANO = [
+export const PLAN_COLORS = [
   '#6366f1', // indigo
   '#8b5cf6', // violet
   '#ec4899', // pink
@@ -230,7 +230,7 @@ export const CORES_PLANO = [
 ]
 
 // Labels e cores para agrupamentos (superset, dropset, giantset)
-export const AGRUPAMENTO_CONFIG: Record<string, { label: string; cor: string; corBg: string }> = {
+export const GROUPING_CONFIG: Record<string, { label: string; cor: string; corBg: string }> = {
   superset: { label: 'Superset', cor: '#f59e0b', corBg: 'rgba(245,158,11,0.15)' },
   dropset: { label: 'Drop Set', cor: '#ef4444', corBg: 'rgba(239,68,68,0.15)' },
   giantset: { label: 'Giant Set', cor: '#8b5cf6', corBg: 'rgba(139,92,246,0.15)' },
@@ -239,7 +239,7 @@ export const AGRUPAMENTO_CONFIG: Record<string, { label: string; cor: string; co
 // ============================================================
 // Medidas Corporais
 // ============================================================
-export interface MedidaCorporal {
+export interface BodyMeasurement {
   id: string
   userId: string
   data: number // timestamp
@@ -254,7 +254,7 @@ export interface MedidaCorporal {
   notas?: string
 }
 
-export const CAMPOS_MEDIDA: { key: keyof MedidaCorporal; label: string; unidade: string }[] = [
+export const MEASUREMENT_FIELDS: { key: keyof BodyMeasurement; label: string; unidade: string }[] = [
   { key: 'peso', label: 'Peso', unidade: 'kg' },
   { key: 'gordura', label: 'Gordura Corporal', unidade: '%' },
   { key: 'braco', label: 'Braço', unidade: 'cm' },

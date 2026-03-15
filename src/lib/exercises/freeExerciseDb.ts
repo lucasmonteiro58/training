@@ -1,6 +1,6 @@
-import { GRUPOS_EN_PT } from '../../types'
-import type { Exercicio } from '../../types'
-import { getCachedExercicios, setCachedExercicios } from '../db/dexie'
+import { GROUPS_EN_TO_PT } from '../../types'
+import type { Exercise } from '../../types'
+import { getCachedExercises, setCachedExercises } from '../db/dexie'
 
 // Dataset open-source: https://github.com/yuhonas/free-exercise-db
 const RAW_URL =
@@ -22,11 +22,11 @@ interface RawExercise {
   images?: string[]
 }
 
-function mapearGrupo(en: string): string {
-  return GRUPOS_EN_PT[en.toLowerCase()] ?? en
+function mapGroup(en: string): string {
+  return GROUPS_EN_TO_PT[en.toLowerCase()] ?? en
 }
 
-function convertRawToExercicio(raw: RawExercise): Exercicio {
+function convertRawToExercise(raw: RawExercise): Exercise {
   const primaryMuscle = raw.primaryMuscles?.[0] ?? raw.category ?? 'outro'
   const gifUrl =
     raw.images && raw.images.length > 0
@@ -35,56 +35,56 @@ function convertRawToExercicio(raw: RawExercise): Exercicio {
 
   return {
     id: raw.id,
-    nome: raw.name,
-    grupoMuscular: mapearGrupo(primaryMuscle),
-    grupoMuscularSecundario: raw.secondaryMuscles?.[0]
-      ? mapearGrupo(raw.secondaryMuscles[0])
+    name: raw.name,
+    muscleGroup: mapGroup(primaryMuscle),
+    secondaryMuscleGroup: raw.secondaryMuscles?.[0]
+      ? mapGroup(raw.secondaryMuscles[0])
       : undefined,
-    equipamento: raw.equipment,
+    equipment: raw.equipment,
     gifUrl,
-    instrucoes: raw.instructions,
-    personalizado: false,
+    instructions: raw.instructions,
+    custom: false,
   }
 }
 
-let cachedExercicios: Exercicio[] | null = null
+let cachedExercises: Exercise[] | null = null
 
-export async function carregarExercicios(): Promise<Exercicio[]> {
-  // 1. Memória
-  if (cachedExercicios) return cachedExercicios
+export async function loadExercises(): Promise<Exercise[]> {
+  // 1. Memory
+  if (cachedExercises) return cachedExercises
 
-  // 2. IndexedDB local
-  const dbCache = await getCachedExercicios()
+  // 2. Local IndexedDB
+  const dbCache = await getCachedExercises()
   if (dbCache.length > 0) {
-    cachedExercicios = dbCache
+    cachedExercises = dbCache
     return dbCache
   }
 
-  // 3. Fetch remoto
+  // 3. Remote fetch
   try {
     const resp = await fetch(RAW_URL)
     if (!resp.ok) throw new Error('Erro ao buscar exercícios')
     const raw: RawExercise[] = await resp.json()
-    const exercicios = raw.map(convertRawToExercicio)
-    cachedExercicios = exercicios
-    await setCachedExercicios(exercicios)
-    return exercicios
+    const exercises = raw.map(convertRawToExercise)
+    cachedExercises = exercises
+    await setCachedExercises(exercises)
+    return exercises
   } catch (err) {
     console.error('Erro ao carregar exercícios:', err)
     return []
   }
 }
 
-export function buscarExercicios(
-  exercicios: Exercicio[],
+export function searchExercises(
+  exercises: Exercise[],
   query: string,
-  grupo?: string
-): Exercicio[] {
+  group?: string
+): Exercise[] {
   const q = query.toLowerCase().trim()
-  return exercicios.filter((ex) => {
-    const matchQuery = !q || ex.nome.toLowerCase().includes(q) ||
-      ex.grupoMuscular.toLowerCase().includes(q)
-    const matchGrupo = !grupo || ex.grupoMuscular === grupo
-    return matchQuery && matchGrupo
+  return exercises.filter((ex) => {
+    const matchQuery = !q || ex.name.toLowerCase().includes(q) ||
+      ex.muscleGroup.toLowerCase().includes(q)
+    const matchGroup = !group || ex.muscleGroup === group
+    return matchQuery && matchGroup
   })
 }

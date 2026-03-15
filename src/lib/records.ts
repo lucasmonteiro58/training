@@ -1,58 +1,55 @@
-import type { SessaoDeTreino, SerieRegistrada } from '../types'
+import type { WorkoutSession, RecordedSet } from '../types'
 
-export interface RecordeExercicio {
-  exercicioId: string
-  exercicioNome: string
-  maiorPeso: number          // maior peso levantado em qualquer série
-  maiorVolumeSerie: number   // maior (peso × reps) em uma série
-  maiorPesoData: number      // timestamp
-  maiorVolumeSerieData: number
-  maior1RM: number           // 1RM estimado (Epley)
-  maior1RMData: number
+export interface ExerciseRecord {
+  exerciseId: string
+  exerciseName: string
+  maxWeight: number
+  maxSetVolume: number
+  maxWeightDate: number
+  maxSetVolumeDate: number
+  max1RM: number
+  max1RMDate: number
 }
 
-/**
- * Calcula os recordes de todos os exercícios a partir do histórico de sessões.
- */
-export function calcularRecordes(sessoes: SessaoDeTreino[]): Map<string, RecordeExercicio> {
-  const map = new Map<string, RecordeExercicio>()
+export function calculateRecords(sessions: WorkoutSession[]): Map<string, ExerciseRecord> {
+  const map = new Map<string, ExerciseRecord>()
 
-  for (const sessao of sessoes) {
-    for (const ex of sessao.exercicios) {
-      for (const serie of ex.series) {
-        if (!serie.completada || serie.peso <= 0) continue
+  for (const session of sessions) {
+    for (const ex of session.exercises) {
+      for (const set of ex.sets) {
+        if (!set.completed || set.weight <= 0) continue
 
-        const volumeSerie = serie.peso * (serie.repeticoes ?? 0)
-        const est1RM = serie.repeticoes > 0
-          ? serie.peso * (1 + (serie.repeticoes ?? 0) / 30) // Epley
-          : serie.peso
+        const setVolume = set.weight * (set.reps ?? 0)
+        const est1RM = set.reps > 0
+          ? set.weight * (1 + (set.reps ?? 0) / 30)
+          : set.weight
 
-        let rec = map.get(ex.exercicioId)
-        if (!rec) {
-          rec = {
-            exercicioId: ex.exercicioId,
-            exercicioNome: ex.exercicioNome,
-            maiorPeso: 0,
-            maiorVolumeSerie: 0,
-            maiorPesoData: 0,
-            maiorVolumeSerieData: 0,
-            maior1RM: 0,
-            maior1RMData: 0,
+        let record = map.get(ex.exerciseId)
+        if (!record) {
+          record = {
+            exerciseId: ex.exerciseId,
+            exerciseName: ex.exerciseName,
+            maxWeight: 0,
+            maxSetVolume: 0,
+            maxWeightDate: 0,
+            maxSetVolumeDate: 0,
+            max1RM: 0,
+            max1RMDate: 0,
           }
-          map.set(ex.exercicioId, rec)
+          map.set(ex.exerciseId, record)
         }
 
-        if (serie.peso > rec.maiorPeso) {
-          rec.maiorPeso = serie.peso
-          rec.maiorPesoData = sessao.iniciadoEm
+        if (set.weight > record.maxWeight) {
+          record.maxWeight = set.weight
+          record.maxWeightDate = session.startedAt
         }
-        if (volumeSerie > rec.maiorVolumeSerie) {
-          rec.maiorVolumeSerie = volumeSerie
-          rec.maiorVolumeSerieData = sessao.iniciadoEm
+        if (setVolume > record.maxSetVolume) {
+          record.maxSetVolume = setVolume
+          record.maxSetVolumeDate = session.startedAt
         }
-        if (est1RM > rec.maior1RM) {
-          rec.maior1RM = est1RM
-          rec.maior1RMData = sessao.iniciadoEm
+        if (est1RM > record.max1RM) {
+          record.max1RM = est1RM
+          record.max1RMDate = session.startedAt
         }
       }
     }
@@ -61,30 +58,24 @@ export function calcularRecordes(sessoes: SessaoDeTreino[]): Map<string, Recorde
   return map
 }
 
-/**
- * Detecta se uma série recém-completada é um novo PR (personal record).
- * Retorna o tipo de PR ou null.
- * PR de peso só é retornado se já existir recorde anterior (maiorPeso > 0) — não mostra para "primeira vez".
- */
-export function detectarNovoPR(
-  serie: SerieRegistrada,
-  exercicioId: string,
-  recordes: Map<string, RecordeExercicio>,
-): { tipo: 'peso' | 'volume' | '1rm'; valor: number } | null {
-  if (!serie.completada || serie.peso <= 0) return null
+export function detectNewPR(
+  set: RecordedSet,
+  exerciseId: string,
+  records: Map<string, ExerciseRecord>,
+): { type: 'peso' | 'volume' | '1rm'; value: number } | null {
+  if (!set.completed || set.weight <= 0) return null
 
-  const rec = recordes.get(exercicioId)
-  const volumeSerie = serie.peso * (serie.repeticoes ?? 0)
-  const est1RM = serie.repeticoes > 0
-    ? serie.peso * (1 + (serie.repeticoes ?? 0) / 30)
-    : serie.peso
+  const record = records.get(exerciseId)
+  const setVolume = set.weight * (set.reps ?? 0)
+  const est1RM = set.reps > 0
+    ? set.weight * (1 + (set.reps ?? 0) / 30)
+    : set.weight
 
-  // Só considera PR de peso se o recorde anterior for > 0 (não mostra quando era 0 / primeira vez)
-  if (rec && rec.maiorPeso > 0 && serie.peso > rec.maiorPeso) return { tipo: 'peso', valor: serie.peso }
-  if (!rec) return null // primeiro contato com o exercício → não mostra tela de PR
+  if (record && record.maxWeight > 0 && set.weight > record.maxWeight) return { type: 'peso', value: set.weight }
+  if (!record) return null
 
-  if (volumeSerie > rec.maiorVolumeSerie) return { tipo: 'volume', valor: volumeSerie }
-  if (est1RM > rec.maior1RM) return { tipo: '1rm', valor: Math.round(est1RM) }
+  if (setVolume > record.maxSetVolume) return { type: 'volume', value: setVolume }
+  if (est1RM > record.max1RM) return { type: '1rm', value: Math.round(est1RM) }
 
   return null
 }

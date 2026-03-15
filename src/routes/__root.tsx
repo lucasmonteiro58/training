@@ -1,16 +1,16 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { BottomNav } from '../components/layout/BottomNav'
-import { useTreinoAtivoStore } from '../stores'
-import { registrarServiceWorker } from '../lib/notifications'
+import { useActiveWorkoutStore } from '../stores'
+import { registerServiceWorker } from '../lib/notifications'
 import { FloatingWorkoutButton } from '../components/layout/FloatingWorkoutButton'
 import { Toaster } from 'sonner'
 import { PWAInstallPrompt } from '../components/ui/PWAInstallPrompt'
 import { useAuth as useAuthHook } from '../hooks/useAuth'
-import { useProgressoTreinoSync } from '../hooks/useProgressoTreinoSync'
+import { useWorkoutProgressSync } from '../hooks/useWorkoutProgressSync'
 import appCss from '../styles.css?url'
 import { AuthLoadingScreen } from './__root/components/-AuthLoadingScreen'
-import { AutoEncerradoBanner } from './__root/components/-AutoEncerradoBanner'
+import { AutoClosedBanner } from './__root/components/-AutoClosedBanner'
 import { SyncIndicator } from './__root/components/-SyncIndicator'
 import { LoginPage } from './__root/components/-LoginPage'
 
@@ -63,9 +63,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { user, loading: loadingAuth } = useAuthHook()
-  const { iniciado, pausado, tickGeral } = useTreinoAtivoStore()
+  const { started, paused, tickTotal } = useActiveWorkoutStore()
 
-  useProgressoTreinoSync(user)
+  useWorkoutProgressSync(user)
 
   useEffect(() => {
     if (import.meta.env.DEV && 'serviceWorker' in navigator) {
@@ -73,14 +73,14 @@ function RootComponent() {
         regs.forEach(reg => reg.unregister())
       })
     }
-    registrarServiceWorker()
+    registerServiceWorker()
   }, [])
 
   useEffect(() => {
-    if (!iniciado || pausado) return
-    const interval = setInterval(tickGeral, 1000)
+    if (!started || paused) return
+    const interval = setInterval(tickTotal, 1000)
     return () => clearInterval(interval)
-  }, [iniciado, pausado, tickGeral])
+  }, [started, paused, tickTotal])
 
   if (loadingAuth) {
     return <AuthLoadingScreen />
@@ -93,7 +93,7 @@ function RootComponent() {
   return (
     <div className="flex flex-col min-h-dvh bg-bg relative overflow-x-hidden">
       <SyncIndicator />
-      <AutoEncerradoBanner />
+      <AutoClosedBanner />
       <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top,0)]">
         <div className="pt-4 py-2">
           <Outlet />

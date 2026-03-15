@@ -2,15 +2,15 @@
 export { useAuthStore } from './authStore'
 export type { AuthState } from './authStore'
 
-export { usePlanosStore } from './planosStore'
-export type { PlanosState } from './planosStore'
+export { usePlansStore } from './plansStore'
+export type { PlansState } from './plansStore'
 
-export { useHistoricoStore } from './historicoStore'
-export type { HistoricoState, SnapshotAutoEncerrado } from './historicoStore'
+export { useHistoryStore } from './historyStore'
+export type { HistoryState, AutoClosedSnapshot } from './historyStore'
 
 export {
-  useTreinoAtivoStore,
+  useActiveWorkoutStore,
   calcularVolume,
   INATIVIDADE_AUTO_ENCERRAR_MS,
-} from './treinoAtivoStore'
-export type { TreinoAtivoStoreState } from './treinoAtivoStore'
+} from './activeWorkoutStore'
+export type { ActiveWorkoutStoreState } from './activeWorkoutStore'
