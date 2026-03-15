@@ -28,7 +28,7 @@ export function FloatingWorkoutButton() {
     <Link
       to="/active-workout/$planId"
       params={{ planId: session.planId }}
-      className="fixed right-4 z-[60] animate-fade-up"
+      className="fixed right-4 z-60 animate-fade-up"
       style={{
         bottom: `calc(90px + env(safe-area-inset-bottom, 0px))`,
         textDecoration: 'none'
