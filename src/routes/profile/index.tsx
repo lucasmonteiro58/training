@@ -13,7 +13,7 @@ import { calculateStreaks, calculateAchievements } from '../../lib/streaks'
 
 function parseOptionalDays(): number[] {
   try {
-    const v = localStorage.getItem('diasOpcionais')
+    const v = localStorage.getItem('optionalDays')
     if (!v) return []
     const arr = JSON.parse(v) as unknown
     return Array.isArray(arr) ? arr.filter((n): n is number => typeof n === 'number' && n >= 0 && n <= 6) : []

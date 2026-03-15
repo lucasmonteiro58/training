@@ -26,6 +26,7 @@ export function useStartWorkoutSession({
 
   useEffect(() => {
     if (!plan || !user) return
+    if (!plan.exercises?.length) return
 
     if (started && session?.planId === planId) {
       startedForPlanIdRef.current = planId

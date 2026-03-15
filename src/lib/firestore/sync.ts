@@ -225,8 +225,8 @@ export async function clearWorkoutProgressFromFirestore(userId: string): Promise
 // Configurações do Usuário
 // ============================
 export interface UserConfig {
-  metaSemanal?: number
-  diasOpcionais?: number[]
+  weeklyGoal?: number
+  optionalDays?: number[]
 }
 
 export async function getUserConfig(userId: string): Promise<UserConfig> {

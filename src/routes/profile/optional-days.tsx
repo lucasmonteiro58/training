@@ -11,7 +11,7 @@ export const Route = createFileRoute('/profile/optional-days')({
 })
 
 const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
-const STORAGE_KEY = 'diasOpcionais'
+const STORAGE_KEY = 'optionalDays'
 
 function parseSaved(value: string | null): number[] {
   if (!value) return []
@@ -31,9 +31,9 @@ function OptionalDaysPage() {
   useEffect(() => {
     if (!user) return
     getUserConfig(user.uid).then(config => {
-      if (config.diasOpcionais && config.diasOpcionais.length > 0) {
-        setDays(config.diasOpcionais)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(config.diasOpcionais))
+      if (config.optionalDays && config.optionalDays.length > 0) {
+        setDays(config.optionalDays)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(config.optionalDays))
       }
     })
   }, [user])
@@ -43,7 +43,7 @@ function OptionalDaysPage() {
     setDays(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     if (user) {
-      saveUserConfig(user.uid, { diasOpcionais: next }).catch(() => {
+      saveUserConfig(user.uid, { optionalDays: next }).catch(() => {
         toast.error('Falha ao sincronizar. Tente de novo.')
       })
     }

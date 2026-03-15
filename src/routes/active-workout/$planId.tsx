@@ -37,7 +37,7 @@ function ActiveWorkoutPage() {
   const { planId } = Route.useParams()
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { plans, updatePlanById } = usePlans()
+  const { plans, loading: plansLoading, updatePlanById } = usePlans()
   const { saveSessionComplete } = useHistory()
   const plan = plans.find((p) => p.id === planId)
   const sessions = useHistoryStore((s) => s.sessions)
@@ -211,6 +211,48 @@ function ActiveWorkoutPage() {
     )
   }
 
+  // Plano ainda carregando
+  if (plansLoading && !plan) {
+    return (
+      <div className="page-container pt-6 text-center">
+        <p className="text-text-muted">Carregando treino...</p>
+      </div>
+    )
+  }
+
+  // Plano não encontrado (ex.: ID inválido ou plano de outro usuário)
+  if (!plansLoading && !plan) {
+    return (
+      <div className="page-container pt-6 text-center space-y-4">
+        <p className="text-text-muted">Plano não encontrado.</p>
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/workouts' })}
+          className="text-accent text-sm font-medium underline underline-offset-2"
+        >
+          Voltar aos treinos
+        </button>
+      </div>
+    )
+  }
+
+  // Plano sem exercícios
+  if (plan && !plan.exercises?.length) {
+    return (
+      <div className="page-container pt-6 text-center space-y-4">
+        <p className="text-text-muted">Este plano não tem exercícios. Adicione exercícios para começar o treino.</p>
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/workouts' })}
+          className="text-accent text-sm font-medium underline underline-offset-2"
+        >
+          Voltar aos treinos
+        </button>
+      </div>
+    )
+  }
+
+  // Aguardando sessão ser criada (plan e user já existem; useStartWorkoutSession roda no effect)
   if (!plan || !session || !currentExercise) {
     return (
       <div className="page-container pt-6 text-center">

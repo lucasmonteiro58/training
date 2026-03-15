@@ -25,15 +25,15 @@ export function useUserConfig(user: { uid: string } | null) {
   useEffect(() => {
     if (!user) return
     getUserConfig(user.uid).then((config) => {
-      if (config.metaSemanal != null) {
-        setWeeklyGoal(config.metaSemanal)
-        localStorage.setItem('weeklyGoal', String(config.metaSemanal))
+      if (config.weeklyGoal != null) {
+        setWeeklyGoal(config.weeklyGoal)
+        localStorage.setItem('weeklyGoal', String(config.weeklyGoal))
       }
-      if (config.diasOpcionais && Array.isArray(config.diasOpcionais)) {
-        setOptionalDays(config.diasOpcionais)
+      if (config.optionalDays && Array.isArray(config.optionalDays)) {
+        setOptionalDays(config.optionalDays)
         localStorage.setItem(
           'optionalDays',
-          JSON.stringify(config.diasOpcionais)
+          JSON.stringify(config.optionalDays)
         )
       }
     })
@@ -43,7 +43,7 @@ export function useUserConfig(user: { uid: string } | null) {
     (value: number) => {
       setWeeklyGoal(value)
       localStorage.setItem('weeklyGoal', String(value))
-      if (user) saveUserConfig(user.uid, { metaSemanal: value })
+      if (user) saveUserConfig(user.uid, { weeklyGoal: value })
       toast.success(`Meta atualizada para ${value}x por semana`)
     },
     [user]
