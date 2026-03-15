@@ -62,7 +62,7 @@ export function PWAInstallPrompt() {
 
   return (
     <div
-      className="fixed left-1/2 -translate-x-1/2 z-[70] w-[calc(100%-2rem)] max-w-sm"
+      className="fixed left-1/2 -translate-x-1/2 z-70 w-[calc(100%-2rem)] max-w-sm"
       style={{ bottom: `calc(100px + env(safe-area-inset-bottom, 0px))` }}
     >
       <div className="card p-5 border border-accent /20 bg-surface/80 backdrop-blur-xl shadow-2xl animate-fade-up">
@@ -74,7 +74,7 @@ export function PWAInstallPrompt() {
         </button>
 
         <div className="flex gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center shadow-lg shadow-accent/20 shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-accent to-accent-hover flex items-center justify-center shadow-lg shadow-accent/20 shrink-0">
             <img src="/icon.png" alt="App Icon" className="w-10 h-10" onError={(e) => {
                // Fallback if icon doesn't exist
                e.currentTarget.style.display = 'none'
