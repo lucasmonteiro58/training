@@ -368,7 +368,6 @@ export const useActiveWorkoutStore = create<ActiveWorkoutStoreState>()(
           }),
 
         restoreFromAutoClosed: snapshot => {
-          const tempoOciosoSegundos = Math.floor(INATIVIDADE_AUTO_ENCERRAR_MS / 1000)
           const sessionActive = {
             ...snapshot.session,
             finishedAt: undefined,

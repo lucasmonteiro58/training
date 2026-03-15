@@ -117,7 +117,7 @@ export function ExerciseInPlanCard({
         {exercicio.exercise.gifUrl ? (
           <img
             src={exercicio.exercise.gifUrl}
-            alt={exercicio.exercise.nome}
+            alt={exercicio.exercise.name}
             className="w-10 h-10 rounded-lg object-cover bg-surface-2"
           />
         ) : (
@@ -126,9 +126,9 @@ export function ExerciseInPlanCard({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-text font-semibold text-sm truncate">{exercicio.exercise.nome}</p>
+          <p className="text-text font-semibold text-sm truncate">{exercicio.exercise.name}</p>
           <p className="text-text-muted text-xs">
-            {series.length} séries {series.length > 0 && `(Meta: ${series[0].repeticoes} reps)`}
+            {series.length} séries {series.length > 0 && `(Meta: ${series[0].reps} reps)`}
           </p>
         </div>
         <button type="button" onClick={() => setExpanded(e => !e)} className="btn-ghost p-2">
@@ -149,7 +149,7 @@ export function ExerciseInPlanCard({
               onClick={() => {
                 const updates: Partial<ExerciseInPlan> = { setType: proximo }
                 if (proximo === 'tempo') {
-                  updates.seriesDetalhadas = series.map(s => ({ ...s, reps: 1 }))
+                  updates.setsDetail = series.map(s => ({ ...s, reps: 1 }))
                 }
                 onUpdate(updates)
                 setApplyAll(null)
@@ -177,7 +177,7 @@ export function ExerciseInPlanCard({
                 <input
                   type="number"
                   className="set-input h-9! py-0! text-sm!"
-                  value={s.peso === 0 ? '' : s.peso}
+                  value={s.weight === 0 ? '' : s.weight}
                   onChange={e =>
                     updateSerie(i, { weight: e.target.value === '' ? 0 : parseFloat(e.target.value) })
                   }
@@ -189,12 +189,12 @@ export function ExerciseInPlanCard({
                   className="set-input h-9! py-0! text-sm!"
                   value={
                     tipo === 'tempo'
-                      ? s.repeticoes === 0
+                      ? s.reps === 0
                         ? ''
-                        : s.repeticoes
-                      : s.repeticoes === 0
+                        : s.reps
+                      : s.reps === 0
                         ? ''
-                        : s.repeticoes
+                        : s.reps
                   }
                   onChange={e =>
                     updateSerie(i, {

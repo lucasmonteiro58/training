@@ -22,7 +22,7 @@ export function ExerciseEditCard({
   onRemove,
 }: ExerciseEditCardProps) {
   const [applyAll, setApplyAll] = useState<{
-    field: 'peso' | 'repeticoes'
+    field: 'weight' | 'reps'
     sIdx: number
     value: number
   } | null>(null)
