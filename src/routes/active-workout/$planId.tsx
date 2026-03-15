@@ -55,6 +55,8 @@ function ActiveWorkoutPage() {
     updateNotes, clearLocal, heartbeat,
   } = store
 
+  const currentExercise = session?.exercises[currentExerciseIndex]
+
   const timerRef = useRef<number | null>(null)
   const restIntervalRef = useRef<number | null>(null)
 
@@ -145,7 +147,6 @@ function ActiveWorkoutPage() {
     return () => { if (restIntervalRef.current) clearInterval(restIntervalRef.current) }
   }, [restTimerActive, tickRest])
 
-  const currentExercise = session?.exercises[currentExerciseIndex]
   const planExercise = plan?.exercises.find((ex) => ex.exerciseId === currentExercise?.exerciseId)
   const totalExercises = session?.exercises.length ?? 0
   const progress = totalExercises ? (currentExerciseIndex / totalExercises) * 100 : 0
@@ -211,48 +212,6 @@ function ActiveWorkoutPage() {
     )
   }
 
-  // Plano ainda carregando
-  if (plansLoading && !plan) {
-    return (
-      <div className="page-container pt-6 text-center">
-        <p className="text-text-muted">Carregando treino...</p>
-      </div>
-    )
-  }
-
-  // Plano não encontrado (ex.: ID inválido ou plano de outro usuário)
-  if (!plansLoading && !plan) {
-    return (
-      <div className="page-container pt-6 text-center space-y-4">
-        <p className="text-text-muted">Plano não encontrado.</p>
-        <button
-          type="button"
-          onClick={() => navigate({ to: '/workouts' })}
-          className="text-accent text-sm font-medium underline underline-offset-2"
-        >
-          Voltar aos treinos
-        </button>
-      </div>
-    )
-  }
-
-  // Plano sem exercícios
-  if (plan && !plan.exercises?.length) {
-    return (
-      <div className="page-container pt-6 text-center space-y-4">
-        <p className="text-text-muted">Este plano não tem exercícios. Adicione exercícios para começar o treino.</p>
-        <button
-          type="button"
-          onClick={() => navigate({ to: '/workouts' })}
-          className="text-accent text-sm font-medium underline underline-offset-2"
-        >
-          Voltar aos treinos
-        </button>
-      </div>
-    )
-  }
-
-  // Aguardando sessão ser criada (plan e user já existem; useStartWorkoutSession roda no effect)
   if (!plan || !session || !currentExercise) {
     return (
       <div className="page-container pt-6 text-center">

@@ -16,10 +16,7 @@ export function usePlans() {
     if (!user) return
 
     getPlans(user.uid).then((local) => {
-      // Não sobrescrever com [] quando IndexedDB está vazio mas o store já tem planos
-      // (ex.: planos vieram do Firestore na tela anterior; ao montar active-workout
-      // getPlans() pode retornar [] e apagava a lista, travando em "Carregando treino...")
-      if (local.length > 0) setPlans(local)
+      setPlans(local)
       setLoading(false)
     })
 

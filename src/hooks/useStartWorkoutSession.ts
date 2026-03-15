@@ -42,9 +42,7 @@ export function useStartWorkoutSession({
       .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))[0]
 
     const exercisesInSession: ExerciseInSession[] = plan.exercises.map((ex) => {
-      const exLastSession = lastSession?.exercises.find(
-        (e) => e.exerciseId === ex.exerciseId
-      )
+      const exLastSession = lastSession?.exercises.find((e) => e.exerciseId === ex.exerciseId)
       return {
         exerciseId: ex.exerciseId,
         exerciseName: ex.exercise.name,

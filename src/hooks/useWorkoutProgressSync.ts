@@ -20,8 +20,10 @@ export function useWorkoutProgressSync(user: { uid: string } | null) {
       const state = useActiveWorkoutStore.getState()
       const historyState = useHistoryStore.getState()
 
-      if (!data || !data.iniciado) {
-        if (state.started) state.clearLocal()
+      // Não limpar quando data é null: o doc pode ainda não existir (write em progresso ao iniciar treino)
+      const isActive = data && (data.started === true || data.iniciado === true)
+      if (!isActive) {
+        if (data != null && state.started) state.clearLocal()
         return
       }
 
