@@ -50,8 +50,8 @@ exports.encerrarTreinosInativos = onSchedule(
   },
   async (event) => {
     const db = getFirestore();
-    const ativoRef = db.collection('ativo');
-    const snap = await ativoRef.get();
+    const activeRef = db.collection('active');
+    const snap = await activeRef.get();
     const now = Date.now();
 
     const batch = db.batch();
@@ -76,8 +76,8 @@ exports.encerrarTreinosInativos = onSchedule(
         syncedAt: now,
       };
 
-      const sessoesRef = db.collection('sessoes').doc(finalizada.id);
-      batch.set(sessoesRef, stripUndefined(finalizada));
+      const sessionsRef = db.collection('sessions').doc(finalizada.id);
+      batch.set(sessionsRef, stripUndefined(finalizada));
       batch.delete(doc.ref);
     }
 

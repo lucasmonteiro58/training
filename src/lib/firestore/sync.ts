@@ -182,7 +182,7 @@ export async function syncWorkoutProgressToFirestore(
   data: any
 ): Promise<void> {
   try {
-    const ref = doc(db, 'ativo', userId)
+    const ref = doc(db, 'active', userId)
     await setDoc(ref, stripUndefined({ ...data, updatedAt: Date.now() }))
   } catch (err) {
     console.error('Erro ao sincronizar progresso ativo:', err)
@@ -193,7 +193,7 @@ export function subscribeToWorkoutProgress(
   userId: string,
   callback: (data: any) => void
 ): () => void {
-  const ref = doc(db, 'ativo', userId)
+  const ref = doc(db, 'active', userId)
   return onSnapshot(
     ref,
     (d) => {
@@ -215,7 +215,7 @@ export function subscribeToWorkoutProgress(
 
 export async function clearWorkoutProgressFromFirestore(userId: string): Promise<void> {
   try {
-    await deleteDoc(doc(db, 'ativo', userId))
+    await deleteDoc(doc(db, 'active', userId))
   } catch (err) {
     console.error('Erro ao limpar progresso ativo:', err)
   }
@@ -231,7 +231,7 @@ export interface UserConfig {
 
 export async function getUserConfig(userId: string): Promise<UserConfig> {
   try {
-    const ref = doc(db, 'configuracoes', userId)
+    const ref = doc(db, 'settings', userId)
     const snap = await getDoc(ref)
     if (snap.exists()) return snap.data() as UserConfig
     return {}
@@ -245,7 +245,7 @@ export async function saveUserConfig(
   config: Partial<UserConfig>
 ): Promise<void> {
   try {
-    const ref = doc(db, 'configuracoes', userId)
+    const ref = doc(db, 'settings', userId)
     await setDoc(ref, stripUndefined({ ...config, updatedAt: Date.now() }), { merge: true })
   } catch (err) {
     console.error('Erro ao salvar config:', err)
@@ -345,10 +345,10 @@ export async function syncMeasurementToFirestore(measurement: BodyMeasurement): 
   incrementSync()
   try {
     const data = stripUndefined({ ...measurement, syncedAt: Date.now() })
-    await writeOrQueue('medidas', measurement.id, 'set', data as Record<string, unknown>)
+    await writeOrQueue('measurements', measurement.id, 'set', data as Record<string, unknown>)
   } catch (err) {
     console.error('Erro ao sincronizar medida:', err)
-    await enqueueWrite('medidas', measurement.id, 'set', stripUndefined({ ...measurement, syncedAt: Date.now() }) as Record<string, unknown>)
+    await enqueueWrite('measurements', measurement.id, 'set', stripUndefined({ ...measurement, syncedAt: Date.now() }) as Record<string, unknown>)
   } finally {
     decrementSync()
   }
@@ -357,10 +357,10 @@ export async function syncMeasurementToFirestore(measurement: BodyMeasurement): 
 export async function deleteMeasurementFromFirestore(id: string): Promise<void> {
   incrementSync()
   try {
-    await writeOrQueue('medidas', id, 'delete')
+    await writeOrQueue('measurements', id, 'delete')
   } catch (err) {
     console.error('Erro ao deletar medida do Firestore:', err)
-    await enqueueWrite('medidas', id, 'delete')
+    await enqueueWrite('measurements', id, 'delete')
   } finally {
     decrementSync()
   }
@@ -371,7 +371,7 @@ export function subscribeToMeasurements(
   callback: (measurements: BodyMeasurement[]) => void
 ): () => void {
   const q = query(
-    collection(db, 'medidas'),
+    collection(db, 'measurements'),
     where('userId', '==', userId),
     orderBy('data', 'desc')
   )
